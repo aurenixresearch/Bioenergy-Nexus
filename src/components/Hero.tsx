@@ -106,8 +106,13 @@ export default function Hero({ onExploreResearch, onRequestConsulting, onSignIn,
                   <div className="absolute inset-0 border-2 border-dashed border-emerald-200 rounded-full animate-[spin_40s_linear_infinite]"></div>
                   {/* Solid accent circles */}
                   <div className="absolute inset-4 bg-emerald-50 rounded-full flex items-center justify-center"></div>
-                  <div className="absolute inset-8 bg-white rounded-full shadow-md flex items-center justify-center">
-                    <Leaf className="w-16 h-16 text-emerald-600" />
+                  <div className="absolute inset-8 bg-white rounded-full shadow-md flex items-center justify-center p-3">
+                    <img 
+                      src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
+                      alt="Bioenergy Nexus Icon Logo" 
+                      referrerPolicy="no-referrer"
+                      className="w-14 h-14 object-contain animate-pulse"
+                    />
                   </div>
                 </div>
 
@@ -153,6 +158,35 @@ export default function Hero({ onExploreResearch, onRequestConsulting, onSignIn,
           </div>
 
         </div>
+
+        {/* Collaborating & Research Institutions (Social Proof Trust Bar) */}
+        <div className="mt-20 pt-10 border-t border-slate-200/50">
+          <p className="text-center text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-6">
+            Trusted Technical Partner & Aligned with Leading Clean Energy Authorities
+          </p>
+          <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-6 opacity-60 grayscale hover:grayscale-0 transition-all duration-300">
+            <div className="flex items-center gap-2">
+              <span className="font-display font-extrabold text-slate-700 text-sm tracking-tight">FAAN NIGERIA</span>
+            </div>
+            <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
+            <div className="flex items-center gap-2">
+              <span className="font-display font-extrabold text-slate-700 text-sm tracking-tight">IEA BIOMASS</span>
+            </div>
+            <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
+            <div className="flex items-center gap-2">
+              <span className="font-display font-extrabold text-slate-700 text-sm tracking-tight">UNIVERSITY OF LAGOS</span>
+            </div>
+            <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
+            <div className="flex items-center gap-2">
+              <span className="font-display font-extrabold text-slate-700 text-sm tracking-tight">LAWMA CLEANUP</span>
+            </div>
+            <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
+            <div className="flex items-center gap-2">
+              <span className="font-display font-extrabold text-slate-700 text-sm tracking-tight">ECOWAS BIOENERGY</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
   );

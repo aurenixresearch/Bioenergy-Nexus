@@ -232,7 +232,7 @@ export default function CollaborationSection({
       <div className="absolute top-0 right-0 w-[45rem] h-[45rem] bg-emerald-500/5 rounded-full blur-3xl -z-10"></div>
       <div className="absolute bottom-0 left-0 w-[35rem] h-[35rem] bg-teal-500/5 rounded-full blur-3xl -z-10"></div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-24">
+      <div className="w-full px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-24">
         
         {/* ================= SECTION HERO & METRICS ================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">

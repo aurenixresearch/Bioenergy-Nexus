@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import config from '../firebase-applet-config.json';
 
 const firebaseConfig = {
@@ -15,10 +15,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore with the specific database ID if present
-export const db = config.firestoreDatabaseId
-  ? getFirestore(app, config.firestoreDatabaseId)
-  : getFirestore(app);
+// Initialize Firestore with custom settings to use long polling, which is robust in sandboxed/iframe/reverse proxy environments.
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+}, config.firestoreDatabaseId || '(default)');
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();

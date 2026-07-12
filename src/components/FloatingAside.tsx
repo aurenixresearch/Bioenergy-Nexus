@@ -18,14 +18,15 @@ import {
   LogOut,
   Settings,
   Home,
-  Mail
+  Mail,
+  Bookmark
 } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 
 interface FloatingAsideProps {
   user: FirebaseUser | null;
-  currentView: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact';
-  setView: (view: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact') => void;
+  currentView: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved';
+  setView: (view: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved') => void;
   isCollapsed: boolean;
   setIsCollapsed: (collapsed: boolean) => void;
   onSignOut?: () => void;
@@ -52,13 +53,14 @@ export default function FloatingAside({
   const navItems = [
     { label: 'User Dashboard', id: 'dashboard' as const, icon: LayoutDashboard, desc: 'Manage your submissions' },
     { label: 'Research Hub', id: 'research' as const, icon: BookOpen, desc: 'Explore published research' },
+    { label: 'Saved Studies', id: 'saved' as const, icon: Bookmark, desc: 'Your bookmarked research' },
     { label: 'Services', id: 'services' as const, icon: HeartHandshake, desc: 'Request specialized consulting' },
     { label: 'Collaborations', id: 'collaboration' as const, icon: Users, desc: 'Partner with global teams' },
     { label: 'About Us', id: 'about' as const, icon: Info, desc: 'Learn about our mission' },
     { label: 'Contact Us', id: 'contact' as const, icon: Mail, desc: 'Get in touch with our team' },
   ];
 
-  const handleNav = (id: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact') => {
+  const handleNav = (id: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved') => {
     setView(id);
     setIsMobileOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -82,7 +84,7 @@ export default function FloatingAside({
         id="desktop_floating_aside"
       >
         {/* UPPER PORTION */}
-        <div className="flex flex-col flex-grow overflow-y-auto custom-scrollbar px-4">
+        <div className="flex flex-col flex-grow overflow-y-auto overflow-x-hidden custom-scrollbar px-4">
           
           {/* Aside Header: Brand & Moon Toggle */}
           <div className={`flex items-center justify-between mb-6 ${isCollapsed ? 'justify-center' : ''}`}>
@@ -95,8 +97,13 @@ export default function FloatingAside({
                   exit={{ opacity: 0, x: -10 }}
                   className="flex items-center gap-2"
                 >
-                  <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
-                    <Leaf className="w-5 h-5" />
+                  <div className="p-2 bg-emerald-50 rounded-xl">
+                    <img 
+                      src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
+                      alt="Bioenergy Nexus Logo" 
+                      referrerPolicy="no-referrer"
+                      className="w-5 h-5 object-contain"
+                    />
                   </div>
                   <div>
                     <span className="block text-sm font-display font-black text-slate-900 tracking-tight leading-none">
@@ -113,9 +120,14 @@ export default function FloatingAside({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="p-2 bg-emerald-50 rounded-xl text-emerald-600"
+                  className="p-2 bg-emerald-50 rounded-xl"
                 >
-                  <Leaf className="w-5 h-5" />
+                  <img 
+                    src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
+                    alt="Bioenergy Nexus Logo" 
+                    referrerPolicy="no-referrer"
+                    className="w-5 h-5 object-contain"
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -255,20 +267,6 @@ export default function FloatingAside({
         {/* BOTTOM PORTION: Settings / Sign out */}
         <div className="px-4 pt-4 border-t border-slate-100 space-y-2">
           
-          {/* Collapse/Expand Sidebar Trigger Row */}
-          <div className="flex justify-center">
-            <motion.button
-              onClick={toggleCollapse}
-              whileHover={{ scale: 1.1, backgroundColor: 'rgba(243, 244, 246, 1)' }}
-              whileTap={{ scale: 0.9 }}
-              className="p-2 text-slate-400 hover:text-slate-800 rounded-xl transition-all cursor-pointer bg-slate-50 border border-slate-100 flex items-center justify-center"
-              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              id="aside_toggle_btn"
-            >
-              {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            </motion.button>
-          </div>
-
           {/* Decorative Settings bottom block matching reference image */}
           <div className="relative group/bottom-settings">
             <button
@@ -306,6 +304,20 @@ export default function FloatingAside({
               )}
             </div>
           )}
+
+          {/* Collapse/Expand Sidebar Trigger Row */}
+          <div className="flex justify-center pt-2">
+            <motion.button
+              onClick={toggleCollapse}
+              whileHover={{ scale: 1.1, backgroundColor: 'rgba(243, 244, 246, 1)' }}
+              whileTap={{ scale: 0.9 }}
+              className="p-2 text-slate-400 hover:text-slate-800 rounded-xl transition-all cursor-pointer bg-slate-50 border border-slate-100 flex items-center justify-center"
+              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              id="aside_toggle_btn"
+            >
+              {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </motion.button>
+          </div>
 
         </div>
       </motion.aside>
@@ -351,8 +363,13 @@ export default function FloatingAside({
                 {/* Header */}
                 <div className="flex items-center justify-between pb-6 border-b border-slate-100">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
-                      <Leaf className="w-6 h-6 animate-pulse" />
+                    <div className="p-2 bg-emerald-50 rounded-xl">
+                      <img 
+                        src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
+                        alt="Bioenergy Nexus Logo" 
+                        referrerPolicy="no-referrer"
+                        className="w-6 h-6 object-contain"
+                      />
                     </div>
                     <div>
                       <span className="block text-lg font-display font-extrabold text-slate-900 leading-none">

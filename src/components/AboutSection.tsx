@@ -136,7 +136,7 @@ export default function AboutSection() {
     <section className="bg-white" id="about_main_section">
       
       {/* 1. Core Corporate Identity & Mission */}
-      <div className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-b border-slate-100">
+      <div className="py-20 w-full px-4 sm:px-6 lg:px-8 border-b border-slate-100">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
@@ -232,7 +232,7 @@ export default function AboutSection() {
 
       {/* 2. Interactive Focus Pillars of Excellence */}
       <div className="py-20 bg-slate-50/45 border-b border-slate-100" id="pillars_of_excellence_section">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">
@@ -360,7 +360,7 @@ export default function AboutSection() {
       </div>
 
       {/* 3. Meet the Founder: Specialized Credentials, Quote & Professional Bio */}
-      <div className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-b border-slate-100" id="founder_biography">
+      <div className="py-24 w-full px-4 sm:px-6 lg:px-8 border-b border-slate-100" id="founder_biography">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 sm:gap-16 items-start">
           
           {/* Founder Photo Panel & Quick Credentials */}
@@ -373,7 +373,7 @@ export default function AboutSection() {
               <div className="relative bg-white p-4 rounded-[2.5rem] shadow-xl border border-slate-100 text-left">
                 <div className="aspect-[3/4] rounded-2xl overflow-hidden relative bg-slate-100 shadow-inner">
                   <img 
-                    src="https://lh3.googleusercontent.com/d/1m-_0CtBqoDtZBx516bJqUCs88btgGkdY" 
+                    src="https://lh3.googleusercontent.com/d/1OJ7HkIbAG_YVcDeFM-F2mrzk13M4Cqp2" 
                     alt="Filani Olalekan T." 
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover transform hover:scale-102 transition duration-500"
@@ -474,7 +474,7 @@ export default function AboutSection() {
 
       {/* 4. Professional Milestone Timeline & Journey */}
       <div className="py-24 bg-slate-50/50" id="experience_timeline">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">

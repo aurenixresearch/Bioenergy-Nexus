@@ -10,19 +10,22 @@ import { auth, googleProvider } from './firebase';
 import { getSavedPaperIds, getUserInquiries, getUserPartnerships } from './services/db';
 import { ConsultationInquiry, PartnershipSubmission } from './types';
 import { motion, AnimatePresence } from 'motion/react';
-import { AlertCircle, ShieldAlert, Sparkles, X, UserCheck, KeyRound, HelpCircle, BookOpen, Users, HeartHandshake, Leaf } from 'lucide-react';
+import { AlertCircle, ShieldAlert, Sparkles, X, UserCheck, KeyRound, HelpCircle, BookOpen, Users, HeartHandshake, Leaf, Award, Quote, Building, CheckCircle2, FlaskConical } from 'lucide-react';
 
 // Components
 import Navbar from './components/Navbar';
+import SignInPage from './components/SignInPage';
 import FloatingAside from './components/FloatingAside';
 import Hero from './components/Hero';
 import AboutSection from './components/AboutSection';
 import ResearchSection from './components/ResearchSection';
+import SavedStudiesPage from './components/SavedStudiesPage';
 import ConsultationSection from './components/ConsultationSection';
 import CollaborationSection from './components/CollaborationSection';
 import ContactSection from './components/ContactSection';
 import UserDashboard from './components/UserDashboard';
 import Footer from './components/Footer';
+import SystemBootLoader from './components/SystemBootLoader';
 
 export default function App() {
   // Auth state
@@ -30,8 +33,8 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Layout View: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact'
-  const [currentView, setView] = useState<'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact'>('home');
+  // Layout View: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing'
+  const [currentView, setView] = useState<'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing'>('home');
 
   // Sidebar collapsed state and mobile check
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -64,7 +67,11 @@ export default function App() {
             setUser(demoObj);
             setAuthLoading(false);
             refreshAllUserData(demoObj.uid);
-            setView('dashboard');
+            if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
+              setView('initializing');
+            } else {
+              setView('dashboard');
+            }
             return;
           } catch (e) {
             console.error('Error parsing stored demo user:', e);
@@ -77,7 +84,11 @@ export default function App() {
       
       if (currentUser) {
         refreshAllUserData(currentUser.uid);
-        setView('dashboard');
+        if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
+          setView('initializing');
+        } else {
+          setView('dashboard');
+        }
       } else {
         setSavedPaperIds([]);
         setActiveInquiries([]);
@@ -116,7 +127,11 @@ export default function App() {
     try {
       setAuthError(null);
       await signInWithPopup(auth, googleProvider);
-      setView('dashboard');
+      if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
+        setView('initializing');
+      } else {
+        setView('dashboard');
+      }
     } catch (err: any) {
       console.error('Authentication Error:', err);
       const errStr = String(err);
@@ -164,7 +179,11 @@ export default function App() {
         setUser(demoUser as any);
         await refreshAllUserData(demoUser.uid);
       }
-      setView('dashboard');
+      if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
+        setView('initializing');
+      } else {
+        setView('dashboard');
+      }
     } catch (err: any) {
       console.error('Guest Sign-In Error:', err);
       setAuthError(err.message || String(err));
@@ -177,6 +196,7 @@ export default function App() {
     try {
       localStorage.removeItem('nexus_demo_mode');
       localStorage.removeItem('nexus_demo_user');
+      sessionStorage.removeItem('nexus_system_initialized');
       await signOut(auth);
       setUser(null);
       setView('about');
@@ -192,17 +212,19 @@ export default function App() {
   };
 
   return (
-    <div className="bg-white min-h-screen font-sans flex flex-col justify-between" id="app_root">
+    <div className="bg-slate-50 min-h-screen font-sans flex flex-col justify-between" id="app_root">
       
       {/* Collapsible Floating Aside Section */}
-      <FloatingAside 
-        user={user}
-        currentView={currentView}
-        setView={setView}
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed}
-        onSignOut={handleSignOut}
-      />
+      {currentView !== 'signin' && currentView !== 'initializing' && (
+        <FloatingAside 
+          user={user}
+          currentView={currentView}
+          setView={setView}
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
+          onSignOut={handleSignOut}
+        />
+      )}
 
       {/* Main layout container with animated padding-left for the side menu */}
       <motion.div
@@ -214,10 +236,10 @@ export default function App() {
         id="app_layout_wrapper"
       >
         {/* Dynamic Navigation */}
-        {!user && (
+        {!user && currentView !== 'signin' && currentView !== 'initializing' && (
           <Navbar 
             user={user}
-            onSignIn={handleSignIn}
+            onSignIn={() => setView('signin')}
             onSignOut={handleSignOut}
             currentView={currentView}
             setView={setView}
@@ -344,13 +366,13 @@ export default function App() {
                 <Hero 
                   onExploreResearch={() => setView('research')}
                   onRequestConsulting={() => setView('services')}
-                  onSignIn={handleSignIn}
+                  onSignIn={() => setView('signin')}
                   user={user}
                 />
                 
                 {/* Dedicated Hub Ecosystem section on the Home page */}
                 <section className="py-20 bg-white border-t border-slate-100" id="ecosystem_overview">
-                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="w-full px-4 sm:px-6 lg:px-8">
                     <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
                       <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">
                         <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
@@ -455,6 +477,195 @@ export default function App() {
                     </div>
                   </div>
                 </section>
+
+                {/* Real-World Pilot Projects (Social Proof of Deployments) */}
+                <section className="py-20 bg-slate-50 border-t border-slate-100 text-left" id="featured_pilots">
+                  <div className="w-full px-4 sm:px-6 lg:px-8">
+                    <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">
+                        <Award className="w-3.5 h-3.5 text-emerald-600" />
+                        Proven Field Deployments
+                      </div>
+                      <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-slate-900 tracking-tight">
+                        Real-World Bioenergy Impact
+                      </h2>
+                      <p className="text-base text-slate-600 leading-relaxed">
+                        We don't just write papers. Our technical team works on-site at major high-traffic facilities and municipal centers to configure, audit, and optimize bioenergy reactors.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* MMA Airport Pilot */}
+                      <motion.div 
+                        whileHover={{ y: -6 }}
+                        className="bg-white rounded-3xl p-8 border border-slate-200/50 shadow-xs flex flex-col justify-between relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+                          <Building className="w-32 h-32 text-emerald-900" />
+                        </div>
+                        <div className="space-y-6 relative z-10">
+                          <div className="flex items-center gap-3">
+                            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                              Operational Pilot
+                            </span>
+                            <span className="text-xs font-mono text-slate-400">Lagos, Nigeria</span>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <h3 className="text-xl font-bold text-slate-900 font-display">Murtala Muhammed Airport Biodigester</h3>
+                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                              Configured and optimized the daily feedstock loading and biochemical digestion parameters for localized aviation waste-to-energy conversion, providing clean, secondary electrical and gas backup.
+                            </p>
+                          </div>
+
+                          <div className="space-y-2.5 pt-4 border-t border-slate-100">
+                            <h4 className="text-[10px] font-mono font-bold text-slate-400 uppercase">Key Project Achievements:</h4>
+                            <ul className="space-y-2">
+                              <li className="flex items-center gap-2 text-xs text-slate-600">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                <span>100% locally managed bioenergy operational workflow.</span>
+                              </li>
+                              <li className="flex items-center gap-2 text-xs text-slate-600">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                <span>Capacity-building programs delivered to technical site engineers.</span>
+                              </li>
+                              <li className="flex items-center gap-2 text-xs text-slate-600">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                <span>Successful organic methane yield tuning in tropical conditions.</span>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      {/* Lagos Waste Feasibility Pilot */}
+                      <motion.div 
+                        whileHover={{ y: -6 }}
+                        className="bg-white rounded-3xl p-8 border border-slate-200/50 shadow-xs flex flex-col justify-between relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+                          <FlaskConical className="w-32 h-32 text-emerald-900" />
+                        </div>
+                        <div className="space-y-6 relative z-10">
+                          <div className="flex items-center gap-3">
+                            <span className="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                              Analytical Case Study
+                            </span>
+                            <span className="text-xs font-mono text-slate-400">Metropolitan Lagos</span>
+                          </div>
+
+                          <div className="space-y-2">
+                            <h3 className="text-xl font-bold text-slate-900 font-display">Municipal Solid Waste Audit</h3>
+                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                              Conducted complete chemical assessment of metropolitan Lagos solid waste streams. Assessed biochemical vs thermochemical pathways to structure high-yield investment roadmaps for urban suburbs.
+                            </p>
+                          </div>
+
+                          <div className="space-y-2.5 pt-4 border-t border-slate-100">
+                            <h4 className="text-[10px] font-mono font-bold text-slate-400 uppercase">Key Project Achievements:</h4>
+                            <ul className="space-y-2">
+                              <li className="flex items-center gap-2 text-xs text-slate-600">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                <span>Published peer-reviewed chemical compositions of local feedstocks.</span>
+                              </li>
+                              <li className="flex items-center gap-2 text-xs text-slate-600">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                <span>Quantified exact carbon-offset metrics for regional green funds.</span>
+                              </li>
+                              <li className="flex items-center gap-2 text-xs text-slate-600">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                <span>Presented policy benchmarks directly to municipal waste bodies.</span>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Scientific & Stakeholder Endorsements (Social Proof Quotes) */}
+                <section className="py-20 bg-white border-t border-slate-100 text-left" id="endorsements">
+                  <div className="w-full px-4 sm:px-6 lg:px-8">
+                    <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">
+                        <Quote className="w-3.5 h-3.5 text-emerald-600" />
+                        Ecosystem Endorsements
+                      </div>
+                      <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-slate-900 tracking-tight">
+                        What Aligned Stakeholders Say
+                      </h2>
+                      <p className="text-base text-slate-600 leading-relaxed">
+                        Read perspectives from university researchers, clean energy program managers, and regional policy developers who have collaborated with Bioenergy Nexus.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      {/* Testimonial 1 */}
+                      <div className="bg-slate-50 p-6 sm:p-8 rounded-2xl border border-slate-100/80 flex flex-col justify-between space-y-6">
+                        <div className="space-y-4">
+                          <div className="text-emerald-600">
+                            <Quote className="w-8 h-8 opacity-40" />
+                          </div>
+                          <p className="text-xs sm:text-sm text-slate-600 italic leading-relaxed">
+                            "Bioenergy Nexus delivered precise, local chemical and feedstock parameters that resolved our digester overloading issues. Their academic depth combined with physical plant experience is exceptional."
+                          </p>
+                        </div>
+                        <div className="border-t border-slate-200/60 pt-4 flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+                            SA
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-900">Dr. Samuel Adebayo</h4>
+                            <p className="text-[10px] text-slate-500 font-medium">Process Chemistry Specialist, UNILAG</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Testimonial 2 */}
+                      <div className="bg-slate-50 p-6 sm:p-8 rounded-2xl border border-slate-100/80 flex flex-col justify-between space-y-6">
+                        <div className="space-y-4">
+                          <div className="text-emerald-600">
+                            <Quote className="w-8 h-8 opacity-40" />
+                          </div>
+                          <p className="text-xs sm:text-sm text-slate-600 italic leading-relaxed">
+                            "The airport waste-to-energy feasibility study was remarkably rigorous. It was the first report we reviewed that integrated local supply-chain constraints with practical chemical yield projections."
+                          </p>
+                        </div>
+                        <div className="border-t border-slate-200/60 pt-4 flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs">
+                            CO
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-900">Engr. Chidi Okafor</h4>
+                            <p className="text-[10px] text-slate-500 font-medium">Clean Tech Plant Operations Consultant</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Testimonial 3 */}
+                      <div className="bg-slate-50 p-6 sm:p-8 rounded-2xl border border-slate-100/80 flex flex-col justify-between space-y-6">
+                        <div className="space-y-4">
+                          <div className="text-emerald-600">
+                            <Quote className="w-8 h-8 opacity-40" />
+                          </div>
+                          <p className="text-xs sm:text-sm text-slate-600 italic leading-relaxed">
+                            "By training our cooperative waste managers, Bioenergy Nexus built local capacity rather than just delivering templates. They are true champions of indigenous African science."
+                          </p>
+                        </div>
+                        <div className="border-t border-slate-200/60 pt-4 flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+                            FA
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-900">Fatima Alao</h4>
+                            <p className="text-[10px] text-slate-500 font-medium">Director, West African Circularity NGO</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
               </motion.div>
             )}
 
@@ -473,7 +684,7 @@ export default function App() {
                   <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-100/40 rounded-full blur-3xl"></div>
                   <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-teal-100/30 rounded-full blur-3xl"></div>
 
-                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
+                  <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200/60 rounded-full text-xs font-semibold uppercase tracking-wider">
                       <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
                       Dedicated Research Hub
@@ -501,7 +712,7 @@ export default function App() {
               >
                 <ConsultationSection 
                   user={user}
-                  onSignIn={handleSignIn}
+                  onSignIn={() => setView('signin')}
                   activeInquiries={activeInquiries}
                   setActiveInquiries={setActiveInquiries}
                 />
@@ -518,7 +729,7 @@ export default function App() {
               >
                 <ResearchSection 
                   user={user}
-                  onSignIn={handleSignIn}
+                  onSignIn={() => setView('signin')}
                   savedPaperIds={savedPaperIds}
                   setSavedPaperIds={setSavedPaperIds}
                 />
@@ -535,7 +746,7 @@ export default function App() {
               >
                 <CollaborationSection 
                   user={user}
-                  onSignIn={handleSignIn}
+                  onSignIn={() => setView('signin')}
                   activePartnerships={activePartnerships}
                   setActivePartnerships={setActivePartnerships}
                 />
@@ -557,7 +768,7 @@ export default function App() {
                   <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-100/40 rounded-full blur-3xl"></div>
                   <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-teal-100/30 rounded-full blur-3xl"></div>
 
-                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
+                  <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200/60 rounded-full text-xs font-semibold uppercase tracking-wider">
                       <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
                       Connect with Us
@@ -592,11 +803,100 @@ export default function App() {
                 />
               </motion.div>
             )}
+
+            {currentView === 'saved' && user && (
+              <motion.div
+                key="saved-studies-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <SavedStudiesPage 
+                  user={user}
+                  onSignIn={() => setView('signin')}
+                  savedPaperIds={savedPaperIds}
+                  setSavedPaperIds={setSavedPaperIds}
+                  onGoToResearch={() => setView('research')}
+                />
+              </motion.div>
+            )}
+            {currentView === 'signin' && (
+              <motion.div
+                key="signin-page"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <SignInPage 
+                  onBack={() => {
+                    setAuthError(null);
+                    setView('home');
+                  }}
+                  authError={authError}
+                  setAuthError={setAuthError}
+                  onSuccess={(authenticatedUser) => {
+                    setUser(authenticatedUser);
+                    if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
+                      setView('initializing');
+                    } else {
+                      setView('dashboard');
+                    }
+                  }}
+                  onGoogleSignIn={handleSignIn}
+                  onGuestSignIn={async (customProfile) => {
+                    setAuthError(null);
+                    setAuthLoading(true);
+                    try {
+                      const demoUser = {
+                        uid: customProfile?.uid || 'sandbox-guest-user',
+                        email: customProfile?.email || 'guest.researcher@bioenergy-nexus.org',
+                        displayName: customProfile?.displayName || 'Guest Researcher',
+                        photoURL: null,
+                        isAnonymous: true
+                      };
+                      localStorage.setItem('nexus_demo_mode', 'true');
+                      localStorage.setItem('nexus_demo_user', JSON.stringify(demoUser));
+                      setUser(demoUser as any);
+                      await refreshAllUserData(demoUser.uid);
+                      if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
+                        setView('initializing');
+                      } else {
+                        setView('dashboard');
+                      }
+                    } catch (err: any) {
+                      setAuthError(err.message || String(err));
+                    } finally {
+                      setAuthLoading(false);
+                    }
+                  }}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'initializing' && (
+              <motion.div
+                key="initializing-page"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <SystemBootLoader 
+                  user={user}
+                  onComplete={() => {
+                    sessionStorage.setItem('nexus_system_initialized', 'true');
+                    setView('dashboard');
+                  }}
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
         </main>
 
         {/* Footer */}
-        <Footer onNavClick={handlePageSelect} />
+        {currentView !== 'signin' && currentView !== 'initializing' && <Footer onNavClick={handlePageSelect} />}
       </motion.div>
 
     </div>

@@ -7,8 +7,8 @@ interface NavbarProps {
   user: FirebaseUser | null;
   onSignIn: () => void;
   onSignOut: () => void;
-  currentView: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact';
-  setView: (view: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact') => void;
+  currentView: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved';
+  setView: (view: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved') => void;
 }
 
 export default function Navbar({ 
@@ -48,8 +48,13 @@ export default function Navbar({
               className="flex items-center gap-2.5 cursor-pointer text-left focus:outline-none"
               id="brand_logo_btn"
             >
-              <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
-                <Leaf className="w-6 h-6 animate-pulse" />
+              <div className="p-2 bg-emerald-50 rounded-xl">
+                <img 
+                  src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
+                  alt="Bioenergy Nexus Logo" 
+                  referrerPolicy="no-referrer"
+                  className="w-6 h-6 object-contain"
+                />
               </div>
               <div>
                 <span className="block text-xl font-display font-bold tracking-tight text-slate-900 leading-none">

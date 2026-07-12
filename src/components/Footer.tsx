@@ -10,7 +10,7 @@ interface FooterProps {
 export default function Footer({ onNavClick }: FooterProps) {
   return (
     <footer className="bg-slate-950 text-slate-200 pt-16 pb-8 text-left" id="footer">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <div className="w-full px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Top footer row */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 pb-12">
@@ -21,8 +21,13 @@ export default function Footer({ onNavClick }: FooterProps) {
               onClick={() => { onNavClick('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
               className="flex items-center gap-2.5 cursor-pointer text-left focus:outline-none"
             >
-              <div className="p-2 bg-emerald-950 rounded-xl text-emerald-400">
-                <Leaf className="w-5 h-5" />
+              <div className="p-2 bg-emerald-950 rounded-xl">
+                <img 
+                  src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
+                  alt="Bioenergy Nexus Logo" 
+                  referrerPolicy="no-referrer"
+                  className="w-5 h-5 object-contain"
+                />
               </div>
               <div>
                 <span className="block text-lg font-display font-bold tracking-tight text-white leading-none">

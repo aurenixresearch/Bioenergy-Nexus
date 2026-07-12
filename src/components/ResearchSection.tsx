@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Save, Trash2, Download, Plus, BookOpen, AlertCircle, CheckCircle2, FileText, Sparkles, X } from 'lucide-react';
+import { Search, Save, Trash2, Download, Plus, BookOpen, AlertCircle, CheckCircle2, FileText, Sparkles, X, Check } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { ResearchPaper } from '../types';
 import { RESEARCH_PAPERS } from '../data';
 import { savePaper, unsavePaper, getSavedPaperIds, addCustomPaper, getCustomPapers } from '../services/db';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import ResearchDetail from './ResearchDetail';
 
 interface ResearchSectionProps {
@@ -25,6 +25,7 @@ export default function ResearchSection({
   const [customPapers, setCustomPapers] = useState<ResearchPaper[]>([]);
   const [allPapers, setAllPapers] = useState<ResearchPaper[]>(RESEARCH_PAPERS);
   const [selectedPaper, setSelectedPaper] = useState<ResearchPaper | null>(null);
+  const [animatingPaperIds, setAnimatingPaperIds] = useState<string[]>([]);
   
   // Submit Form modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,18 +63,36 @@ export default function ResearchSection({
     }
 
     const isAlreadySaved = savedPaperIds.includes(paperId);
+    
+    // Add to animating list to show the checkmark feedback
+    setAnimatingPaperIds(prev => [...prev, paperId]);
+    setTimeout(() => {
+      setAnimatingPaperIds(prev => prev.filter(id => id !== paperId));
+    }, 1500);
+
+    // Optimistically update local state immediately
+    if (isAlreadySaved) {
+      setSavedPaperIds(prev => prev.filter(id => id !== paperId));
+    } else {
+      setSavedPaperIds(prev => [...prev, paperId]);
+    }
+
     try {
       if (isAlreadySaved) {
         await unsavePaper(user.uid, paperId);
-        setSavedPaperIds(prev => prev.filter(id => id !== paperId));
         showNotification('Study removed from your saved list.', 'success');
       } else {
         await savePaper(user.uid, paperId);
-        setSavedPaperIds(prev => [...prev, paperId]);
         showNotification('Study saved to your profile!', 'success');
       }
     } catch (err) {
       console.error('Error saving paper:', err);
+      // Revert the optimistic update on failure
+      if (isAlreadySaved) {
+        setSavedPaperIds(prev => [...prev, paperId]);
+      } else {
+        setSavedPaperIds(prev => prev.filter(id => id !== paperId));
+      }
       showNotification('Could not update saved studies. Please try again.', 'error');
     }
   };
@@ -167,7 +186,7 @@ export default function ResearchSection({
 
   return (
     <section className="py-20 bg-slate-50" id="research">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         
         {/* Toast Notification */}
         {notification && (
@@ -248,6 +267,7 @@ export default function ResearchSection({
           {filteredPapers.length > 0 ? (
             filteredPapers.map((paper) => {
               const isSaved = savedPaperIds.includes(paper.id);
+              const isAnimating = animatingPaperIds.includes(paper.id);
               return (
                 <motion.div 
                   key={paper.id}
@@ -317,16 +337,43 @@ export default function ResearchSection({
                       onClick={() => handleSaveToggle(paper.id)}
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
-                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0 ${
-                        isSaved
-                          ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                          : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                      className={`inline-flex items-center justify-center min-w-[105px] h-8.5 gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 cursor-pointer border-0 ${
+                        isAnimating
+                          ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200/50'
+                          : isSaved
+                            ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                            : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                       }`}
                       title={isSaved ? 'Remove Bookmark' : 'Bookmark to Profile'}
                       id={`bookmark_btn_${paper.id}`}
                     >
-                      {isSaved ? <Trash2 className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
-                      {isSaved ? 'Bookmarked' : 'Save Study'}
+                      <AnimatePresence mode="wait">
+                        {isAnimating ? (
+                          <motion.span
+                            key="checkmark-icon"
+                            initial={{ scale: 0, rotate: -20, opacity: 0 }}
+                            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            transition={{ type: 'spring', stiffness: 350, damping: 20 }}
+                            className="inline-flex items-center gap-1.5"
+                          >
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            <span>{isSaved ? 'Saved' : 'Removed'}</span>
+                          </motion.span>
+                        ) : (
+                          <motion.span
+                            key="normal-icon"
+                            initial={{ scale: 0.85, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.85, opacity: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="inline-flex items-center gap-1.5"
+                          >
+                            {isSaved ? <Trash2 className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+                            <span>{isSaved ? 'Remove' : 'Save Study'}</span>
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </motion.button>
                   </div>
                 </motion.div>

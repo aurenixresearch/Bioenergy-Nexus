@@ -64,7 +64,7 @@ export default function UserDashboard({
 
   return (
     <div className="bg-slate-50 min-h-screen py-10" id="user_dashboard">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 font-bold">
+      <div className="w-full px-4 sm:px-6 lg:px-8 space-y-8 font-bold">
         
         {/* Navigation Bar Refresh button */}
         <div className="flex items-center justify-end">

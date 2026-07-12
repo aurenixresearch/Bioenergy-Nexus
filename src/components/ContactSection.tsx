@@ -100,7 +100,7 @@ export default function ContactSection() {
 
   return (
     <div className="bg-slate-50 py-12 md:py-20 text-left" id="contact_section">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <div className="w-full px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
