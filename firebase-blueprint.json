@@ -1,0 +1,174 @@
+{
+  "entities": {
+    "saved_paper": {
+      "title": "Saved Paper",
+      "description": "Represents a paper bookmarked by a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The unique ID of the user saving the paper."
+        },
+        "paperId": {
+          "type": "string",
+          "description": "The unique ID of the research paper."
+        },
+        "savedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the paper was bookmarked."
+        }
+      },
+      "required": ["userId", "paperId", "savedAt"]
+    },
+    "consultation_inquiry": {
+      "title": "Consultation Inquiry",
+      "description": "Represents a consulting or advisory inquiry submitted by a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The unique ID of the user submitting the inquiry."
+        },
+        "userEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "The email of the user submitting the inquiry."
+        },
+        "userName": {
+          "type": "string",
+          "description": "The name of the user."
+        },
+        "organization": {
+          "type": "string",
+          "description": "The company/organization of the user."
+        },
+        "serviceType": {
+          "type": "string",
+          "description": "The requested Bioenergy advisory service type."
+        },
+        "message": {
+          "type": "string",
+          "description": "Detailed description of the inquiry."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the inquiry was submitted."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "In Review", "Resolved"],
+          "description": "Status of the advisory request."
+        }
+      },
+      "required": ["userId", "userEmail", "userName", "organization", "serviceType", "message", "createdAt", "status"]
+    },
+    "partnership_submission": {
+      "title": "Partnership Submission",
+      "description": "Represents an alliance or partnership submission.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The unique ID of the user submitting the partnership request."
+        },
+        "userEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "The email of the user."
+        },
+        "partnerName": {
+          "type": "string",
+          "description": "Name of the organization or stakeholder seeking alliance."
+        },
+        "stakeholderType": {
+          "type": "string",
+          "description": "The type of the stakeholder."
+        },
+        "collaborationArea": {
+          "type": "string",
+          "description": "The primary area of collaboration."
+        },
+        "message": {
+          "type": "string",
+          "description": "Detailed description of the proposed alliance."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the alliance was registered."
+        }
+      },
+      "required": ["userId", "userEmail", "partnerName", "stakeholderType", "collaborationArea", "message", "createdAt"]
+    },
+    "custom_paper": {
+      "title": "Custom Research Paper",
+      "description": "A research paper contributed to the repository by a registered member.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Title of the research paper."
+        },
+        "author": {
+          "type": "string",
+          "description": "Author of the research paper."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of bioenergy/sustainability."
+        },
+        "abstract": {
+          "type": "string",
+          "description": "Abstract/summary of the study."
+        },
+        "downloadUrl": {
+          "type": "string",
+          "description": "Download or reference link."
+        },
+        "publishedYear": {
+          "type": "number",
+          "description": "The publication year."
+        },
+        "isCustom": {
+          "type": "boolean",
+          "description": "Always true."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The unique ID of the submitting user."
+        },
+        "userEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Email of the submitting user."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Submission timestamp."
+        }
+      },
+      "required": ["title", "author", "category", "abstract", "downloadUrl", "publishedYear", "isCustom", "userId", "userEmail", "createdAt"]
+    }
+  },
+  "firestore": {
+    "saved_papers": {
+      "schema": "saved_paper",
+      "description": "Bookmarked research papers for individual users."
+    },
+    "consultation_inquiries": {
+      "schema": "consultation_inquiry",
+      "description": "Inquiries submitted for advisory services."
+    },
+    "partnership_submissions": {
+      "schema": "partnership_submission",
+      "description": "Stakeholder partnership submissions."
+    },
+    "custom_papers": {
+      "schema": "custom_paper",
+      "description": "Member contributed research papers."
+    }
+  }
+}

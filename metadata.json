@@ -1,0 +1,6 @@
+{
+  "name": "Bioenergy Nexus",
+  "description": "A research, training, and environmental consulting hub dedicated to accelerating waste-to-energy technologies and sustainability in Nigeria and Africa.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

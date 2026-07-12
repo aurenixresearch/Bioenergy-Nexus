@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+
+    // Collection: saved_papers
+    match /saved_papers/{savedPaperId} {
+      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidSavedPaper(incoming()) && incoming().userId == request.auth.uid;
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    function isValidSavedPaper(data) {
+      return data.keys().hasAll(['userId', 'paperId', 'savedAt']) &&
+             data.keys().size() == 3 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.paperId is string && data.paperId.size() <= 128 &&
+             data.savedAt is string && data.savedAt.size() <= 50;
+    }
+
+    // Collection: consultation_inquiries
+    match /consultation_inquiries/{inquiryId} {
+      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidConsultationInquiry(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && isValidConsultationInquiry(incoming()) && incoming().userId == existing().userId;
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    function isValidConsultationInquiry(data) {
+      return data.keys().hasAll(['userId', 'userEmail', 'userName', 'organization', 'serviceType', 'message', 'createdAt', 'status']) &&
+             data.keys().size() == 8 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.userEmail is string && data.userEmail.size() <= 128 &&
+             data.userName is string && data.userName.size() <= 128 &&
+             data.organization is string && data.organization.size() <= 128 &&
+             data.serviceType is string && data.serviceType.size() <= 128 &&
+             data.message is string && data.message.size() <= 2000 &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             data.status is string && data.status.size() <= 50;
+    }
+
+    // Collection: partnership_submissions
+    match /partnership_submissions/{submissionId} {
+      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidPartnershipSubmission(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && isValidPartnershipSubmission(incoming()) && incoming().userId == existing().userId;
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    function isValidPartnershipSubmission(data) {
+      return data.keys().hasAll(['userId', 'userEmail', 'partnerName', 'stakeholderType', 'collaborationArea', 'message', 'createdAt']) &&
+             data.keys().size() == 7 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.userEmail is string && data.userEmail.size() <= 128 &&
+             data.partnerName is string && data.partnerName.size() <= 128 &&
+             data.stakeholderType is string && data.stakeholderType.size() <= 128 &&
+             data.collaborationArea is string && data.collaborationArea.size() <= 128 &&
+             data.message is string && data.message.size() <= 2000 &&
+             data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    // Collection: custom_papers
+    match /custom_papers/{paperId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidCustomPaper(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && isValidCustomPaper(incoming()) && incoming().userId == existing().userId;
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    function isValidCustomPaper(data) {
+      return data.keys().hasAll(['title', 'author', 'category', 'abstract', 'downloadUrl', 'publishedYear', 'isCustom', 'userId', 'userEmail', 'createdAt']) &&
+             data.keys().size() == 10 &&
+             data.title is string && data.title.size() <= 500 &&
+             data.author is string && data.author.size() <= 200 &&
+             data.category is string && data.category.size() <= 100 &&
+             data.abstract is string && data.abstract.size() <= 5000 &&
+             data.downloadUrl is string && data.downloadUrl.size() <= 500 &&
+             (data.publishedYear is int || data.publishedYear is float) &&
+             data.isCustom is bool &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.userEmail is string && data.userEmail.size() <= 128 &&
+             data.createdAt is string && data.createdAt.size() <= 50;
+    }
+  }
+}
