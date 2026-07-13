@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2 } from 'lucide-react';
+import { Leaf } from 'lucide-react';
 
 interface SystemBootLoaderProps {
   user: any;
@@ -9,12 +9,11 @@ interface SystemBootLoaderProps {
 
 export default function SystemBootLoader({ user, onComplete }: SystemBootLoaderProps) {
   const [progress, setProgress] = useState(0);
-  const [loadingText, setLoadingText] = useState("Configuring secure environment...");
+  const [loadingText, setLoadingText] = useState("Initializing Research Environment...");
 
-  // Smooth 3-second (3000ms) progress loader
   useEffect(() => {
-    const totalDuration = 3000; // 3 seconds
-    const intervalTime = 30; // Update every 30ms
+    const totalDuration = 3000; // Exact 3-seconds
+    const intervalTime = 20; // 50 updates per second for ultra-smooth animation
     const totalSteps = totalDuration / intervalTime;
     let currentStep = 0;
 
@@ -23,22 +22,22 @@ export default function SystemBootLoader({ user, onComplete }: SystemBootLoaderP
       const nextProgress = Math.min(100, Math.round((currentStep / totalSteps) * 100));
       setProgress(nextProgress);
 
-      // Simple, elegant status updates during the 3-second load
-      if (nextProgress < 35) {
-        setLoadingText("Configuring secure workspace...");
-      } else if (nextProgress < 70) {
-        setLoadingText("Synchronizing research files...");
-      } else if (nextProgress < 95) {
-        setLoadingText("Optimizing workspace layout...");
+      // Cycle text perfectly according to progress percentage
+      if (nextProgress < 25) {
+        setLoadingText("Initializing Research Environment...");
+      } else if (nextProgress < 50) {
+        setLoadingText("Connecting to African Energy Knowledge Base...");
+      } else if (nextProgress < 75) {
+        setLoadingText("Preparing Research Workspace...");
       } else {
-        setLoadingText("Ready!");
+        setLoadingText("Loading Sustainable Energy Resources...");
       }
 
       if (currentStep >= totalSteps) {
         clearInterval(timer);
         setTimeout(() => {
           onComplete();
-        }, 150); // Small fluid delay to let the user feel the "100%" completion state
+        }, 150); // Fluid finish transition
       }
     }, intervalTime);
 
@@ -46,130 +45,183 @@ export default function SystemBootLoader({ user, onComplete }: SystemBootLoaderP
   }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#06080e] text-slate-100 flex flex-col items-center justify-center p-6 font-sans select-none overflow-hidden" id="bootloader_simple">
+    <div className="fixed inset-0 z-50 bg-white text-slate-900 flex flex-col items-center justify-between p-6 sm:p-10 font-sans select-none overflow-hidden" id="premium_white_loader">
       
-      {/* Interactive liquid fluid orb styles injected directly */}
+      {/* CSS Keyframes for premium clean white-and-green theme */}
       <style>{`
-        @keyframes blob-morph {
-          0%, 100% {
-            border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
-          }
-          25% {
-            border-radius: 70% 30% 52% 48% / 60% 40% 60% 40%;
-          }
-          50% {
-            border-radius: 30% 70% 60% 40% / 50% 60% 40% 50%;
-          }
-          75% {
-            border-radius: 60% 40% 40% 60% / 40% 50% 60% 50%;
-          }
+        @keyframes spin-clockwise {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
 
-        @keyframes blob-rotate {
-          0% {
-            transform: rotate(0deg) scale(0.97);
-          }
-          50% {
-            transform: rotate(180deg) scale(1.03);
-          }
-          100% {
-            transform: rotate(360deg) scale(0.97);
-          }
+        @keyframes spin-counterclockwise {
+          0% { transform: rotate(360deg); }
+          100% { transform: rotate(0deg); }
         }
 
-        @keyframes color-cycle {
-          0%, 100% {
-            border-color: rgba(6, 182, 212, 0.85);
-            background-color: rgba(6, 182, 212, 0.02);
-            box-shadow: 
-              0 0 50px rgba(6, 182, 212, 0.5),
-              0 0 100px rgba(6, 182, 212, 0.15),
-              inset 0 0 30px rgba(6, 182, 212, 0.4);
-          }
-          33% {
-            border-color: rgba(168, 85, 247, 0.85);
-            background-color: rgba(168, 85, 247, 0.02);
-            box-shadow: 
-              0 0 50px rgba(168, 85, 247, 0.5),
-              0 0 100px rgba(168, 85, 247, 0.15),
-              inset 0 0 30px rgba(168, 85, 247, 0.4);
-          }
-          66% {
-            border-color: rgba(234, 179, 8, 0.85);
-            background-color: rgba(234, 179, 8, 0.02);
-            box-shadow: 
-              0 0 50px rgba(234, 179, 8, 0.5),
-              0 0 100px rgba(234, 179, 8, 0.15),
-              inset 0 0 30px rgba(234, 179, 8, 0.4);
-          }
+        @keyframes logo-pulse {
+          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.15)); }
+          50% { transform: scale(1.025); filter: drop-shadow(0 0 25px rgba(16, 185, 129, 0.35)); }
         }
 
-        .blob-fluid-layer {
-          animation: 
-            blob-morph 8s ease-in-out infinite, 
-            blob-rotate 12s linear infinite, 
-            color-cycle 15s ease-in-out infinite;
+        @keyframes drift-particle-1 {
+          0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.25; }
+          50% { transform: translate(-15px, -25px) scale(1.2); opacity: 0.6; }
         }
 
-        .pulse-text {
-          animation: pulse-soft 2s ease-in-out infinite;
+        @keyframes drift-particle-2 {
+          0%, 100% { transform: translate(0, 0) scale(1.1); opacity: 0.3; }
+          50% { transform: translate(20px, -15px) scale(0.9); opacity: 0.5; }
         }
 
-        @keyframes pulse-soft {
-          0%, 100% { opacity: 0.7; }
-          50% { opacity: 1; }
+        @keyframes drift-particle-3 {
+          0%, 100% { transform: translate(0, 0) scale(0.9); opacity: 0.2; }
+          50% { transform: translate(-10px, 20px) scale(1.15); opacity: 0.45; }
         }
+
+        @keyframes drift-particle-4 {
+          0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.35; }
+          50% { transform: translate(15px, 15px) scale(0.85); opacity: 0.55; }
+        }
+
+        .ring-cw {
+          animation: spin-clockwise 12s linear infinite;
+        }
+
+        .ring-ccw {
+          animation: spin-counterclockwise 16s linear infinite;
+        }
+
+        .logo-pulsing-core {
+          animation: logo-pulse 3s ease-in-out infinite;
+        }
+
+        .particle-1 { animation: drift-particle-1 7s ease-in-out infinite; }
+        .particle-2 { animation: drift-particle-2 8s ease-in-out infinite; }
+        .particle-3 { animation: drift-particle-3 6s ease-in-out infinite; }
+        .particle-4 { animation: drift-particle-4 9s ease-in-out infinite; }
       `}</style>
 
-      {/* Subtle tech background patterns */}
-      <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] bg-[size:2.5rem_2.5rem] opacity-[0.02] pointer-events-none"></div>
+      {/* Decorative background grid matching the homepage */}
+      <div 
+        className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30 pointer-events-none"
+        id="loader_grid_pattern"
+      ></div>
 
-      {/* Main container with staggered load-in animation */}
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col items-center justify-center space-y-10"
-        id="bootloader_content"
-      >
-        {/* Dynamic Fluid Orb - matches the gorgeous organic liquid shader video */}
-        <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center" id="fluid_orb_container">
+      {/* Top spacing element to balance layout */}
+      <div className="w-full max-w-5xl flex items-center justify-between text-[10px] text-slate-400 font-mono tracking-widest pb-4 border-b border-slate-100 z-10" id="loader_top_meta">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+          <span>SVIC DATA SYNCING</span>
+        </div>
+        <div>
+          <span>SECURE ENVIRONMENT v2.4</span>
+        </div>
+      </div>
+
+      {/* CENTERPIECE: Logo with soft radial glow, rotating rings, pulse, and floating particles */}
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10 py-12" id="loader_centerpiece_stage">
+        
+        {/* Soft green radial glow background */}
+        <div 
+          className="absolute w-80 h-80 bg-gradient-to-tr from-emerald-100/40 via-teal-50/20 to-transparent rounded-full filter blur-3xl pointer-events-none -z-10"
+          id="loader_radial_glow"
+        ></div>
+
+        {/* Outer Orbit Area for rings & particles */}
+        <div className="relative w-72 h-72 sm:w-80 sm:h-80 flex items-center justify-center" id="rings_and_logo_container">
           
-          {/* Backlight soft ambient light */}
-          <div className="absolute inset-4 rounded-full bg-cyan-500/5 filter blur-[50px] pointer-events-none"></div>
+          {/* Subtle Floating Green/Teal Particles */}
+          <div className="absolute w-3 h-3 bg-emerald-400 rounded-full blur-[1px] particle-1 top-8 left-16"></div>
+          <div className="absolute w-2 h-2 bg-teal-400 rounded-full blur-[0.5px] particle-2 top-16 right-12"></div>
+          <div className="absolute w-2.5 h-2.5 bg-emerald-500 rounded-full blur-[1px] particle-3 bottom-16 left-12"></div>
+          <div className="absolute w-1.5 h-1.5 bg-teal-500 rounded-full particle-4 bottom-12 right-20"></div>
 
-          {/* Liquid Glass Fluid Core */}
+          {/* Clockwise rotating ring (thin dashed green border) */}
           <div 
-            className="absolute w-44 h-44 sm:w-52 sm:h-52 bg-slate-950/90 border-2 border-transparent blob-fluid-layer flex items-center justify-center overflow-hidden" 
-            id="fluid_orb_core"
-          >
-            {/* Shading layer to produce that 3D glass look */}
-            <div className="absolute inset-1.5 bg-gradient-to-tr from-slate-950 via-transparent to-white/[0.04] rounded-full mix-blend-overlay"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.06)_0%,transparent_50%)] rounded-full"></div>
+            className="absolute inset-2 border border-dashed border-emerald-300/60 rounded-full ring-cw"
+            id="ring_outer_clockwise"
+          ></div>
+
+          {/* Counterclockwise rotating ring (another radius with different dash styling) */}
+          <div 
+            className="absolute inset-8 border border-dotted border-emerald-500/30 rounded-full ring-ccw"
+            id="ring_inner_counterclockwise"
+          ></div>
+
+          {/* Premium Logo Centerpiece (Pulsing) */}
+          <div className="absolute flex flex-col items-center gap-4 text-center logo-pulsing-core" id="loader_core_logo">
+            {/* Logo Icon Container */}
+            <div className="p-3 bg-emerald-50 border border-emerald-100/60 rounded-2xl shadow-sm">
+              <img 
+                src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
+                alt="Bioenergy Nexus Logo" 
+                referrerPolicy="no-referrer"
+                className="w-10 h-10 object-contain"
+              />
+            </div>
             
-            {/* Minimal loader spinner inside core */}
-            <Loader2 className="w-5 h-5 text-slate-400/30 animate-spin" />
+            {/* Title / Brand Text */}
+            <div>
+              <span className="block text-2xl font-display font-extrabold tracking-tight text-slate-900 leading-none">
+                Bioenergy <span className="text-emerald-600">Nexus</span>
+              </span>
+              <span className="block text-[10px] font-mono tracking-widest text-slate-400 uppercase mt-2">
+                Research & Sustainability
+              </span>
+            </div>
           </div>
 
         </div>
 
-        {/* Text Section */}
-        <div className="text-center space-y-3 px-4" id="bootloader_label_wrapper">
-          <h2 className="text-sm font-bold tracking-[0.3em] text-slate-400 uppercase pulse-text" id="bootloader_status">
-            Loading...
-          </h2>
+        {/* Loading Indicators & Progress bar */}
+        <div className="w-full max-w-sm px-4 mt-8 space-y-4" id="loader_status_area">
           
-          {/* Dynamic Percentage Count */}
-          <div className="text-2xl sm:text-3xl font-mono font-bold text-white tracking-tight" id="bootloader_percentage">
-            {progress}%
+          {/* Animated Status Cycling Text */}
+          <div className="h-6 flex items-center justify-center text-center" id="loader_status_text_wrapper">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={loadingText}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.2 }}
+                className="text-xs font-semibold text-slate-600 tracking-wide font-mono"
+              >
+                {loadingText}
+              </motion.p>
+            </AnimatePresence>
           </div>
 
-          {/* Subtext description of current task */}
-          <p className="text-[11px] text-slate-500 font-mono tracking-wider h-4 flex items-center justify-center transition-all" id="bootloader_desc">
-            {loadingText}
-          </p>
+          {/* Thin rounded green progress bar */}
+          <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/40" id="progress_bar_bg">
+            <motion.div 
+              className="h-full bg-emerald-600 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.05, ease: 'linear' }}
+              id="progress_bar_fill"
+            ></motion.div>
+          </div>
+
+          {/* Simple digital counter */}
+          <div className="text-center font-mono text-[10px] text-slate-400 font-bold" id="progress_digit">
+            {progress}% COMPLETED
+          </div>
+
         </div>
 
-      </motion.div>
+      </div>
+
+      {/* Bottom Bar: Tagline "Empowering Africa's Energy Future Through Research" */}
+      <div 
+        className="w-full max-w-5xl flex items-center justify-center text-center pt-4 border-t border-slate-100 z-10" 
+        id="loader_bottom_tagline"
+      >
+        <span className="text-xs text-slate-400 font-medium tracking-wide">
+          Empowering Africa&apos;s Energy Future Through Research
+        </span>
+      </div>
 
     </div>
   );
