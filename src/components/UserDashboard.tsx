@@ -115,7 +115,7 @@ export default function UserDashboard({
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5" />
-                  Member since {new Date(user.metadata.creationTime || '').toLocaleDateString(undefined, { year: 'numeric', month: 'short' })}
+                  Member since {user.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString(undefined, { year: 'numeric', month: 'short' }) : 'July 2026'}
                 </span>
               </div>
             </div>
