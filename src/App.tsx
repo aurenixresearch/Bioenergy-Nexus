@@ -28,13 +28,18 @@ import Footer from './components/Footer';
 import SystemBootLoader from './components/SystemBootLoader';
 
 export default function App() {
+  // Sync sessionStorage for loading animation on fresh load or reload
+  if (typeof window !== 'undefined') {
+    sessionStorage.removeItem('nexus_system_initialized');
+  }
+
   // Auth state
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Layout View: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing'
-  const [currentView, setView] = useState<'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing'>('home');
+  const [currentView, setView] = useState<'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing'>('initializing');
 
   // Sidebar collapsed state and mobile check
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -887,7 +892,7 @@ export default function App() {
                   user={user}
                   onComplete={() => {
                     sessionStorage.setItem('nexus_system_initialized', 'true');
-                    setView('dashboard');
+                    setView(user ? 'dashboard' : 'home');
                   }}
                 />
               </motion.div>
