@@ -64,7 +64,24 @@ export default function App() {
   // Listen to Auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      // If we are currently using sandbox demo mode, let it persist instead of null auth
+      if (currentUser) {
+        // Real authenticated Firebase user is present (e.g. Google Sign-In)
+        // We MUST clear any cached sandbox/guest demo mode and use the real user details.
+        localStorage.removeItem('nexus_demo_mode');
+        localStorage.removeItem('nexus_demo_user');
+        
+        setUser(currentUser);
+        setAuthLoading(false);
+        refreshAllUserData(currentUser.uid);
+        if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
+          setView('initializing');
+        } else {
+          setView('dashboard');
+        }
+        return;
+      }
+
+      // If no real Firebase user is logged in, fallback to sandbox demo mode if it was active
       if (localStorage.getItem('nexus_demo_mode') === 'true') {
         const storedDemoUser = localStorage.getItem('nexus_demo_user');
         if (storedDemoUser) {
@@ -85,23 +102,13 @@ export default function App() {
         }
       }
 
-      setUser(currentUser);
+      setUser(null);
       setAuthLoading(false);
-      
-      if (currentUser) {
-        refreshAllUserData(currentUser.uid);
-        if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
-          setView('initializing');
-        } else {
-          setView('dashboard');
-        }
-      } else {
-        setSavedPaperIds([]);
-        setActiveInquiries([]);
-        setActivePartnerships([]);
-        // Keep the view intact unless we're on dashboard (which requires login)
-        setView(prev => prev === 'dashboard' ? 'home' : prev);
-      }
+      setSavedPaperIds([]);
+      setActiveInquiries([]);
+      setActivePartnerships([]);
+      // Keep the view intact unless we're on dashboard (which requires login)
+      setView(prev => prev === 'dashboard' ? 'home' : prev);
     });
     return () => unsubscribe();
   }, []);
@@ -739,6 +746,8 @@ export default function App() {
                   authError={authError}
                   setAuthError={setAuthError}
                   onSuccess={(authenticatedUser) => {
+                    localStorage.removeItem('nexus_demo_mode');
+                    localStorage.removeItem('nexus_demo_user');
                     setUser(authenticatedUser);
                     if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
                       setView('initializing');
