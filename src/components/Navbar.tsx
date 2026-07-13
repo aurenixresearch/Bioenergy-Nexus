@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Leaf, Menu, X, User, LogOut, BookOpen, LayoutDashboard } from 'lucide-react';
+import { Leaf, Menu, X, User, LogOut, BookOpen, LayoutDashboard, ArrowRight } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { motion } from 'motion/react';
 
@@ -7,8 +7,8 @@ interface NavbarProps {
   user: FirebaseUser | null;
   onSignIn: () => void;
   onSignOut: () => void;
-  currentView: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved';
-  setView: (view: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved') => void;
+  currentView: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers';
+  setView: (view: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers') => void;
 }
 
 export default function Navbar({ 
@@ -20,7 +20,7 @@ export default function Navbar({
 }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleNavClick = (sectionId: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'contact') => {
+  const handleNavClick = (sectionId: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'contact' | 'researchers') => {
     setIsOpen(false);
     setView(sectionId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -28,27 +28,29 @@ export default function Navbar({
 
   const navItems = [
     { label: 'Home', id: 'home' as const },
-    { label: 'About Us', id: 'about' as const },
+    { label: 'About', id: 'about' as const },
+    { label: 'Researchers', id: 'researchers' as const },
+    { label: 'Research', id: 'research' as const },
     { label: 'Services', id: 'services' as const },
-    { label: 'Research Hub', id: 'research' as const },
     { label: 'Collaborations', id: 'collaboration' as const },
-    { label: 'Contact Us', id: 'contact' as const },
+    { label: 'Contact', id: 'contact' as const },
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm" id="main_navbar">
+    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-xs" id="main_navbar">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20">
-          {/* Logo and brand */}
-          <div className="flex items-center">
+        <div className="flex items-center justify-between h-20 gap-4">
+          
+          {/* 1. Left Column: Logo and brand */}
+          <div className="flex items-center justify-start shrink-0">
             <motion.button 
               onClick={() => { setView('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
-              className="flex items-center gap-2.5 cursor-pointer text-left focus:outline-none"
+              className="flex items-center gap-2 lg:gap-3 cursor-pointer text-left focus:outline-none"
               id="brand_logo_btn"
             >
-              <div className="p-2 bg-emerald-50 rounded-xl">
+              <div className="p-2 bg-emerald-50 rounded-xl shrink-0 shadow-xs">
                 <img 
                   src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
                   alt="Bioenergy Nexus Logo" 
@@ -56,41 +58,43 @@ export default function Navbar({
                   className="w-6 h-6 object-contain"
                 />
               </div>
-              <div>
-                <span className="block text-xl font-display font-bold tracking-tight text-slate-900 leading-none">
+              <div className="whitespace-nowrap">
+                <span className="block text-base lg:text-lg font-display font-bold tracking-tight text-slate-900 leading-none">
                   Bioenergy <span className="text-emerald-600">Nexus</span>
                 </span>
-                <span className="block text-[10px] font-mono tracking-wider text-slate-400 uppercase mt-1">
+                <span className="block text-[9px] font-mono tracking-wider text-slate-400 uppercase mt-1">
                   Research & Sustainability
                 </span>
               </div>
             </motion.button>
           </div>
 
-          {/* Desktop Nav Items */}
-          <div className="hidden md:flex items-center gap-1 lg:gap-2">
+          {/* 2. Center Column: Desktop Nav Items (Perfectly Centered & Spacious!) */}
+          <div className="hidden md:flex items-center justify-center gap-1 lg:gap-2 xl:gap-3 flex-1 px-4">
             {!user && navItems.map((item) => (
               <motion.button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                className={`px-2.5 lg:px-3.5 xl:px-4 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-150 cursor-pointer whitespace-nowrap ${
                   currentView === item.id
-                    ? 'text-emerald-700 bg-emerald-50/80 shadow-inner'
-                    : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50'
+                    ? 'text-emerald-600 bg-emerald-50/50'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50/50'
                 }`}
                 id={`nav_btn_${item.id}`}
               >
                 {item.label}
               </motion.button>
             ))}
+          </div>
 
-            {/* Auth CTA */}
+          {/* 3. Right Column: Auth CTA / User Details */}
+          <div className="hidden md:flex items-center justify-end shrink-0">
             {user ? (
-              <div className="flex items-center gap-3 ml-2">
+              <div className="flex items-center gap-3">
                 <div 
-                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 bg-slate-50 rounded-full"
+                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 bg-slate-50 rounded-full border border-slate-100"
                   title={user.email || ''}
                 >
                   {user.photoURL ? (
@@ -113,7 +117,7 @@ export default function Navbar({
                   onClick={onSignOut}
                   whileHover={{ scale: 1.05, y: -0.5 }}
                   whileTap={{ scale: 0.95 }}
-                  className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
+                  className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 cursor-pointer"
                   title="Sign Out"
                   id="nav_logout_btn"
                 >
@@ -123,13 +127,14 @@ export default function Navbar({
             ) : (
               <motion.button
                 onClick={onSignIn}
-                whileHover={{ scale: 1.03, y: -1 }}
+                whileHover={{ scale: 1.03, y: -0.5 }}
                 whileTap={{ scale: 0.97 }}
-                className="ml-2 flex items-center gap-2 px-4.5 py-2.5 bg-emerald-700 text-white hover:bg-emerald-800 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-full text-xs lg:text-sm font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer whitespace-nowrap animate-in fade-in zoom-in-95 duration-300"
                 id="nav_signin_btn"
               >
-                <User className="w-4 h-4" />
-                Start Documenting
+                <User className="w-4 h-4 shrink-0" />
+                <span>Start Documenting</span>
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </motion.button>
             )}
           </div>

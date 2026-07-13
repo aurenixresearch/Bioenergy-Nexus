@@ -25,8 +25,8 @@ import { User as FirebaseUser } from 'firebase/auth';
 
 interface FloatingAsideProps {
   user: FirebaseUser | null;
-  currentView: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved';
-  setView: (view: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved') => void;
+  currentView: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers';
+  setView: (view: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers') => void;
   isCollapsed: boolean;
   setIsCollapsed: (collapsed: boolean) => void;
   onSignOut?: () => void;
@@ -52,6 +52,7 @@ export default function FloatingAside({
   // Flat list of navigation items
   const navItems = [
     { label: 'User Dashboard', id: 'dashboard' as const, icon: LayoutDashboard, desc: 'Manage your submissions' },
+    { label: 'Explore Researchers', id: 'researchers' as const, icon: Users, desc: 'Discover experts across Africa' },
     { label: 'Research Hub', id: 'research' as const, icon: BookOpen, desc: 'Explore published research' },
     { label: 'Saved Studies', id: 'saved' as const, icon: Bookmark, desc: 'Your bookmarked research' },
     { label: 'Services', id: 'services' as const, icon: HeartHandshake, desc: 'Request specialized consulting' },
@@ -60,7 +61,7 @@ export default function FloatingAside({
     { label: 'Contact Us', id: 'contact' as const, icon: Mail, desc: 'Get in touch with our team' },
   ];
 
-  const handleNav = (id: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved') => {
+  const handleNav = (id: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers') => {
     setView(id);
     setIsMobileOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });

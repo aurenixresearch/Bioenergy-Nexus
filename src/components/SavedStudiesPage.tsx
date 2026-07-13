@@ -99,6 +99,8 @@ export default function SavedStudiesPage({
         isSaved={savedPaperIds.includes(selectedPaper.id)}
         onSaveToggle={() => handleUnsave(selectedPaper.id)}
         onDownload={handleDownload}
+        user={user}
+        onSignIn={onSignIn}
       />
     );
   }

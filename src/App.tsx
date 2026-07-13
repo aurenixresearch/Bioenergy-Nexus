@@ -26,6 +26,7 @@ import ContactSection from './components/ContactSection';
 import UserDashboard from './components/UserDashboard';
 import Footer from './components/Footer';
 import SystemBootLoader from './components/SystemBootLoader';
+import ExploreResearchers from './components/ExploreResearchers';
 
 export default function App() {
   // Sync sessionStorage for loading animation on fresh load or reload
@@ -38,8 +39,8 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Layout View: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing'
-  const [currentView, setView] = useState<'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing'>('initializing');
+  // Layout View: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers'
+  const [currentView, setView] = useState<'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers'>('initializing');
 
   // Sidebar collapsed state and mobile check
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -737,6 +738,21 @@ export default function App() {
                   onSignIn={() => setView('signin')}
                   savedPaperIds={savedPaperIds}
                   setSavedPaperIds={setSavedPaperIds}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'researchers' && (
+              <motion.div
+                key="researchers-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <ExploreResearchers 
+                  user={user}
+                  onSignIn={() => setView('signin')}
                 />
               </motion.div>
             )}

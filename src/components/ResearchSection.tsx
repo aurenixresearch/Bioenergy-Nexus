@@ -3,9 +3,10 @@ import { Search, Save, Trash2, Download, Plus, BookOpen, AlertCircle, CheckCircl
 import { User as FirebaseUser } from 'firebase/auth';
 import { ResearchPaper } from '../types';
 import { RESEARCH_PAPERS } from '../data';
-import { savePaper, unsavePaper, getSavedPaperIds, addCustomPaper, getCustomPapers } from '../services/db';
+import { savePaper, unsavePaper, addCustomPaper, getCustomPapers } from '../services/db';
 import { motion, AnimatePresence } from 'motion/react';
 import ResearchDetail from './ResearchDetail';
+import PublishWizard from './PublishWizard';
 
 interface ResearchSectionProps {
   user: FirebaseUser | null;
@@ -27,17 +28,11 @@ export default function ResearchSection({
   const [selectedPaper, setSelectedPaper] = useState<ResearchPaper | null>(null);
   const [animatingPaperIds, setAnimatingPaperIds] = useState<string[]>([]);
   
-  // Submit Form modal
+  // PublishWizard open state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newPaperTitle, setNewPaperTitle] = useState('');
-  const [newPaperAuthor, setNewPaperAuthor] = useState('');
-  const [newPaperCategory, setNewPaperCategory] = useState<ResearchPaper['category']>('Bioenergy Technology');
-  const [newPaperAbstract, setNewPaperAbstract] = useState('');
-  const [newPaperYear, setNewPaperYear] = useState(new Date().getFullYear());
-  
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  // Load custom papers from Firestore on startup / when user changes
+  // Load custom papers from Firestore on startup
   useEffect(() => {
     async function loadPapers() {
       try {
@@ -54,6 +49,30 @@ export default function ResearchSection({
   useEffect(() => {
     setAllPapers([...RESEARCH_PAPERS, ...customPapers]);
   }, [customPapers]);
+
+  // Deep-link location hash check for /research/{researchId} routing
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#/research/')) {
+        const paperId = hash.replace('#/research/', '');
+        const found = allPapers.find(p => p.id === paperId);
+        if (found) {
+          setSelectedPaper(found);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } else {
+        setSelectedPaper(null);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    // Trigger initially once papers are loaded
+    if (allPapers.length > 0) {
+      handleHashChange();
+    }
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [allPapers]);
 
   // Handle Save/Unsave
   const handleSaveToggle = async (paperId: string) => {
@@ -105,29 +124,12 @@ export default function ResearchSection({
     }, 4000);
   };
 
-  // Handle Custom Submission
-  const handleAddPaperSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Handle Publish Wizard Submit
+  const handlePublishWizardSubmit = async (paperData: Omit<ResearchPaper, 'id'>) => {
     if (!user) return;
-
-    if (!newPaperTitle || !newPaperAuthor || !newPaperAbstract) {
-      showNotification('All fields are required to submit.', 'error');
-      return;
-    }
-
     try {
-      const paperData: Omit<ResearchPaper, 'id'> = {
-        title: newPaperTitle,
-        author: newPaperAuthor,
-        category: newPaperCategory,
-        abstract: newPaperAbstract,
-        downloadUrl: '#',
-        publishedYear: Number(newPaperYear),
-      };
-
       const docId = await addCustomPaper(paperData, user.uid, user.email || '');
       
-      // Update local state
       const createdPaper: ResearchPaper = {
         id: docId,
         ...paperData,
@@ -136,17 +138,11 @@ export default function ResearchSection({
 
       setCustomPapers(prev => [...prev, createdPaper]);
       setIsModalOpen(false);
-      
-      // Reset form
-      setNewPaperTitle('');
-      setNewPaperAuthor('');
-      setNewPaperAbstract('');
-      setNewPaperYear(new Date().getFullYear());
-      
       showNotification('Research entry contributed successfully to Nexus Repository!', 'success');
     } catch (err) {
       console.error('Error adding custom paper:', err);
       showNotification('Could not submit paper. Please try again.', 'error');
+      throw err;
     }
   };
 
@@ -174,12 +170,15 @@ export default function ResearchSection({
       <ResearchDetail
         paper={selectedPaper}
         onBack={() => {
+          window.location.hash = '';
           setSelectedPaper(null);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         isSaved={savedPaperIds.includes(selectedPaper.id)}
         onSaveToggle={() => handleSaveToggle(selectedPaper.id)}
         onDownload={handleDownload}
+        user={user}
+        onSignIn={onSignIn}
       />
     );
   }
@@ -223,7 +222,7 @@ export default function ResearchSection({
             id="contribute_research_btn"
           >
             <Plus className="w-4 h-4" />
-            Contribute a Study
+            Publish a Research
           </motion.button>
         </div>
 
@@ -280,6 +279,7 @@ export default function ResearchSection({
 
                   <div 
                     onClick={() => {
+                      window.location.hash = `#/research/${paper.id}`;
                       setSelectedPaper(paper);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
@@ -394,113 +394,14 @@ export default function ResearchSection({
           )}
         </div>
 
-        {/* Modal: Contribute Study */}
+        {/* Modal: PublishWizard Multi-step publish form */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" id="contribute_modal">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200">
-              
-              {/* Header */}
-              <div className="px-6 py-5 bg-slate-950 text-white flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-emerald-400" />
-                  <span className="font-display font-bold text-base">Contribute Research Entry</span>
-                </div>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-1.5 hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
-                  id="close_contribute_modal"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Form */}
-              <form onSubmit={handleAddPaperSubmit} className="p-6 space-y-4">
-                <div className="space-y-1 text-left">
-                  <label className="block text-xs font-bold text-slate-700 uppercase">Document Title</label>
-                  <input
-                    type="text"
-                    required
-                    value={newPaperTitle}
-                    onChange={(e) => setNewPaperTitle(e.target.value)}
-                    placeholder="e.g. Biomethane Recovery Systems"
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm outline-none focus:border-emerald-500 focus:bg-white"
-                  />
-                </div>
-
-                <div className="space-y-1 text-left">
-                  <label className="block text-xs font-bold text-slate-700 uppercase">Author Name / Entity</label>
-                  <input
-                    type="text"
-                    required
-                    value={newPaperAuthor}
-                    onChange={(e) => setNewPaperAuthor(e.target.value)}
-                    placeholder="e.g. F. Olalekan or University of Ibadan"
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm outline-none focus:border-emerald-500 focus:bg-white"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1 text-left">
-                    <label className="block text-xs font-bold text-slate-700 uppercase">Category</label>
-                    <select
-                      value={newPaperCategory}
-                      onChange={(e) => setNewPaperCategory(e.target.value as ResearchPaper['category'])}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm outline-none focus:border-emerald-500"
-                    >
-                      <option value="Bioenergy Technology">Bioenergy Technology</option>
-                      <option value="Waste-to-Energy">Waste-to-Energy</option>
-                      <option value="Environmental Sustainability">Environmental Sustainability</option>
-                      <option value="Climate & Energy Policy">Climate & Energy Policy</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1 text-left">
-                    <label className="block text-xs font-bold text-slate-700 uppercase">Year Published</label>
-                    <input
-                      type="number"
-                      min="2000"
-                      max={new Date().getFullYear() + 1}
-                      required
-                      value={newPaperYear}
-                      onChange={(e) => setNewPaperYear(Number(e.target.value))}
-                      className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm outline-none focus:border-emerald-500 focus:bg-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1 text-left">
-                  <label className="block text-xs font-bold text-slate-700 uppercase">Abstract Summary</label>
-                  <textarea
-                    rows={4}
-                    required
-                    value={newPaperAbstract}
-                    onChange={(e) => setNewPaperAbstract(e.target.value)}
-                    placeholder="Provide a detailed summary of the research methodology, waste profiles analyzed, or policy frameworks suggested..."
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm outline-none focus:border-emerald-500 focus:bg-white resize-none"
-                  ></textarea>
-                </div>
-
-                <div className="pt-4 flex items-center justify-end gap-3">
-                  <motion.button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-semibold text-slate-700 transition-colors cursor-pointer border-0"
-                  >
-                    Cancel
-                  </motion.button>
-                  <motion.button
-                    type="submit"
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="px-5 py-2 bg-emerald-700 text-white hover:bg-emerald-800 rounded-xl text-sm font-semibold shadow-sm transition-colors cursor-pointer border-0"
-                  >
-                    Submit Study Entry
-                  </motion.button>
-                </div>
-              </form>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" id="contribute_modal">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+              <PublishWizard
+                onClose={() => setIsModalOpen(false)}
+                onSubmit={handlePublishWizardSubmit}
+              />
             </div>
           </div>
         )}

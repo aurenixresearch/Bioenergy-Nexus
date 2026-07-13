@@ -151,6 +151,51 @@
         }
       },
       "required": ["title", "author", "category", "abstract", "downloadUrl", "publishedYear", "isCustom", "userId", "userEmail", "createdAt"]
+    },
+    "user_profile": {
+      "title": "User Profile",
+      "description": "Additional registration and onboarding details of a registered scholar.",
+      "type": "object",
+      "properties": {
+        "fullName": {
+          "type": "string",
+          "description": "The full name of the user."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The email of the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "The selected user role (e.g., Student, Researcher, etc.)."
+        },
+        "country": {
+          "type": "string",
+          "description": "The country of origin or residence."
+        },
+        "institution": {
+          "type": "string",
+          "description": "Affiliated institution or organization."
+        },
+        "researchInterests": {
+          "type": "array",
+          "description": "The selected research interest tags."
+        },
+        "termsAccepted": {
+          "type": "boolean",
+          "description": "True indicating agreement to the Terms of Service and Privacy Policy."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Onboarding creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Profile update timestamp."
+        }
+      },
+      "required": ["fullName", "email", "role", "country", "termsAccepted"]
     }
   },
   "firestore": {
@@ -169,6 +214,10 @@
     "custom_papers": {
       "schema": "custom_paper",
       "description": "Member contributed research papers."
+    },
+    "users": {
+      "schema": "user_profile",
+      "description": "Registered scholar profile details."
     }
   }
 }
