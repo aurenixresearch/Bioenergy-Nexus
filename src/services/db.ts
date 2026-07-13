@@ -413,6 +413,41 @@ export async function getUserProfile(userId: string): Promise<any> {
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() };
     }
+
+    // Auto-create a profile doc in Firestore using Google account information if the user is authenticated via Firebase
+    const currentUser = auth.currentUser;
+    if (currentUser && currentUser.uid === userId && !currentUser.isAnonymous) {
+      const defaultProfile = {
+        fullName: currentUser.displayName || 'Google Scholar',
+        email: currentUser.email || '',
+        role: 'Academic Partner',
+        country: 'Nigeria',
+        institution: 'Bioenergy Nexus Network',
+        researchInterests: ['Bioenergy', 'Waste-to-Energy'],
+        termsAccepted: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      try {
+        await setDoc(docRef, {
+          fullName: defaultProfile.fullName,
+          email: defaultProfile.email,
+          role: defaultProfile.role,
+          country: defaultProfile.country,
+          institution: defaultProfile.institution,
+          researchInterests: defaultProfile.researchInterests,
+          termsAccepted: defaultProfile.termsAccepted,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+        return { id: userId, ...defaultProfile };
+      } catch (e) {
+        console.warn('Error auto-creating profile in Firestore on fetch, returning local object:', e);
+        return { id: userId, ...defaultProfile };
+      }
+    }
+
     return null;
   } catch (error) {
     console.warn('Error fetching user profile from Firestore, trying local storage fallback:', error);

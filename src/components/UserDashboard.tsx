@@ -246,7 +246,7 @@ export default function UserDashboard({
                 )}
               </div>
               <h2 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight flex items-center gap-2">
-                Welcome back, {user.displayName || 'Researcher'}
+                Welcome back, {userProfile?.fullName || user.displayName || 'Researcher'}
                 {userProfile?.verificationStatus === 'verified' && (
                   <CheckCircle2 className="w-6 h-6 text-blue-400 fill-blue-950 stroke-[2.5]" title="Verified Scholar Badge" />
                 )}
@@ -254,7 +254,7 @@ export default function UserDashboard({
               <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-xs text-emerald-200/90 font-sans mt-2">
                 <span className="flex items-center gap-1.5">
                   <Mail className="w-3.5 h-3.5" />
-                  {user.email}
+                  {userProfile?.email || user.email}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5" />
