@@ -87,6 +87,15 @@ export default function App() {
         if (storedDemoUser) {
           try {
             const demoObj = JSON.parse(storedDemoUser);
+            // Clear and delete Guest Researcher session immediately if found
+            if (demoObj.uid === 'sandbox-guest-user' || demoObj.email === 'guest.researcher@bioenergy-nexus.org') {
+              localStorage.removeItem('nexus_demo_mode');
+              localStorage.removeItem('nexus_demo_user');
+              setUser(null);
+              setAuthLoading(false);
+              setView('home');
+              return;
+            }
             setUser(demoObj);
             setAuthLoading(false);
             refreshAllUserData(demoObj.uid);
@@ -146,49 +155,22 @@ export default function App() {
         setView('dashboard');
       }
     } catch (err: any) {
-      console.warn('Google Sign-In failed or was restricted, falling back to Sandbox User Mode silently:', err);
-      // Silently fall back to Sandbox Guest login to avoid showing any error popup
-      await handleGuestSignIn();
-    }
-  };
+      console.warn('Google Sign-In failed or was restricted:', err);
+      const errStr = String(err);
+      const errCode = err?.code || '';
 
-  // Demo / Guest Sandbox Account sign-in
-  const handleGuestSignIn = async () => {
-    try {
-      setAuthError(null);
-      setAuthLoading(true);
-      
-      // Try real Firebase Anonymous sign in if enabled
-      try {
-        await signInAnonymously(auth);
-        localStorage.removeItem('nexus_demo_mode');
-        localStorage.removeItem('nexus_demo_user');
-      } catch (fbErr) {
-        console.warn('Firebase Anonymous sign in not available/disabled, launching Client Sandbox mode:', fbErr);
-        // Client-side sandbox bypass fallback
-        const demoUser = {
-          uid: 'sandbox-guest-user',
-          email: 'guest.researcher@bioenergy-nexus.org',
-          displayName: 'Guest Researcher',
-          photoURL: null,
-          isAnonymous: true
-        };
-        localStorage.setItem('nexus_demo_mode', 'true');
-        localStorage.setItem('nexus_demo_user', JSON.stringify(demoUser));
-        setUser(demoUser as any);
-        await refreshAllUserData(demoUser.uid);
-      }
-      if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
-        setView('initializing');
+      if (errCode === 'auth/popup-blocked' || errStr.includes('popup-blocked')) {
+        setAuthError('popup-blocked');
+      } else if (
+        errCode === 'auth/popup-closed-by-user' || 
+        errCode === 'auth/cancelled-popup-request' ||
+        errStr.includes('popup-closed-by-user') ||
+        errStr.includes('cancelled-popup-request')
+      ) {
+        setAuthError('popup-closed');
       } else {
-        setView('dashboard');
+        setAuthError(err?.message || errStr);
       }
-    } catch (err: any) {
-      console.error('Guest Sign-In Error:', err);
-      // Ensure we do not set any authError to prevent the access options popup from showing
-      setAuthError(null);
-    } finally {
-      setAuthLoading(false);
     }
   };
 
@@ -756,14 +738,17 @@ export default function App() {
                     }
                   }}
                   onGoogleSignIn={handleSignIn}
-                  onGuestSignIn={async (customProfile) => {
+                   onGuestSignIn={async (customProfile) => {
                     setAuthError(null);
                     setAuthLoading(true);
                     try {
+                      if (!customProfile) {
+                        throw new Error('No sandbox profile selected.');
+                      }
                       const demoUser = {
-                        uid: customProfile?.uid || 'sandbox-guest-user',
-                        email: customProfile?.email || 'guest.researcher@bioenergy-nexus.org',
-                        displayName: customProfile?.displayName || 'Guest Researcher',
+                        uid: customProfile.uid,
+                        email: customProfile.email,
+                        displayName: customProfile.displayName,
                         photoURL: null,
                         isAnonymous: true
                       };
