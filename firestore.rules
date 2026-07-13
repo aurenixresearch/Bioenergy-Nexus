@@ -67,23 +67,49 @@ service cloud.firestore {
     // Collection: custom_papers
     match /custom_papers/{paperId} {
       allow read: if true;
-      allow create, update: if isSignedIn() && isValidCustomPaper(incoming()) && incoming().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidCustomPaper(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if (
+        // Action 1: Counter / Engagement metrics (Views, Downloads, Bookmarks) - Anyone can update
+        (incoming().diff(existing()).affectedKeys().hasOnly(['viewsCount', 'downloadsCount', 'bookmarksCount']) &&
+         incoming().userId == existing().userId && incoming().createdAt == existing().createdAt &&
+         (!incoming().keys().contains('viewsCount') || (incoming().viewsCount is int || incoming().viewsCount is float)) &&
+         (!incoming().keys().contains('downloadsCount') || (incoming().downloadsCount is int || incoming().downloadsCount is float)) &&
+         (!incoming().keys().contains('bookmarksCount') || (incoming().bookmarksCount is int || incoming().bookmarksCount is float))) ||
+        
+        // Action 2: Comments and Contributions - Signed in users
+        (isSignedIn() && incoming().diff(existing()).affectedKeys().hasOnly(['comments', 'contributions']) &&
+         incoming().userId == existing().userId && incoming().createdAt == existing().createdAt &&
+         (!incoming().keys().contains('comments') || (incoming().comments is list && incoming().comments.size() <= 500)) &&
+         (!incoming().keys().contains('contributions') || (incoming().contributions is list && incoming().contributions.size() <= 500))) ||
+        
+        // Action 3: Paper edits or new versions - Only the author (owner)
+        (isSignedIn() && existing().userId == request.auth.uid && incoming().userId == existing().userId && incoming().createdAt == existing().createdAt &&
+         isValidCustomPaper(incoming()))
+      );
       allow delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
     }
 
     function isValidCustomPaper(data) {
       return data.keys().hasAll(['title', 'author', 'category', 'abstract', 'downloadUrl', 'publishedYear', 'isCustom', 'userId', 'userEmail', 'createdAt']) &&
-             data.keys().size() == 10 &&
-             data.title is string && data.title.size() <= 500 &&
-             data.author is string && data.author.size() <= 200 &&
-             data.category is string && data.category.size() <= 100 &&
-             data.abstract is string && data.abstract.size() <= 5000 &&
-             data.downloadUrl is string && data.downloadUrl.size() <= 500 &&
+             data.title is string && data.title.size() <= 1000 &&
+             data.author is string && data.author.size() <= 500 &&
+             data.category is string && data.category.size() <= 200 &&
+             data.abstract is string && data.abstract.size() <= 10000 &&
+             data.downloadUrl is string && data.downloadUrl.size() <= 1000 &&
              (data.publishedYear is int || data.publishedYear is float) &&
              data.isCustom is bool &&
              data.userId is string && data.userId.size() <= 128 &&
              data.userEmail is string && data.userEmail.size() <= 128 &&
-             data.createdAt is string && data.createdAt.size() <= 50;
+             data.createdAt is string && data.createdAt.size() <= 100 &&
+             (!data.keys().contains('viewsCount') || (data.viewsCount is int || data.viewsCount is float)) &&
+             (!data.keys().contains('downloadsCount') || (data.downloadsCount is int || data.downloadsCount is float)) &&
+             (!data.keys().contains('bookmarksCount') || (data.bookmarksCount is int || data.bookmarksCount is float)) &&
+             (!data.keys().contains('comments') || (data.comments is list && data.comments.size() <= 500)) &&
+             (!data.keys().contains('contributions') || (data.contributions is list && data.contributions.size() <= 500)) &&
+             (!data.keys().contains('versions') || (data.versions is list && data.versions.size() <= 50)) &&
+             (!data.keys().contains('researchMethodology') || (data.researchMethodology is string && data.researchMethodology.size() <= 10000)) &&
+             (!data.keys().contains('keyFindings') || (data.keyFindings is string && data.keyFindings.size() <= 10000)) &&
+             (!data.keys().contains('conclusion') || (data.conclusion is string && data.conclusion.size() <= 10000));
     }
 
     // Collection: users
@@ -95,14 +121,31 @@ service cloud.firestore {
 
     function isValidUserProfile(data) {
       return data.keys().hasAll(['fullName', 'email', 'role', 'country', 'termsAccepted', 'createdAt', 'updatedAt']) &&
-             data.keys().size() >= 7 && data.keys().size() <= 9 &&
              data.fullName is string && data.fullName.size() <= 128 &&
              data.email is string && data.email.size() <= 128 &&
              data.role is string && data.role.size() <= 128 &&
              data.country is string && data.country.size() <= 128 &&
-             data.termsAccepted is bool && data.termsAccepted == true &&
+             data.termsAccepted is bool &&
              (!data.keys().contains('institution') || (data.institution is string && data.institution.size() <= 128)) &&
-             (!data.keys().contains('researchInterests') || (data.researchInterests is list && data.researchInterests.size() <= 20));
+             (!data.keys().contains('researchInterests') || (data.researchInterests is list && data.researchInterests.size() <= 50)) &&
+             (!data.keys().contains('verificationStatus') || (data.verificationStatus is string && data.verificationStatus.size() <= 50)) &&
+             (!data.keys().contains('verificationSubmittedAt') || (data.verificationSubmittedAt is string && data.verificationSubmittedAt.size() <= 50)) &&
+             (!data.keys().contains('uploadedResearchCount') || (data.uploadedResearchCount is int || data.uploadedResearchCount is float)) &&
+             (!data.keys().contains('verificationDetails') || (data.verificationDetails is map)) &&
+             (!data.keys().contains('verified') || (data.verified is bool)) &&
+             (!data.keys().contains('verificationApprovedAt') || (data.verificationApprovedAt is string && data.verificationApprovedAt.size() <= 50));
+    }
+
+    // Collection: researchers
+    match /researchers/{researcherId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Collection: publications
+    match /publications/{publicationId} {
+      allow read: if true;
+      allow write: if true;
     }
   }
 }
