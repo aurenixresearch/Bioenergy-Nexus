@@ -387,7 +387,7 @@ export default function UserDashboard({
                         <Check className="w-4 h-4 text-emerald-600 font-extrabold" />
                       </h4>
                       <p className="text-xs text-slate-600 leading-relaxed">
-                        Congratulations! Your academic background and research outputs have been verified by the Bioenergy Nexus board. The certified researcher badge is active on your publications and profile.
+                        Congratulations! Your academic background and research outputs have been verified by the Aurenix Research board. The certified researcher badge is active on your publications and profile.
                       </p>
                     </div>
                   </div>
@@ -398,7 +398,7 @@ export default function UserDashboard({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans text-slate-600">
                       <div className="space-y-1">
                         <span className="block text-[10px] font-mono font-bold text-slate-400 uppercase">Institutional Affiliation</span>
-                        <span className="font-semibold text-slate-800">{userProfile.verificationDetails?.institution || userProfile.institution || 'Bioenergy Nexus Network'}</span>
+                        <span className="font-semibold text-slate-800">{userProfile.verificationDetails?.institution || userProfile.institution || 'Aurenix Research Network'}</span>
                       </div>
                       <div className="space-y-1">
                         <span className="block text-[10px] font-mono font-bold text-slate-400 uppercase">ORCID Identifier</span>
@@ -494,7 +494,7 @@ export default function UserDashboard({
                         Scholar Verification
                       </h4>
                       <p className="text-xs text-slate-500 leading-relaxed">
-                        Establish academic trust in the Bioenergy Nexus network. Verified scholars earn a distinct verification checkmark badge, highlight their researcher profile, and gain authorized indexing across African circular economy channels.
+                        Establish academic trust in the Aurenix Research network. Verified scholars earn a distinct verification checkmark badge, highlight their researcher profile, and gain authorized indexing across African circular economy channels.
                       </p>
                     </div>
                   </div>

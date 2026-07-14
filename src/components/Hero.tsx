@@ -41,7 +41,7 @@ export default function Hero({ onExploreResearch, onRequestConsulting, onSignIn,
 
             {/* Description */}
             <p className="max-w-2xl text-base sm:text-lg text-slate-600 leading-relaxed mx-auto lg:mx-0">
-              Bioenergy Nexus is Nigeria’s research, training, and consulting hub dedicated to accelerating waste-to-energy technologies and circular economy principles. We equip scientists, developers, and governments with verified environmental studies and sustainable feasibility insights.
+              Aurenix Research is Nigeria’s research, training, and consulting hub dedicated to accelerating waste-to-energy technologies and circular economy principles. We equip scientists, developers, and governments with verified environmental studies and sustainable feasibility insights.
             </p>
 
             {/* Action Buttons */}
@@ -109,7 +109,7 @@ export default function Hero({ onExploreResearch, onRequestConsulting, onSignIn,
                   <div className="absolute inset-8 bg-white rounded-full shadow-md flex items-center justify-center p-3">
                     <img 
                       src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
-                      alt="Bioenergy Nexus Icon Logo" 
+                      alt="Aurenix Research Icon Logo" 
                       referrerPolicy="no-referrer"
                       className="w-14 h-14 object-contain animate-pulse"
                     />

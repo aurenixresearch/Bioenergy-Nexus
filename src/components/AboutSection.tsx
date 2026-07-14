@@ -123,7 +123,7 @@ export default function AboutSection() {
     },
     {
       year: '2025',
-      title: 'Bioenergy Nexus Digital Hub',
+      title: 'Aurenix Research Digital Hub',
       subtitle: 'Platform & Regional Launch',
       desc: 'Launched the integrated collaborative portal to streamline resource inquiries, publish peer-reviewed papers, and expand research access.',
       tags: ['Digital Resource Hub', 'Open Science Portal']
@@ -148,7 +148,7 @@ export default function AboutSection() {
             Advancing Practical Energy Solutions Across Africa
           </h2>
           <p className="text-base text-slate-600 leading-relaxed font-sans" id="about_subheading">
-            Bioenergy Nexus is an independent digital and technical advisory hub. We bridge the critical gap between academic chemical research and the industrial-scale implementation of sustainable bio-waste systems in Nigeria.
+            Aurenix Research is an independent digital and technical advisory hub. We bridge the critical gap between academic chemical research and the industrial-scale implementation of sustainable bio-waste systems in Nigeria.
           </p>
         </div>
 
@@ -485,7 +485,7 @@ export default function AboutSection() {
               Our Journey of Applied Innovation
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 max-w-2xl mx-auto">
-              How Bioenergy Nexus transitioned from conceptual laboratory testing to practical state training and municipal-scale deployment.
+              How Aurenix Research transitioned from conceptual laboratory testing to practical state training and municipal-scale deployment.
             </p>
           </div>
 

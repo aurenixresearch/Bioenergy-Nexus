@@ -213,11 +213,11 @@ export default function CollaborationSection({
       a: "Our core framework operates under a co-creation system. Intellectual property produced during joint projects is typically shared proportionally based on institutional contributions, and formalized through transparent, written Memorandums of Understanding (MoUs)."
     },
     {
-      q: "Can international research centers partner with Bioenergy Nexus?",
+      q: "Can international research centers partner with Aurenix Research?",
       a: "Absolutely. We routinely collaborate with international climate networks, academic institutions, and NGOs seeking credible, hands-on scientific partnerships on West African feedstock composition, digester chemical modeling, and municipal policy auditing."
     },
     {
-      q: "Does Bioenergy Nexus provide direct research funding?",
+      q: "Does Aurenix Research provide direct research funding?",
       a: "While we do not act as a direct seed fund, we serve as an active technical partner. We co-write research proposals, structure feasibility matrices, and share institutional credentials to successfully acquire high-ticket international climate grants and development funds."
     },
     {
@@ -239,7 +239,7 @@ export default function CollaborationSection({
           <div className="lg:col-span-7 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200/50 rounded-full text-xs font-semibold uppercase tracking-wider">
               <Users className="w-3.5 h-3.5 text-emerald-600" />
-              The Nexus Global Alliance
+              The Aurenix Global Alliance
             </div>
             
             <h1 className="text-3xl sm:text-5xl font-display font-extrabold text-slate-900 tracking-tight leading-tight">
@@ -247,7 +247,7 @@ export default function CollaborationSection({
             </h1>
             
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
-              Bioenergy Nexus bridges the gap between laboratory research and commercial clean energy projects. We connect academic minds, waste management organizations, and policy authorities to launch sustainable, locally operational green initiatives.
+              Aurenix Research bridges the gap between laboratory research and commercial clean energy projects. We connect academic minds, waste management organizations, and policy authorities to launch sustainable, locally operational green initiatives.
             </p>
 
             <div className="flex flex-wrap gap-4 pt-2">
@@ -310,12 +310,12 @@ export default function CollaborationSection({
           </div>
 
           <div className="max-w-2xl">
-            <span className="text-xs font-mono font-bold text-emerald-600 uppercase tracking-widest">NEXUS TRACK FINDER</span>
+            <span className="text-xs font-mono font-bold text-emerald-600 uppercase tracking-widest">AURENIX TRACK FINDER</span>
             <h2 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900 mt-2">
               How Can We Collaboratively Amplify Your Goals?
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
-              Select your sector below to instantly see the specific lab tools, deployment blueprints, and academic resources Bioenergy Nexus can deliver, along with shared objectives.
+              Select your sector below to instantly see the specific lab tools, deployment blueprints, and academic resources Aurenix Research can deliver, along with shared objectives.
             </p>
           </div>
 

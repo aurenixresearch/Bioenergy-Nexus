@@ -53,14 +53,14 @@ export default function Navbar({
               <div className="p-2 bg-emerald-50 rounded-xl shrink-0 shadow-xs">
                 <img 
                   src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
-                  alt="Bioenergy Nexus Logo" 
+                  alt="Aurenix Research Logo" 
                   referrerPolicy="no-referrer"
                   className="w-6 h-6 object-contain"
                 />
               </div>
               <div className="whitespace-nowrap">
                 <span className="block text-base lg:text-lg font-display font-bold tracking-tight text-slate-900 leading-none">
-                  Bioenergy <span className="text-emerald-600">Nexus</span>
+                  Aurenix <span className="text-emerald-600">Research</span>
                 </span>
                 <span className="block text-[9px] font-mono tracking-wider text-slate-400 uppercase mt-1">
                   Research & Sustainability
@@ -190,7 +190,7 @@ export default function Navbar({
                   </div>
                 )}
                 <div>
-                  <div className="text-sm font-bold text-slate-900">{user.displayName || 'Bioenergy Member'}</div>
+                  <div className="text-sm font-bold text-slate-900">{user.displayName || 'Aurenix Member'}</div>
                   <div className="text-xs text-slate-500 max-w-[200px] truncate">{user.email}</div>
                 </div>
               </div>

@@ -1047,7 +1047,7 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
                           <Eye className="w-4 h-4 text-emerald-600" />
                           Public
                         </span>
-                        <p className="text-[11px] text-slate-500 leading-relaxed">Anyone visiting Bioenergy Nexus can search, read, and download full papers.</p>
+                        <p className="text-[11px] text-slate-500 leading-relaxed">Anyone visiting Aurenix Research can search, read, and download full papers.</p>
                       </div>
                     </label>
 

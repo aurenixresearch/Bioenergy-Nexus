@@ -372,7 +372,7 @@ export default function SignInPage({
           id="back_to_home_btn"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Bioenergy Nexus Home
+          Back to Aurenix Research Home
         </button>
 
         <div className="max-w-md w-full mx-auto space-y-8 my-auto relative z-10" id="signin_form_container">
@@ -1103,7 +1103,7 @@ export default function SignInPage({
                   <div className="inline-flex p-3 bg-emerald-50 rounded-2xl mx-auto shadow-sm">
                     <img 
                       src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
-                      alt="Bioenergy Nexus Logo" 
+                      alt="Aurenix Research Logo" 
                       referrerPolicy="no-referrer"
                       className="w-14 h-14 object-contain"
                     />
@@ -1382,7 +1382,7 @@ export default function SignInPage({
 
         {/* Footer info */}
         <div className="pt-8 text-[10px] text-slate-400 text-center font-mono border-t border-slate-200/50 max-w-md w-full mx-auto relative z-10" id="signin_footer">
-          Bioenergy Nexus Research System &copy; 2024 &bull; Environment Sandboxed
+          Aurenix Research Research System &copy; 2024 &bull; Environment Sandboxed
         </div>
 
       </div>
@@ -1406,7 +1406,7 @@ export default function SignInPage({
           {/* Top Pill Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100/80 border border-emerald-200/60 rounded-full text-[10px] font-bold text-emerald-800 uppercase tracking-widest shadow-xs" id="signin_portal_badge">
             <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
-            Bioenergy Nexus &bull; Research Portal v2.1
+            Aurenix Research &bull; Research Portal v2.1
           </div>
 
           {/* Heading */}

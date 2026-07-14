@@ -24,14 +24,14 @@ export default function Footer({ onNavClick }: FooterProps) {
               <div className="p-2 bg-emerald-950 rounded-xl">
                 <img 
                   src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
-                  alt="Bioenergy Nexus Logo" 
+                  alt="Aurenix Research Logo" 
                   referrerPolicy="no-referrer"
                   className="w-5 h-5 object-contain"
                 />
               </div>
               <div>
                 <span className="block text-lg font-display font-bold tracking-tight text-white leading-none">
-                  Bioenergy <span className="text-emerald-400">Nexus</span>
+                  Aurenix <span className="text-emerald-400">Research</span>
                 </span>
                 <span className="block text-[9px] font-mono tracking-widest text-slate-500 uppercase mt-1">
                   Research & Sustainability
@@ -39,7 +39,7 @@ export default function Footer({ onNavClick }: FooterProps) {
               </div>
             </button>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-sm">
-              Bioenergy Nexus is Nigeria's specialized research and training hub dedicated to helping public utilities and private entities transition safely and profitably to biomass, biogas, and waste-to-energy technologies.
+              Aurenix Research is Nigeria's specialized research and training hub dedicated to helping public utilities and private entities transition safely and profitably to biomass, biogas, and waste-to-energy technologies.
             </p>
           </div>
 
@@ -72,7 +72,7 @@ export default function Footer({ onNavClick }: FooterProps) {
           {/* Contact Details column */}
           <div className="md:col-span-4 space-y-4">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-100 font-mono">
-              Nexus HQ & Contact
+              Aurenix HQ & Contact
             </h4>
             <ul className="space-y-3 text-xs sm:text-sm">
               <li className="flex items-start gap-2.5">
@@ -103,7 +103,7 @@ export default function Footer({ onNavClick }: FooterProps) {
         {/* Bottom row: Copyright and Socials */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-6 pt-2">
           <p className="text-xs text-slate-500 text-center sm:text-left">
-            © {new Date().getFullYear()} Bioenergy Nexus. Advancing Bioenergy Research and Environmental Sustainability. All Rights Reserved.
+            © {new Date().getFullYear()} Aurenix Research. Advancing Bioenergy Research and Environmental Sustainability. All Rights Reserved.
           </p>
 
           <div className="flex items-center gap-4">

@@ -155,7 +155,7 @@ export default function SystemBootLoader({ user, onComplete }: SystemBootLoaderP
             <div className="p-3 bg-emerald-50 border border-emerald-100/60 rounded-2xl shadow-sm">
               <img 
                 src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
-                alt="Bioenergy Nexus Logo" 
+                alt="Aurenix Research Logo" 
                 referrerPolicy="no-referrer"
                 className="w-10 h-10 object-contain"
               />
@@ -164,7 +164,7 @@ export default function SystemBootLoader({ user, onComplete }: SystemBootLoaderP
             {/* Title / Brand Text */}
             <div>
               <span className="block text-2xl font-display font-extrabold tracking-tight text-slate-900 leading-none">
-                Bioenergy <span className="text-emerald-600">Nexus</span>
+                Aurenix <span className="text-emerald-600">Research</span>
               </span>
               <span className="block text-[10px] font-mono tracking-widest text-slate-400 uppercase mt-2">
                 Research & Sustainability
