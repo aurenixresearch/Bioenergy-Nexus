@@ -47,3 +47,386 @@ html {
 .glow-green {
   box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
 }
+
+/* ==========================================================================
+   ELEGANT DARK MODE: Black, Light Green, with Dark Green Gradients
+   ========================================================================== */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body,
+.dark #app_root,
+.dark #app_layout_wrapper,
+.dark .min-h-screen,
+.dark main {
+  background-color: #000000 !important;
+  color: #e2e8f0 !important;
+}
+
+/* Base backgrounds override to pure black in dark mode */
+.dark .bg-white,
+.dark .bg-slate-50,
+.dark .bg-slate-100,
+.dark .bg-slate-200,
+.dark .bg-slate-300,
+.dark .bg-slate-400,
+.dark .bg-zinc-50,
+.dark .bg-zinc-100,
+.dark .bg-zinc-200,
+.dark .bg-gray-50,
+.dark .bg-gray-100,
+.dark .bg-gray-200,
+.dark .bg-neutral-50,
+.dark .bg-neutral-100,
+.dark .bg-neutral-200,
+.dark [class*="bg-white"],
+.dark [class*="bg-slate-"],
+.dark [class*="bg-gray-"],
+.dark [class*="bg-zinc-"],
+.dark [class*="bg-neutral-"],
+.dark [class*="bg-amber-50"],
+.dark [class*="bg-blue-50"] {
+  background-color: #000000 !important;
+  background-image: none !important;
+  color: #f1f5f9 !important;
+}
+
+/* Navigation headers and glass blurs */
+.dark nav,
+.dark .sticky,
+.dark .bg-white\/95,
+.dark .bg-white\/90,
+.dark .bg-white\/80,
+.dark .bg-white\/75 {
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* Desktop and mobile aside sidebars */
+.dark aside,
+.dark #desktop_floating_aside,
+.dark #mobile_aside_drawer {
+  background-color: #010403 !important;
+  background-image: linear-gradient(180deg, #000000 0%, #021a12 100%) !important; /* gorgeous dark green gradient */
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(52, 211, 153, 0.03) !important;
+}
+
+/* Specific main layout sections overrides for pristine dark mode */
+.dark #mission_card {
+  background-color: #040706 !important;
+  background-image: linear-gradient(135deg, #000000 0%, #031c15 100%) !important;
+  border-color: rgba(52, 211, 153, 0.2) !important;
+}
+
+.dark #pillars_of_excellence_section,
+.dark #experience_timeline {
+  background-color: #000000 !important;
+}
+
+/* Premium elevated interactive buttons */
+.dark button.bg-slate-50,
+.dark button.bg-slate-100,
+.dark a.bg-slate-50,
+.dark a.bg-slate-100,
+.dark label.bg-slate-50,
+.dark label.bg-slate-100,
+.dark .cursor-pointer.bg-slate-50,
+.dark .cursor-pointer.bg-slate-100 {
+  background-color: #111d17 !important;
+  background-image: none !important;
+  border: 1px solid rgba(52, 211, 153, 0.3) !important;
+  color: #e2e8f0 !important;
+}
+
+.dark button.bg-slate-50:hover,
+.dark button.bg-slate-100:hover,
+.dark a.bg-slate-50:hover,
+.dark a.bg-slate-100:hover,
+.dark label.bg-slate-50:hover,
+.dark label.bg-slate-100:hover,
+.dark .cursor-pointer.bg-slate-50:hover,
+.dark .cursor-pointer.bg-slate-100:hover {
+  background-color: #162a1f !important;
+  border-color: rgba(74, 222, 128, 0.5) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.2) !important;
+}
+
+/* Beautiful red-badge / removal buttons in dark mode */
+.dark button.bg-red-50,
+.dark button.bg-red-100,
+.dark .bg-red-50,
+.dark .bg-red-100 {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  background-image: none !important;
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+  color: #fca5a5 !important;
+}
+
+.dark button.bg-red-50:hover,
+.dark button.bg-red-100:hover,
+.dark .bg-red-50:hover,
+.dark .bg-red-100:hover {
+  background-color: rgba(239, 68, 68, 0.25) !important;
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  color: #fecaca !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25) !important;
+}
+
+/* Light green, or army green, cards and highlights in light mode become vibrant light green in dark mode */
+.dark .bg-emerald-50,
+.dark .bg-emerald-50\/30,
+.dark .bg-emerald-50\/50,
+.dark .bg-emerald-50\/80,
+.dark .bg-emerald-100,
+.dark .bg-emerald-200,
+.dark .bg-emerald-100\/60,
+.dark .bg-emerald-950,
+.dark .bg-green-50,
+.dark .bg-green-100,
+.dark .bg-green-200,
+.dark .bg-green-950,
+.dark .bg-green-100\/50,
+.dark .bg-teal-50,
+.dark .bg-teal-100 {
+  background-color: rgba(16, 185, 129, 0.25) !important; /* gorgeous vibrant translucent light green background */
+  color: #a7f3d0 !important; /* elegant mint green text */
+  box-shadow: 0 4px 15px rgba(52, 211, 153, 0.08) !important;
+}
+
+/* Ensure text inside these cards is readable and beautifully green */
+.dark .bg-emerald-50 *,
+.dark .bg-emerald-50\/30 *,
+.dark .bg-emerald-50\/50 *,
+.dark .bg-emerald-50\/80 *,
+.dark .bg-emerald-100 *,
+.dark .bg-emerald-200 *,
+.dark .bg-emerald-100\/60 *,
+.dark .bg-emerald-950 *,
+.dark .bg-green-50 *,
+.dark .bg-green-100 *,
+.dark .bg-green-200 *,
+.dark .bg-green-950 *,
+.dark .bg-teal-50 *,
+.dark .bg-teal-100 * {
+  color: #a7f3d0 !important;
+}
+
+.dark .bg-emerald-50 h1, .dark .bg-emerald-50 h2, .dark .bg-emerald-50 h3, .dark .bg-emerald-50 h4,
+.dark .bg-emerald-100 h1, .dark .bg-emerald-100 h2, .dark .bg-emerald-100 h3, .dark .bg-emerald-100 h4,
+.dark .bg-emerald-200 h1, .dark .bg-emerald-200 h2, .dark .bg-emerald-200 h3, .dark .bg-emerald-200 h4,
+.dark .bg-emerald-950 h1, .dark .bg-emerald-950 h2, .dark .bg-emerald-950 h3, .dark .bg-emerald-950 h4,
+.dark .bg-green-50 h1, .dark .bg-green-50 h2, .dark .bg-green-50 h3, .dark .bg-green-50 h4,
+.dark .bg-teal-50 h1, .dark .bg-teal-50 h2, .dark .bg-teal-50 h3, .dark .bg-teal-50 h4 {
+  color: #4ade80 !important; /* bright light green headings */
+}
+
+/* Text elements: headings, primary labels */
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700,
+.dark .text-slate-950,
+.dark .text-gray-900,
+.dark .text-gray-850,
+.dark .text-zinc-900,
+.dark .text-neutral-900 {
+  color: #f8fafc !important;
+}
+
+/* Text elements: paragraph descriptions, helper subtitles */
+.dark .text-slate-600,
+.dark .text-slate-500,
+.dark .text-slate-400,
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-gray-400,
+.dark .text-zinc-500 {
+  color: #a1a1aa !important;
+}
+
+/* Glowing high-contrast light green accents */
+.dark .text-emerald-600,
+.dark .text-emerald-700,
+.dark .text-emerald-800,
+.dark .text-green-600,
+.dark .text-green-700,
+.dark .text-green-800,
+.dark .text-teal-600,
+.dark .text-emerald-500 {
+  color: #4ade80 !important; /* bright light green */
+}
+
+.dark .text-emerald-950 {
+  color: #bbf7d0 !important;
+}
+
+/* Core green CTA buttons & controls */
+.dark .bg-emerald-600,
+.dark .bg-emerald-700,
+.dark .bg-emerald-800,
+.dark .bg-green-600,
+.dark .bg-green-700,
+.dark .bg-green-800 {
+  background-color: #059669 !important;
+  background-image: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  color: #ffffff !important;
+  border-color: rgba(52, 211, 153, 0.3) !important;
+}
+
+.dark .bg-emerald-600:hover,
+.dark .bg-emerald-700:hover,
+.dark .bg-emerald-800:hover,
+.dark .bg-green-600:hover,
+.dark .bg-green-700:hover {
+  background-color: #10b981 !important;
+  background-image: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.25) !important;
+}
+
+/* Border color overrides to keep dividers clean and high-contrast dark */
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-200/60,
+.dark .border-slate-100/80,
+.dark .border-emerald-100,
+.dark .border-emerald-200,
+.dark .border-zinc-100,
+.dark .border-zinc-200 {
+  border-color: rgba(52, 211, 153, 0.15) !important;
+}
+
+/* Dialog screens & popups */
+.dark .bg-slate-950/40 {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+/* Input fields, search bars, textareas & dropdown pickers */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #020403 !important;
+  color: #ffffff !important;
+  border-color: rgba(52, 211, 153, 0.25) !important;
+}
+
+.dark select option {
+  background-color: #020403 !important;
+  color: #ffffff !important;
+}
+
+/* Ensure absolute dropdown menus / listboxes have visible items */
+.dark ul[role="listbox"],
+.dark div[role="listbox"],
+.dark .dropdown-menu,
+.dark [role="menu"] {
+  background-color: #040706 !important;
+  border: 1px solid rgba(52, 211, 153, 0.25) !important;
+}
+
+.dark ul[role="listbox"] li,
+.dark div[role="listbox"] div,
+.dark .dropdown-item,
+.dark [role="menuitem"] {
+  color: #f1f5f9 !important;
+}
+
+.dark ul[role="listbox"] li:hover,
+.dark div[role="listbox"] div:hover,
+.dark .dropdown-item:hover,
+.dark [role="menuitem"]:hover {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: #4ade80 !important;
+}
+
+.dark input::placeholder,
+.dark select::placeholder,
+.dark textarea::placeholder {
+  color: #52525b !important;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  background-color: #020403 !important;
+  border-color: #4ade80 !important;
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2) !important;
+}
+
+/* User metrics and other info stats are changed to black backgrounds */
+.dark .bg-slate-200,
+.dark .bg-slate-200\/50,
+.dark .bg-slate-300 {
+  background-color: #000000 !important;
+  color: #e2e8f0 !important;
+}
+
+/* Custom glow aesthetics */
+.dark .glow-green {
+  box-shadow: 0 0 25px rgba(74, 222, 128, 0.25) !important;
+}
+
+/* Custom dark scrollbar settings */
+.dark ::-webkit-scrollbar-track {
+  background: #000000 !important;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(52, 211, 153, 0.25) !important;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.45) !important;
+}
+
+/* Ultimate border, divider, and demarcation line removal for dark mode */
+.dark *,
+.dark *::before,
+.dark *::after,
+.dark hr,
+.dark .divide-y > *,
+.dark [class*="divide-"],
+.dark [class*="border-"] {
+  border: none !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  outline: none !important;
+}
+
+/* Backgroundless buttons on the aside bar in dark mode */
+.dark aside button,
+.dark aside a,
+.dark #desktop_floating_aside button,
+.dark #desktop_floating_aside a,
+.dark #mobile_aside_drawer button,
+.dark #mobile_aside_drawer a,
+.dark [id*="aside_btn_"],
+.dark #aside_toggle_btn,
+.dark #aside_theme_toggle,
+.dark #mobile_aside_trigger {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.dark aside button:hover,
+.dark aside a:hover,
+.dark #desktop_floating_aside button:hover,
+.dark #desktop_floating_aside a:hover,
+.dark #mobile_aside_drawer button:hover,
+.dark #mobile_aside_drawer a:hover,
+.dark [id*="aside_btn_"]:hover,
+.dark #aside_toggle_btn:hover,
+.dark #aside_theme_toggle:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+
+

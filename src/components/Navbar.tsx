@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Leaf, Menu, X, User, LogOut, BookOpen, LayoutDashboard, ArrowRight } from 'lucide-react';
+import { Leaf, Menu, X, User, LogOut, BookOpen, LayoutDashboard, ArrowRight, Sun, Moon } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { motion } from 'motion/react';
 
@@ -9,6 +9,8 @@ interface NavbarProps {
   onSignOut: () => void;
   currentView: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers';
   setView: (view: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers') => void;
+  theme?: 'light' | 'dark';
+  onToggleTheme?: () => void;
 }
 
 export default function Navbar({ 
@@ -16,7 +18,9 @@ export default function Navbar({
   onSignIn, 
   onSignOut, 
   currentView, 
-  setView
+  setView,
+  theme,
+  onToggleTheme
 }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -90,7 +94,19 @@ export default function Navbar({
           </div>
 
           {/* 3. Right Column: Auth CTA / User Details */}
-          <div className="hidden md:flex items-center justify-end shrink-0">
+          <div className="hidden md:flex items-center justify-end shrink-0 gap-3">
+            {onToggleTheme && (
+              <motion.button
+                onClick={onToggleTheme}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 rounded-xl transition-all duration-150 cursor-pointer flex items-center justify-center border border-transparent hover:border-emerald-100"
+                title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                id="navbar_theme_toggle_desktop"
+              >
+                {theme === 'dark' ? <Sun className="w-5 h-5 text-emerald-400" /> : <Moon className="w-5 h-5" />}
+              </motion.button>
+            )}
             {user ? (
               <div className="flex items-center gap-3">
                 <div 
@@ -171,6 +187,22 @@ export default function Navbar({
               {item.label}
             </button>
           ))}
+          
+          {onToggleTheme && (
+            <button
+              onClick={onToggleTheme}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-base font-semibold text-slate-600 hover:text-slate-950 hover:bg-slate-50 transition-colors"
+              id="navbar_theme_toggle_mobile"
+            >
+              <span className="flex items-center gap-2">
+                {theme === 'dark' ? <Sun className="w-5 h-5 text-emerald-600" /> : <Moon className="w-5 h-5 text-slate-400" />}
+                <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+              </span>
+              <span className="text-xs font-mono text-slate-400 uppercase">
+                {theme === 'dark' ? 'Active' : 'Inactive'}
+              </span>
+            </button>
+          )}
           
           <div className="h-px bg-slate-100 my-2"></div>
 

@@ -4,7 +4,7 @@ export const RESEARCH_PAPERS: ResearchPaper[] = [
   {
     id: 'paper-1',
     title: 'Biogas as an Alternate Source of Energy',
-    author: 'Bioenergy Nexus Research Group',
+    author: 'Aurenix Research Research Group',
     category: 'Bioenergy Technology',
     abstract: 'This technical paper examines the feasibility, design parameters, and operational dynamics of residential and commercial biodigester systems. It covers the biochemical pathways of anaerobic digestion, methane yield optimization from agricultural and municipal solid wastes, and safety protocols for gas collection and distribution.',
     downloadUrl: '#',
@@ -13,7 +13,7 @@ export const RESEARCH_PAPERS: ResearchPaper[] = [
   {
     id: 'paper-2',
     title: 'Better Use of Biomass for Energy - Background Report',
-    author: 'International Energy Agency (IEA) & Bioenergy Nexus',
+    author: 'International Energy Agency (IEA) & Aurenix Research',
     category: 'Climate & Energy Policy',
     abstract: 'An in-depth policy and technical background report detailing the strategic pathways for modern biomass energy. The paper outlines carbon balance assessments, ecological thresholds for wood and crop waste harvesting, and frameworks for matching biomass resource profiles to optimal thermal or chemical conversion pathways.',
     downloadUrl: '#',
@@ -40,7 +40,7 @@ export const RESEARCH_PAPERS: ResearchPaper[] = [
   {
     id: 'paper-5',
     title: 'Policy Roadmaps for Sustainable Biofuels in West Africa',
-    author: 'Bioenergy Nexus Policy Group',
+    author: 'Aurenix Research Policy Group',
     category: 'Climate & Energy Policy',
     abstract: 'Analyzing the regulatory frameworks, land-use policies, and investment incentives required to transition from traditional biomass combustion to modern, sustainable liquid and gaseous biofuel production. This paper offers actionable recommendations for ECOWAS policy alignment.',
     downloadUrl: '#',
@@ -174,12 +174,12 @@ export const FOUNDER_INFO = {
   name: 'Filani Olalekan Theophilus',
   title: 'Founder & Lead Renewable Energy Analyst',
   bio: 'Filani Olalekan Theophilus is a dedicated Renewable Energy and Environmental Feasibility/Impact Analyst with hands-on expertise in design, operation, and training of bioenergy systems. He holds a B.Sc. in Industrial Chemistry and has successfully applied his chemical and process foundations in several high-profile real-world implementations, such as configuring waste biodigesters at the Murtala Muhammed International Airport (MMA), Ikeja. Filani is passionate about scaling indigenous scientific capability across Africa and bridging the gap between university research and commercial, scalable clean energy projects.',
-  mission: "Bioenergy Nexus was born from a clear, unwavering mission: to advance Nigeria and Africa's transition to clean energy through rigorous research, practical field training, and collaborative knowledge-sharing. We believe that Africa's green future cannot be outsourced; it must be built locally, driven by indigenous scientists, practical policy, and sustainable environmental investments."
+  mission: "Aurenix Research was born from a clear, unwavering mission: to bridge the critical gap between academic chemical research and the industrial-scale implementation of sustainable bio-waste systems in Nigeria. We believe that Africa's transition to clean energy must be built locally—driven by rigorous empirical research, indigenous scientists, practical field training, and collaborative knowledge-sharing."
 };
 
 export const CONTACT_INFO = {
   address: 'NO 1 AINA AJAYI, ABULE EGBA, LAGOS, 340110, NIGERIA',
-  email: 'bioenergynexus@gmail.com',
+  email: 'aurenixresearch@gmail.com',
   phone: '(+234) 91-6936-5341',
   hours: 'Monday – Friday, 8:00 AM – 6:00 PM (WAT)',
   socials: {

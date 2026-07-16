@@ -41,6 +41,8 @@ interface UserDashboardProps {
   activeInquiries: ConsultationInquiry[];
   activePartnerships: PartnershipSubmission[];
   onRefreshAll: () => Promise<void>;
+  onNavigateToProfile?: () => void;
+  onNavigateToSettings?: () => void;
 }
 
 export default function UserDashboard({
@@ -48,7 +50,9 @@ export default function UserDashboard({
   onBackToLanding,
   activeInquiries,
   activePartnerships,
-  onRefreshAll
+  onRefreshAll,
+  onNavigateToProfile,
+  onNavigateToSettings
 }: UserDashboardProps) {
   const [savedPapers, setSavedPapers] = useState<ResearchPaper[]>([]);
   const [loading, setLoading] = useState(false);
@@ -230,7 +234,7 @@ export default function UserDashboard({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-850 rounded-md text-[10px] font-bold uppercase tracking-wider text-emerald-400">
                   <ShieldCheck className="w-3 h-3" />
-                  Active Nexus Member
+                  Active Aurenix Member
                 </span>
                 {userProfile?.verificationStatus === 'verified' && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500 rounded-md text-[10px] font-bold uppercase tracking-wider text-white shadow-xs">
@@ -260,6 +264,26 @@ export default function UserDashboard({
                   <Calendar className="w-3.5 h-3.5" />
                   Member since {user.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString(undefined, { year: 'numeric', month: 'short' }) : 'July 2026'}
                 </span>
+              </div>
+
+              {/* High-fidelity Profile & Settings quick links */}
+              <div className="flex flex-wrap items-center gap-2.5 pt-4">
+                {onNavigateToProfile && (
+                  <button
+                    onClick={onNavigateToProfile}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-xs font-bold text-white flex items-center gap-2 backdrop-blur-md cursor-pointer transition-all"
+                  >
+                    View Public Portfolio
+                  </button>
+                )}
+                {onNavigateToSettings && (
+                  <button
+                    onClick={onNavigateToSettings}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500/10 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all"
+                  >
+                    Configure Preferences
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -338,7 +362,7 @@ export default function UserDashboard({
                   <div>
                     <h4 className="text-sm font-bold text-slate-700">No bookmarked studies</h4>
                     <p className="text-xs text-slate-400 max-w-xs mt-1">
-                      Navigate back to the Nexus Research Repository on the main page to find and bookmark studies.
+                      Navigate back to the Aurenix Research Repository on the main page to find and bookmark studies.
                     </p>
                   </div>
                 </div>
@@ -564,7 +588,7 @@ export default function UserDashboard({
                       <div className="p-4 bg-amber-50/50 border border-amber-200/50 rounded-xl text-xs text-slate-600 leading-relaxed flex items-start gap-2.5">
                         <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 animate-pulse" />
                         <p>
-                          Please upload at least <strong>{3 - myUploadedPapers.length} more study</strong> to fulfill the publishing criteria. Use the "Nexus Repository" page to contribute a new document.
+                          Please upload at least <strong>{3 - myUploadedPapers.length} more study</strong> to fulfill the publishing criteria. Use the "Aurenix Repository" page to contribute a new document.
                         </p>
                       </div>
 

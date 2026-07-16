@@ -10,7 +10,7 @@ import {
   addDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { db, auth, isFirestoreOffline, setFirestoreOffline } from '../firebase';
 import { ResearchPaper, ConsultationInquiry, PartnershipSubmission, Researcher, Publication } from '../types';
 import { SEED_RESEARCHERS, SEED_PUBLICATIONS } from './researchersSeed';
 
@@ -40,9 +40,27 @@ interface FirestoreErrorInfo {
   }
 }
 
+export function isOfflineError(error: unknown): boolean {
+  const errMsg = error instanceof Error ? error.message : String(error);
+  return (
+    errMsg.includes('unavailable') || 
+    errMsg.includes('offline') || 
+    errMsg.includes('Could not reach') || 
+    errMsg.includes('Connection failed') ||
+    errMsg.includes('failed to connect') ||
+    errMsg.includes('network')
+  );
+}
+
 function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
+  const errMsg = error instanceof Error ? error.message : String(error);
+  if (isOfflineError(error)) {
+    setFirestoreOffline(true);
+    console.warn("Detected Firestore connection failure in operation. Falling back to local demo mode.");
+  }
+
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errMsg,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -62,8 +80,13 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
 }
 
 // LOCAL STORAGE SANDBOX FALLBACK HELPERS
-export function isDemoModeActive(): boolean {
-  return localStorage.getItem('nexus_demo_mode') === 'true';
+export function isDemoModeActive(userId?: string): boolean {
+  if (userId && (userId === 'sandbox-guest-user' || userId.startsWith('sandbox-'))) {
+    return true;
+  }
+  return localStorage.getItem('nexus_demo_mode') === 'true' || 
+         localStorage.getItem('nexus_demo_user') !== null || 
+         isFirestoreOffline;
 }
 
 function getLocalSavedPapers(userId: string): string[] {
@@ -104,7 +127,7 @@ function setLocalCustomPapers(papers: ResearchPaper[]) {
 
 // SAVED PAPERS
 export async function savePaper(userId: string, paperId: string): Promise<void> {
-  if (isDemoModeActive()) {
+  if (isDemoModeActive(userId)) {
     const papers = getLocalSavedPapers(userId);
     if (!papers.includes(paperId)) {
       setLocalSavedPapers(userId, [...papers, paperId]);
@@ -121,12 +144,16 @@ export async function savePaper(userId: string, paperId: string): Promise<void> 
       savedAt: new Date().toISOString(),
     });
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return savePaper(userId, paperId);
+    }
     handleFirestoreError(error, OperationType.WRITE, `${path}/${userId}_${paperId}`);
   }
 }
 
 export async function unsavePaper(userId: string, paperId: string): Promise<void> {
-  if (isDemoModeActive()) {
+  if (isDemoModeActive(userId)) {
     const papers = getLocalSavedPapers(userId);
     setLocalSavedPapers(userId, papers.filter(id => id !== paperId));
     return;
@@ -137,12 +164,16 @@ export async function unsavePaper(userId: string, paperId: string): Promise<void
     const docRef = doc(db, path, `${userId}_${paperId}`);
     await deleteDoc(docRef);
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return unsavePaper(userId, paperId);
+    }
     handleFirestoreError(error, OperationType.DELETE, `${path}/${userId}_${paperId}`);
   }
 }
 
 export async function getSavedPaperIds(userId: string): Promise<string[]> {
-  if (isDemoModeActive()) {
+  if (isDemoModeActive(userId)) {
     return getLocalSavedPapers(userId);
   }
 
@@ -156,13 +187,17 @@ export async function getSavedPaperIds(userId: string): Promise<string[]> {
     });
     return ids;
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return getSavedPaperIds(userId);
+    }
     handleFirestoreError(error, OperationType.LIST, path);
   }
 }
 
 // CONSULTATION INQUIRIES
 export async function submitInquiry(inquiry: Omit<ConsultationInquiry, 'id' | 'status' | 'createdAt'>): Promise<string> {
-  if (isDemoModeActive()) {
+  if (isDemoModeActive(inquiry.userId)) {
     const inquiries = getLocalInquiries(inquiry.userId);
     const mockId = 'inquiry_' + Math.random().toString(36).substring(2, 9);
     const newInquiry: ConsultationInquiry = {
@@ -185,12 +220,16 @@ export async function submitInquiry(inquiry: Omit<ConsultationInquiry, 'id' | 's
     });
     return docRef.id;
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return submitInquiry(inquiry);
+    }
     handleFirestoreError(error, OperationType.CREATE, path);
   }
 }
 
 export async function getUserInquiries(userId: string): Promise<ConsultationInquiry[]> {
-  if (isDemoModeActive()) {
+  if (isDemoModeActive(userId)) {
     return getLocalInquiries(userId);
   }
 
@@ -218,13 +257,17 @@ export async function getUserInquiries(userId: string): Promise<ConsultationInqu
     });
     return inquiries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return getUserInquiries(userId);
+    }
     handleFirestoreError(error, OperationType.LIST, path);
   }
 }
 
 // PARTNERSHIPS
 export async function submitPartnership(partnership: Omit<PartnershipSubmission, 'id' | 'createdAt'>): Promise<string> {
-  if (isDemoModeActive()) {
+  if (isDemoModeActive(partnership.userId)) {
     const partnerships = getLocalPartnerships(partnership.userId);
     const mockId = 'partner_' + Math.random().toString(36).substring(2, 9);
     const newPartnership: PartnershipSubmission = {
@@ -245,12 +288,16 @@ export async function submitPartnership(partnership: Omit<PartnershipSubmission,
     });
     return docRef.id;
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return submitPartnership(partnership);
+    }
     handleFirestoreError(error, OperationType.CREATE, path);
   }
 }
 
 export async function getUserPartnerships(userId: string): Promise<PartnershipSubmission[]> {
-  if (isDemoModeActive()) {
+  if (isDemoModeActive(userId)) {
     return getLocalPartnerships(userId);
   }
 
@@ -277,13 +324,17 @@ export async function getUserPartnerships(userId: string): Promise<PartnershipSu
     });
     return submissions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return getUserPartnerships(userId);
+    }
     handleFirestoreError(error, OperationType.LIST, path);
   }
 }
 
 // CUSTOM RESEARCH PAPERS (CONTRIBUTIONS)
 export async function addCustomPaper(paper: Omit<ResearchPaper, 'id'>, userId: string, userEmail: string): Promise<string> {
-  if (isDemoModeActive()) {
+  if (isDemoModeActive(userId)) {
     const papers = getLocalCustomPapers();
     const mockId = 'paper_' + Math.random().toString(36).substring(2, 9);
     const newPaper: ResearchPaper = {
@@ -307,6 +358,10 @@ export async function addCustomPaper(paper: Omit<ResearchPaper, 'id'>, userId: s
     });
     return docRef.id;
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return addCustomPaper(paper, userId, userEmail);
+    }
     handleFirestoreError(error, OperationType.CREATE, path);
   }
 }
@@ -329,6 +384,10 @@ export async function updateCustomPaper(paperId: string, paper: Partial<Research
     const docRef = doc(db, path, paperId);
     await setDoc(docRef, paper, { merge: true });
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return updateCustomPaper(paperId, paper);
+    }
     handleFirestoreError(error, OperationType.UPDATE, `${path}/${paperId}`);
   }
 }
@@ -356,6 +415,10 @@ export async function getCustomPapers(): Promise<ResearchPaper[]> {
     // Merge both for complete sandboxing
     return [...papers, ...localPapers];
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return getCustomPapers();
+    }
     // If firebase fails entirely due to rules/restrictions, fallback gracefully to local custom papers
     console.warn('Firebase error fetching custom papers, falling back to local storage custom papers:', error);
     return localPapers;
@@ -372,7 +435,7 @@ export async function createUserProfile(userId: string, profile: {
   researchInterests?: string[];
   termsAccepted: boolean;
 }): Promise<void> {
-  if (isDemoModeActive() || userId === 'sandbox-guest-user') {
+  if (isDemoModeActive(userId)) {
     localStorage.setItem(`nexus_demo_profile_${userId}`, JSON.stringify({
       ...profile,
       createdAt: new Date().toISOString(),
@@ -396,12 +459,16 @@ export async function createUserProfile(userId: string, profile: {
       updatedAt: serverTimestamp()
     });
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return createUserProfile(userId, profile);
+    }
     handleFirestoreError(error, OperationType.WRITE, `${path}/${userId}`);
   }
 }
 
 export async function getUserProfile(userId: string): Promise<any> {
-  if (isDemoModeActive() || userId === 'sandbox-guest-user' || userId.startsWith('sandbox-')) {
+  if (isDemoModeActive(userId)) {
     const data = localStorage.getItem(`nexus_demo_profile_${userId}`);
     return data ? JSON.parse(data) : null;
   }
@@ -422,7 +489,7 @@ export async function getUserProfile(userId: string): Promise<any> {
         email: currentUser.email || '',
         role: 'Academic Partner',
         country: 'Nigeria',
-        institution: 'Bioenergy Nexus Network',
+        institution: 'Aurenix Research Network',
         researchInterests: ['Bioenergy', 'Waste-to-Energy'],
         termsAccepted: true,
         createdAt: new Date().toISOString(),
@@ -443,6 +510,10 @@ export async function getUserProfile(userId: string): Promise<any> {
         });
         return { id: userId, ...defaultProfile };
       } catch (e) {
+        if (isOfflineError(e)) {
+          setFirestoreOffline(true);
+          return getUserProfile(userId);
+        }
         console.warn('Error auto-creating profile in Firestore on fetch, returning local object:', e);
         return { id: userId, ...defaultProfile };
       }
@@ -450,6 +521,10 @@ export async function getUserProfile(userId: string): Promise<any> {
 
     return null;
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return getUserProfile(userId);
+    }
     console.warn('Error fetching user profile from Firestore, trying local storage fallback:', error);
     const data = localStorage.getItem(`nexus_demo_profile_${userId}`);
     return data ? JSON.parse(data) : null;
@@ -470,7 +545,7 @@ export async function applyForVerification(userId: string, researchCount: number
     verificationDetails: details,
   };
 
-  if (isDemoModeActive() || userId.startsWith('sandbox-')) {
+  if (isDemoModeActive(userId)) {
     const profileKey = `nexus_demo_profile_${userId}`;
     const data = localStorage.getItem(profileKey);
     const profile = data ? JSON.parse(data) : {};
@@ -487,6 +562,10 @@ export async function applyForVerification(userId: string, researchCount: number
       updatedAt: serverTimestamp()
     }, { merge: true });
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return applyForVerification(userId, researchCount, details);
+    }
     handleFirestoreError(error, OperationType.UPDATE, `${path}/${userId}`);
   }
 }
@@ -499,7 +578,7 @@ export async function approveVerification(userId: string, userProfile: any): Pro
   };
 
   // 1. Update user profile in Firestore / local storage
-  if (isDemoModeActive() || userId.startsWith('sandbox-')) {
+  if (isDemoModeActive(userId)) {
     const profileKey = `nexus_demo_profile_${userId}`;
     const data = localStorage.getItem(profileKey);
     const profile = data ? JSON.parse(data) : {};
@@ -524,9 +603,9 @@ export async function approveVerification(userId: string, userProfile: any): Pro
     fullName: userProfile.fullName || 'Verified Researcher',
     profilePhoto: 'https://lh3.googleusercontent.com/d/1utUCWpBRmKjeGRFF1Jo2Z3-ta7B8bgOq', // default elegant logo/avatar
     role: userProfile.role || 'Senior Researcher',
-    institution: userProfile.verificationDetails?.institution || userProfile.institution || 'Bioenergy Nexus Network',
+    institution: userProfile.verificationDetails?.institution || userProfile.institution || 'Aurenix Research Network',
     country: userProfile.country || 'Nigeria',
-    bio: userProfile.verificationDetails?.bio || 'Verified academic contributor to the Bioenergy Nexus repository.',
+    bio: userProfile.verificationDetails?.bio || 'Verified academic contributor to the Aurenix Research repository.',
     researchInterests: userProfile.verificationDetails?.researchInterests || userProfile.researchInterests || ['Bioenergy'],
     verified: true,
     followers: [],
@@ -540,7 +619,7 @@ export async function approveVerification(userId: string, userProfile: any): Pro
     googleScholar: userProfile.verificationDetails?.googleScholar || '',
   };
 
-  if (isDemoModeActive() || userId.startsWith('sandbox-')) {
+  if (isDemoModeActive(userId)) {
     const researchers = getLocalResearchers();
     // Prevent duplicate entries
     const filtered = researchers.filter(r => r.id !== userId);
@@ -636,12 +715,20 @@ export async function getResearchers(): Promise<Researcher[]> {
         }
         return SEED_RESEARCHERS;
       } catch (seedErr) {
+        if (isOfflineError(seedErr)) {
+          setFirestoreOffline(true);
+          return getResearchers();
+        }
         console.warn('Could not seed Firestore researchers, returning static seed data:', seedErr);
         return SEED_RESEARCHERS;
       }
     }
     return list;
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return getResearchers();
+    }
     console.warn('Error fetching researchers from Firestore, falling back to local seed:', error);
     return getLocalResearchers();
   }
@@ -690,12 +777,20 @@ export async function getPublications(): Promise<Publication[]> {
         }
         return SEED_PUBLICATIONS;
       } catch (seedErr) {
+        if (isOfflineError(seedErr)) {
+          setFirestoreOffline(true);
+          return getPublications();
+        }
         console.warn('Could not seed Firestore publications, returning static seed data:', seedErr);
         return SEED_PUBLICATIONS;
       }
     }
     return list;
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return getPublications();
+    }
     console.warn('Error fetching publications from Firestore, falling back to local seed:', error);
     return getLocalPublications();
   }
@@ -751,6 +846,10 @@ export async function followResearcher(userId: string, researcherId: string): Pr
     await setDoc(docRef, { followers }, { merge: true });
     return isFollowing;
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return followResearcher(userId, researcherId);
+    }
     console.warn('Error toggling follow state on Firestore:', error);
     // Fallback locally
     const researchers = getLocalResearchers();
@@ -797,6 +896,10 @@ export async function incrementResearcherMetric(researcherId: string, metric: 'v
       await setDoc(docRef, { [metric]: (researcher[metric] || 0) + 1 }, { merge: true });
     }
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return incrementResearcherMetric(researcherId, metric);
+    }
     console.warn('Error incrementing researcher metric on Firestore:', error);
     // Fallback locally
     const researchers = getLocalResearchers();
@@ -831,6 +934,10 @@ export async function incrementPublicationMetric(publicationId: string, metric: 
       await setDoc(docRef, { [metric]: (publication[metric] || 0) + 1 }, { merge: true });
     }
   } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return incrementPublicationMetric(publicationId, metric);
+    }
     console.warn('Error incrementing publication metric on Firestore:', error);
     // Fallback locally
     const publications = getLocalPublications();

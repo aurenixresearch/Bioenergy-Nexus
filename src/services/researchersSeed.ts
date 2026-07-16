@@ -33,7 +33,7 @@ export const SEED_RESEARCHERS: Researcher[] = [
     role: 'Lecturer / Professor',
     institution: 'Université Cheikh Anta Diop',
     country: 'Senegal',
-    bio: 'Prof. Amadi Keita has over twenty years of research and teaching experience in thermochemical biomass conversion. He spearheads the Senegal Bioenergy Nexus Initiative, focusing on agricultural residues such as peanut hulls and rice husks for gasification. His work provides decentralized power solutions to dozens of off-grid agricultural cooperatives in rural Senegal.',
+    bio: 'Prof. Amadi Keita has over twenty years of research and teaching experience in thermochemical biomass conversion. He spearheads the Senegal Aurenix Research Initiative, focusing on agricultural residues such as peanut hulls and rice husks for gasification. His work provides decentralized power solutions to dozens of off-grid agricultural cooperatives in rural Senegal.',
     researchInterests: ['Bioenergy', 'Circular Economy', 'Sustainable Development', 'Rural Electrification'],
     verified: true,
     followers: [],

@@ -147,5 +147,45 @@ service cloud.firestore {
       allow read: if true;
       allow write: if true;
     }
+
+    // Collection: projects (Collaboration)
+    match /projects/{projectId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && incoming().createdBy == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+    }
+
+    // Collection: alliance_opportunities (Collaboration)
+    match /alliance_opportunities/{opportunityId} {
+      allow read: if true;
+      allow create: if isSignedIn() && incoming().createdBy == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+    }
+
+    // Collection: applications (Collaboration)
+    match /applications/{applicationId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && incoming().applicantId == request.auth.uid;
+      allow update, delete: if isSignedIn();
+    }
+
+    // Collection: workspaces (Collaboration)
+    match /workspaces/{workspaceId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Collection: innovation_challenges (Collaboration)
+    match /innovation_challenges/{challengeId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Collection: notifications (Collaboration)
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
   }
 }

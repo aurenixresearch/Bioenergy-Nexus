@@ -18,7 +18,7 @@ export const DETAILED_RESEARCH_DATA: Record<string, DetailedResearch> = {
   'paper-1': {
     id: 'paper-1',
     title: 'Biogas as an Alternate Source of Energy',
-    author: 'Bioenergy Nexus Research Group',
+    author: 'Aurenix Research Research Group',
     category: 'Bioenergy Technology',
     publishedYear: 2024,
     abstract: 'This technical paper examines the feasibility, design parameters, and operational dynamics of residential and commercial biodigester systems. It covers the biochemical pathways of anaerobic digestion, methane yield optimization from agricultural and municipal solid wastes, and safety protocols for gas collection and distribution.',
@@ -46,7 +46,7 @@ export const DETAILED_RESEARCH_DATA: Record<string, DetailedResearch> = {
       'Install iron-oxide scrubbers inline to neutralize corrosive hydrogen sulfide (H2S) gases before storage or thermal combustion.',
       'Use the nutrient-dense effluent digestate as an organic bio-fertilizer to replace synthetic petroleum-based chemical fertilizers.'
     ],
-    citation: 'Bioenergy Nexus Research Group (2024). "Biogas as an Alternate Source of Energy: Process Kinetics and Scalable Reactor Architectures." Nexus Technical Briefs, Vol. 14, pp. 45–58.',
+    citation: 'Aurenix Research Group (2024). "Biogas as an Alternate Source of Energy: Process Kinetics and Scalable Reactor Architectures." Aurenix Technical Briefs, Vol. 14, pp. 45–58.',
     stats: [
       { name: 'Day 1', value: 10 },
       { name: 'Day 5', value: 35 },
@@ -58,7 +58,7 @@ export const DETAILED_RESEARCH_DATA: Record<string, DetailedResearch> = {
   'paper-2': {
     id: 'paper-2',
     title: 'Better Use of Biomass for Energy - Background Report',
-    author: 'International Energy Agency (IEA) & Bioenergy Nexus',
+    author: 'International Energy Agency (IEA) & Aurenix Research',
     category: 'Climate & Energy Policy',
     publishedYear: 2023,
     abstract: 'An in-depth policy and technical background report detailing the strategic pathways for modern biomass energy. The paper outlines carbon balance assessments, ecological thresholds for wood and crop waste harvesting, and frameworks for matching biomass resource profiles to optimal thermal or chemical conversion pathways.',
@@ -84,7 +84,7 @@ export const DETAILED_RESEARCH_DATA: Record<string, DetailedResearch> = {
       'Establish community-level cooperatives for solar-assisted drying of agricultural residues to raise combustion yield.',
       'Develop regional biochar integration plans to simultaneously capture carbon in arable soils and improve water retention capacity.'
     ],
-    citation: 'IEA & Bioenergy Nexus (2023). "Better Use of Biomass for Energy: Global Strategic Guidelines and Ecological Limits." IEA Policy Reports, Doc Ref: IEA-BNE-2023-A9.',
+    citation: 'IEA & Aurenix Research (2023). "Better Use of Biomass for Energy: Global Strategic Guidelines and Ecological Limits." IEA Policy Reports, Doc Ref: IEA-BNE-2023-A9.',
     stats: [
       { name: 'Traditional Stove', value: 12 },
       { name: 'Improved Cookstove', value: 35 },
@@ -119,7 +119,7 @@ export const DETAILED_RESEARCH_DATA: Record<string, DetailedResearch> = {
     recommendations: [
       'Create Public-Private Partnerships (PPPs) allowing bioenergy developers to deploy decentralized power stations directly inside major open-air food markets.',
       'Provide national tax holidays and tariff exemptions for bioenergy generation hardware, including gas scrubbers, storage bladders, and dual-fuel generators.',
-      'Establish vocational training pathways (like the Bioenergy Nexus practical program) to supply qualified technical operators for rural and urban digesters.'
+      'Establish vocational training pathways (like the Aurenix Research practical program) to supply qualified technical operators for rural and urban digesters.'
     ],
     citation: 'Filani, O. T. (2025). "Reversing Energy Poverty: Decentralized Bioenergy Grids and Circular Waste Management in West African Cities." Journal of African Energy Solutions, Vol. 8, No. 2, pp. 112–129.',
     stats: [
@@ -168,7 +168,7 @@ export const DETAILED_RESEARCH_DATA: Record<string, DetailedResearch> = {
   'paper-5': {
     id: 'paper-5',
     title: 'Policy Roadmaps for Sustainable Biofuels in West Africa',
-    author: 'Bioenergy Nexus Policy Group',
+    author: 'Aurenix Research Policy Group',
     category: 'Climate & Energy Policy',
     publishedYear: 2025,
     abstract: 'Analyzing the regulatory frameworks, land-use policies, and investment incentives required to transition from traditional biomass combustion to modern, sustainable liquid and gaseous biofuel production. This paper offers actionable recommendations for ECOWAS policy alignment.',
@@ -195,7 +195,7 @@ export const DETAILED_RESEARCH_DATA: Record<string, DetailedResearch> = {
       'Create rural bioenergy credit schemes that directly subsidize farming communities that supply waste starch to biofuel cooperatives.',
       'Establish sub-regional biofuel quality assurance laboratories under ECOWAS to harmonize technical fuel standards and build investor trust.'
     ],
-    citation: 'Bioenergy Nexus Policy Group (2025). "Sustainable Liquid Biofuels in West Africa: A Harmonized Regulatory and Land-Use Policy Roadmap." ECOWAS Renewable Energy Policy Reviews, Vol. 7, pp. 88–109.',
+    citation: 'Aurenix Research Policy Group (2025). "Sustainable Liquid Biofuels in West Africa: A Harmonized Regulatory and Land-Use Policy Roadmap." ECOWAS Renewable Energy Policy Reviews, Vol. 7, pp. 88–109.',
     stats: [
       { name: 'Ghana', value: 8 },
       { name: 'Nigeria', value: 12 },
@@ -217,7 +217,7 @@ export function getDetailedResearch(paper: { id: string; title: string; author: 
     category: paper.category,
     publishedYear: paper.publishedYear,
     abstract: paper.abstract,
-    introduction: `This research paper, titled "${paper.title}" by ${paper.author}, addresses key aspects of ${paper.category} and environmental resource optimization. It represents a valuable technical and structural contribution to the Bioenergy Nexus scientific community, offering empirical perspectives or practical system insights.`,
+    introduction: `This research paper, titled "${paper.title}" by ${paper.author}, addresses key aspects of ${paper.category} and environmental resource optimization. It represents a valuable technical and structural contribution to the Aurenix Research scientific community, offering empirical perspectives or practical system insights.`,
     methodology: [
       'Evaluated process and system parameters based on primary design criteria of ' + paper.category + '.',
       'Formulated mathematical or experimental models mapping input variables to output metrics.',
@@ -239,6 +239,6 @@ export function getDetailedResearch(paper: { id: string; title: string; author: 
       'Evaluate supply chain constraints or local biomass resources before scaling the project setup.',
       'Collaborate with local administrative bodies and researchers to integrate results into energy policies.'
     ],
-    citation: `${paper.author} (${paper.publishedYear}). "${paper.title}." Contributed Research Entry, Bioenergy Nexus Repository, ID: ${paper.id}.`
+    citation: `${paper.author} (${paper.publishedYear}). "${paper.title}." Contributed Research Entry, Aurenix Research Repository, ID: ${paper.id}.`
   };
 }

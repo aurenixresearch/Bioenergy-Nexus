@@ -332,11 +332,11 @@ export default function ResearchDetail({
     const doiStr = paper.doi || '10.5281/zenodo.4729104';
 
     if (citationFormat === 'APA') {
-      return `${author}. (${year}). ${title}. Bioenergy Nexus Scientific Repository. DOI: ${doiStr}`;
+      return `${author}. (${year}). ${title}. Aurenix Research Scientific Repository. DOI: ${doiStr}`;
     } else if (citationFormat === 'IEEE') {
-      return `[1] ${author}, "${title}," Bioenergy Nexus Scientific Repository, ${year}. Available: ${window.location.origin}/#/research/${paper.id}. DOI: ${doiStr}.`;
+      return `[1] ${author}, "${title}," Aurenix Research Scientific Repository, ${year}. Available: ${window.location.origin}/#/research/${paper.id}. DOI: ${doiStr}.`;
     } else {
-      return `${author} ${year}, '${title}', Bioenergy Nexus Scientific Repository, DOI: ${doiStr}.`;
+      return `${author} ${year}, '${title}', Aurenix Research Scientific Repository, DOI: ${doiStr}.`;
     }
   };
 
@@ -504,7 +504,7 @@ export default function ResearchDetail({
 
                 <div className="space-y-1">
                   <p className="text-[10px] font-mono text-slate-500 font-bold uppercase">Affiliated Institution</p>
-                  <p className="text-xs text-slate-300 font-bold">{paper.institution || 'Bioenergy Nexus Network'}</p>
+                  <p className="text-xs text-slate-300 font-bold">{paper.institution || 'Aurenix Research Network'}</p>
                 </div>
 
                 <div className="space-y-1">
@@ -1182,7 +1182,7 @@ export default function ResearchDetail({
                             <span className="text-sm font-extrabold text-slate-900">{paper.leadResearcher || paper.author}</span>
                           </div>
                           <p className="text-[10px] text-slate-500 font-semibold mt-1">
-                            {paper.institution || 'Bioenergy Nexus Research Associate'} • {paper.department || 'Process Chemistry'}
+                            {paper.institution || 'Aurenix Research Research Associate'} • {paper.department || 'Process Chemistry'}
                           </p>
                         </div>
                         {paper.orcid && (
@@ -1201,7 +1201,7 @@ export default function ResearchDetail({
                               <span className="text-sm font-extrabold text-slate-900">{co.name}</span>
                             </div>
                             <p className="text-[10px] text-slate-500 font-semibold mt-1">
-                              {co.institution || 'Bioenergy Nexus Affiliation'} • {co.department || 'Mechanical Engineering'}
+                              {co.institution || 'Aurenix Research Affiliation'} • {co.department || 'Mechanical Engineering'}
                             </p>
                           </div>
                         </div>
@@ -1376,7 +1376,7 @@ export default function ResearchDetail({
               </h4>
 
               <p className="text-[11px] text-emerald-200/80 leading-relaxed font-sans">
-                The Bioenergy Nexus scientific team provides direct engineering consulting, waste feedstock audits, and professional training to implement sustainable reactors.
+                The Aurenix Research scientific team provides direct engineering consulting, waste feedstock audits, and professional training to implement sustainable reactors.
               </p>
 
               <div className="pt-2 border-t border-emerald-900 flex items-start gap-2 text-[10px] text-emerald-300 leading-relaxed">

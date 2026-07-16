@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { initializeFirestore } from 'firebase/firestore';
+import { initializeFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import config from '../firebase-applet-config.json';
 
 const firebaseConfig = {
@@ -26,3 +26,33 @@ export const googleProvider = new GoogleAuthProvider();
 // Standard scopes if needed
 googleProvider.addScope('profile');
 googleProvider.addScope('email');
+
+export let isFirestoreOffline = false;
+
+export function setFirestoreOffline(val: boolean) {
+  isFirestoreOffline = val;
+  if (val) {
+    // Also set demo mode in local storage to keep session state in sync
+    localStorage.setItem('nexus_demo_mode', 'true');
+  }
+}
+
+async function testConnection() {
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (
+      errMsg.includes('the client is offline') || 
+      errMsg.includes('unavailable') || 
+      errMsg.includes('Could not reach') || 
+      errMsg.includes('Connection failed') ||
+      errMsg.includes('failed to connect')
+    ) {
+      console.warn("Firestore is unreachable or offline. Activating local storage demo fallback mode.");
+      setFirestoreOffline(true);
+    }
+  }
+}
+testConnection();
+

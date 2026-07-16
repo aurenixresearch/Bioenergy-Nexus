@@ -27,6 +27,9 @@ import UserDashboard from './components/UserDashboard';
 import Footer from './components/Footer';
 import SystemBootLoader from './components/SystemBootLoader';
 import ExploreResearchers from './components/ExploreResearchers';
+import OperationalConsole from './components/collaboration/OperationalConsole';
+import ProfilePage from './components/ProfilePage';
+import SettingsPage from './components/SettingsPage';
 
 export default function App() {
   // Sync sessionStorage for loading animation on fresh load or reload
@@ -39,8 +42,8 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Layout View: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers'
-  const [currentView, setView] = useState<'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers'>('initializing');
+  // Layout View: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers' | 'console' | 'profile' | 'settings'
+  const [currentView, setView] = useState<'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers' | 'console' | 'profile' | 'settings'>('initializing');
 
   // Sidebar collapsed state and mobile check
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -48,6 +51,21 @@ export default function App() {
     return saved === null ? false : saved === 'true';
   });
   const [isMobile, setIsMobile] = useState(false);
+
+  // Theme state for dark & light mode
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('nexus_theme');
+    return (saved === 'dark' || saved === 'light') ? saved : 'light';
+  });
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('nexus_theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -88,7 +106,7 @@ export default function App() {
           try {
             const demoObj = JSON.parse(storedDemoUser);
             // Clear and delete Guest Researcher session immediately if found
-            if (demoObj.uid === 'sandbox-guest-user' || demoObj.email === 'guest.researcher@bioenergy-nexus.org') {
+            if (demoObj.uid === 'sandbox-guest-user' || demoObj.email === 'guest.researcher@aurenix-research.org') {
               localStorage.removeItem('nexus_demo_mode');
               localStorage.removeItem('nexus_demo_user');
               setUser(null);
@@ -205,6 +223,8 @@ export default function App() {
           isCollapsed={isCollapsed}
           setIsCollapsed={setIsCollapsed}
           onSignOut={handleSignOut}
+          theme={theme}
+          onToggleTheme={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
         />
       )}
 
@@ -225,6 +245,8 @@ export default function App() {
             onSignOut={handleSignOut}
             currentView={currentView}
             setView={setView}
+            theme={theme}
+            onToggleTheme={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
           />
         )}
 
@@ -472,7 +494,7 @@ export default function App() {
                         What Aligned Stakeholders Say
                       </h2>
                       <p className="text-base text-slate-600 leading-relaxed">
-                        Read perspectives from university researchers, clean energy program managers, and regional policy developers who have collaborated with Bioenergy Nexus.
+                        Read perspectives from university researchers, clean energy program managers, and regional policy developers who have collaborated with Aurenix Research.
                       </p>
                     </div>
 
@@ -484,7 +506,7 @@ export default function App() {
                             <Quote className="w-8 h-8 opacity-40" />
                           </div>
                           <p className="text-xs sm:text-sm text-slate-600 italic leading-relaxed">
-                            "Bioenergy Nexus delivered precise, local chemical and feedstock parameters that resolved our digester overloading issues. Their academic depth combined with physical plant experience is exceptional."
+                            "Aurenix Research delivered precise, local chemical and feedstock parameters that resolved our digester overloading issues. Their academic depth combined with physical plant experience is exceptional."
                           </p>
                         </div>
                         <div className="border-t border-slate-200/60 pt-4 flex items-center gap-3">
@@ -526,7 +548,7 @@ export default function App() {
                             <Quote className="w-8 h-8 opacity-40" />
                           </div>
                           <p className="text-xs sm:text-sm text-slate-600 italic leading-relaxed">
-                            "By training our cooperative waste managers, Bioenergy Nexus built local capacity rather than just delivering templates. They are true champions of indigenous African science."
+                            "By training our cooperative waste managers, Aurenix Research built local capacity rather than just delivering templates. They are true champions of indigenous African science."
                           </p>
                         </div>
                         <div className="border-t border-slate-200/60 pt-4 flex items-center gap-3">
@@ -566,10 +588,10 @@ export default function App() {
                       Dedicated Research Hub
                     </div>
                     <h1 className="text-4xl sm:text-5xl font-display font-extrabold tracking-tight text-slate-900">
-                      About Bioenergy <span className="text-emerald-600">Nexus</span>
+                      About Aurenix <span className="text-emerald-600">Research</span>
                     </h1>
                     <p className="text-base sm:text-lg text-slate-600 max-w-3xl leading-relaxed">
-                      Our mission is to establish waste-to-energy technologies and circular economy principles across Nigeria, offering high-quality peer-reviewed research, operations training, and feasibility advisory.
+                      Our mission is to establish waste-to-energy technologies and circular economy principles across Nigeria—bridging the critical gap between academic chemical research and the industrial-scale implementation of sustainable bio-waste systems.
                     </p>
                   </div>
                 </div>
@@ -638,8 +660,22 @@ export default function App() {
                 <CollaborationSection 
                   user={user}
                   onSignIn={() => setView('signin')}
-                  activePartnerships={activePartnerships}
-                  setActivePartnerships={setActivePartnerships}
+                  onNavigateToConsole={() => setView('console')}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'console' && (
+              <motion.div
+                key="operational-console-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <OperationalConsole 
+                  user={user}
+                  onSignIn={() => setView('signin')}
                 />
               </motion.div>
             )}
@@ -665,7 +701,7 @@ export default function App() {
                       Connect with Us
                     </div>
                     <h1 className="text-4xl sm:text-5xl font-display font-extrabold tracking-tight text-slate-900 font-bold">
-                      Contact <span className="text-emerald-600">Bioenergy Nexus</span>
+                      Contact <span className="text-emerald-600">Aurenix Research</span>
                     </h1>
                     <p className="text-base sm:text-lg text-slate-600 max-w-3xl leading-relaxed">
                       Have questions about our peer-reviewed research, specialized feasibility studies, or operations training? Get in touch with our lead analysts.
@@ -691,6 +727,41 @@ export default function App() {
                   activeInquiries={activeInquiries}
                   activePartnerships={activePartnerships}
                   onRefreshAll={handleRefreshAll}
+                  onNavigateToProfile={() => setView('profile')}
+                  onNavigateToSettings={() => setView('settings')}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'profile' && user && (
+              <motion.div
+                key="profile-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <ProfilePage 
+                  user={user}
+                  onNavigateToView={setView}
+                  theme={theme}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'settings' && user && (
+              <motion.div
+                key="settings-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <SettingsPage 
+                  user={user}
+                  onNavigateToView={setView}
+                  theme={theme}
+                  onToggleTheme={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
                 />
               </motion.div>
             )}
@@ -728,8 +799,14 @@ export default function App() {
                   authError={authError}
                   setAuthError={setAuthError}
                   onSuccess={(authenticatedUser) => {
-                    localStorage.removeItem('nexus_demo_mode');
-                    localStorage.removeItem('nexus_demo_user');
+                    const isSandbox = authenticatedUser?.uid?.startsWith('sandbox-') || authenticatedUser?.uid === 'sandbox-guest-user';
+                    if (isSandbox) {
+                      localStorage.setItem('nexus_demo_mode', 'true');
+                      localStorage.setItem('nexus_demo_user', JSON.stringify(authenticatedUser));
+                    } else {
+                      localStorage.removeItem('nexus_demo_mode');
+                      localStorage.removeItem('nexus_demo_user');
+                    }
                     setUser(authenticatedUser);
                     if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
                       setView('initializing');

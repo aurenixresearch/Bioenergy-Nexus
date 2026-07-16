@@ -139,21 +139,21 @@ export default function SignInPage({
   const demoProfiles = [
     {
       uid: 'sandbox-blessing-williams',
-      email: 'blessing.williams@bioenergy-nexus.org',
+      email: 'blessing.williams@aurenix-research.org',
       displayName: 'Blessing Williams',
       role: 'Student Cohort',
       idNum: '5999883-DEV'
     },
     {
       uid: 'sandbox-chidi-okafor',
-      email: 'chidi.okafor@bioenergy-nexus.org',
+      email: 'chidi.okafor@aurenix-research.org',
       displayName: 'Engr. Chidi Okafor',
       role: 'Clean Tech Consultant',
       idNum: '4820124-CT'
     },
     {
       uid: 'sandbox-samuel-adebayo',
-      email: 'samuel.adebayo@bioenergy-nexus.org',
+      email: 'samuel.adebayo@aurenix-research.org',
       displayName: 'Dr. Samuel Adebayo',
       role: 'Academic Partner',
       idNum: '8839011-AP'
@@ -220,7 +220,7 @@ export default function SignInPage({
       setConfirmPassword('');
 
       setTimeout(async () => {
-        const targetEmail = email || 'blessing.williams@bioenergy-nexus.org';
+        const targetEmail = email || 'blessing.williams@aurenix-research.org';
         const matchingDemo = demoProfiles.find(p => p.email === targetEmail) || demoProfiles[0];
         
         await onGuestSignIn({

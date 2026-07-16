@@ -206,7 +206,7 @@ export default function AboutSection() {
                 Empowering Decentralized Energy
               </h3>
               <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-light">
-                Modern bioenergy offers a stable, consistent baseload unlike traditional solar or wind models. By analyzing daily municipal municipal waste profiles and regional biomass catalysts, we generate safe, robust plans for rural micro-grids and municipal landfills.
+                Modern bioenergy requires an empirical bridge between lab-tested kinetics and physical reactors. By analyzing regional biomass catalysts and organic waste profiles, we translate academic chemical findings into safe, robust, industrial-scale systems.
               </p>
             </div>
 

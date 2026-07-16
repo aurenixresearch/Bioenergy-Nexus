@@ -138,7 +138,7 @@ export default function ResearchSection({
 
       setCustomPapers(prev => [...prev, createdPaper]);
       setIsModalOpen(false);
-      showNotification('Research entry contributed successfully to Nexus Repository!', 'success');
+      showNotification('Research entry contributed successfully to Aurenix Repository!', 'success');
     } catch (err) {
       console.error('Error adding custom paper:', err);
       showNotification('Could not submit paper. Please try again.', 'error');
@@ -207,7 +207,7 @@ export default function ResearchSection({
               Repository
             </div>
             <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-slate-900 tracking-tight">
-              Nexus Research Repository
+              Aurenix Research Repository
             </h2>
             <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
               Access peer-reviewed studies, technical feasibility templates, and policy briefs. Securely bookmark materials to your user profile for streamlined retrieval.

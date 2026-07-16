@@ -15,21 +15,25 @@ import {
   Sparkles,
   User,
   Moon,
+  Sun,
   LogOut,
   Settings,
   Home,
   Mail,
-  Bookmark
+  Bookmark,
+  Activity
 } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 
 interface FloatingAsideProps {
   user: FirebaseUser | null;
-  currentView: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers';
-  setView: (view: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers') => void;
+  currentView: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers' | 'console' | 'profile' | 'settings';
+  setView: (view: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers' | 'console' | 'profile' | 'settings') => void;
   isCollapsed: boolean;
   setIsCollapsed: (collapsed: boolean) => void;
   onSignOut?: () => void;
+  theme?: 'light' | 'dark';
+  onToggleTheme?: () => void;
 }
 
 export default function FloatingAside({ 
@@ -38,7 +42,9 @@ export default function FloatingAside({
   setView,
   isCollapsed,
   setIsCollapsed,
-  onSignOut
+  onSignOut,
+  theme,
+  onToggleTheme
 }: FloatingAsideProps) {
   // If no user is logged in, do not render the floating aside
   if (!user) return null;
@@ -46,22 +52,22 @@ export default function FloatingAside({
   // Mobile drawer open state
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // Decorative dark mode state (only visual state to match image's moon toggle)
-  const [isDecorativeDark, setIsDecorativeDark] = useState(false);
-
   // Flat list of navigation items
   const navItems = [
     { label: 'User Dashboard', id: 'dashboard' as const, icon: LayoutDashboard, desc: 'Manage your submissions' },
+    { label: 'My Public Profile', id: 'profile' as const, icon: User, desc: 'View and edit your portfolio' },
+    { label: 'System Settings', id: 'settings' as const, icon: Settings, desc: 'Preferences and privacy' },
     { label: 'Explore Researchers', id: 'researchers' as const, icon: Users, desc: 'Discover experts across Africa' },
     { label: 'Research Hub', id: 'research' as const, icon: BookOpen, desc: 'Explore published research' },
     { label: 'Saved Studies', id: 'saved' as const, icon: Bookmark, desc: 'Your bookmarked research' },
     { label: 'Services', id: 'services' as const, icon: HeartHandshake, desc: 'Request specialized consulting' },
     { label: 'Collaborations', id: 'collaboration' as const, icon: Users, desc: 'Partner with global teams' },
+    { label: 'Operational Console', id: 'console' as const, icon: Activity, desc: 'Manage workspaces & grants' },
     { label: 'About Us', id: 'about' as const, icon: Info, desc: 'Learn about our mission' },
     { label: 'Contact Us', id: 'contact' as const, icon: Mail, desc: 'Get in touch with our team' },
   ];
 
-  const handleNav = (id: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers') => {
+  const handleNav = (id: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers' | 'console' | 'profile' | 'settings') => {
     setView(id);
     setIsMobileOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -101,17 +107,17 @@ export default function FloatingAside({
                   <div className="p-2 bg-emerald-50 rounded-xl">
                     <img 
                       src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
-                      alt="Bioenergy Nexus Logo" 
+                      alt="Aurenix Research Logo" 
                       referrerPolicy="no-referrer"
                       className="w-5 h-5 object-contain"
                     />
                   </div>
                   <div>
                     <span className="block text-sm font-display font-black text-slate-900 tracking-tight leading-none">
-                      Bioenergy <span className="text-emerald-600">Nexus</span>
+                      Aurenix <span className="text-emerald-600">Research</span>
                     </span>
                     <span className="block text-[8px] font-mono tracking-widest text-slate-400 uppercase mt-0.5">
-                      Sustainability Hub
+                      research & collaboration hub
                     </span>
                   </div>
                 </motion.div>
@@ -125,7 +131,7 @@ export default function FloatingAside({
                 >
                   <img 
                     src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
-                    alt="Bioenergy Nexus Logo" 
+                    alt="Aurenix Research Logo" 
                     referrerPolicy="no-referrer"
                     className="w-5 h-5 object-contain"
                   />
@@ -133,16 +139,16 @@ export default function FloatingAside({
               )}
             </AnimatePresence>
 
-            {!isCollapsed && (
+            {!isCollapsed && onToggleTheme && (
               <motion.button
-                onClick={() => setIsDecorativeDark(!isDecorativeDark)}
+                onClick={onToggleTheme}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                className={`p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-50 cursor-pointer ${isDecorativeDark ? 'text-yellow-500 hover:text-yellow-600' : ''}`}
+                className={`p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-50 cursor-pointer ${theme === 'dark' ? 'text-emerald-400 hover:text-emerald-500' : ''}`}
                 title="Toggle visual style mode"
                 id="aside_theme_toggle"
               >
-                <Moon className="w-4 h-4" />
+                {theme === 'dark' ? <Sun className="w-4 h-4 text-emerald-400" /> : <Moon className="w-4 h-4" />}
               </motion.button>
             )}
           </div>
@@ -176,7 +182,7 @@ export default function FloatingAside({
                         {user.displayName || 'Guest Researcher'}
                       </div>
                       <div className="text-[9px] text-slate-400 truncate">
-                        {user.email || 'guest@bioenergy-nexus.org'}
+                        {user.email || 'guest@aurenix-research.org'}
                       </div>
                     </div>
                   </div>
@@ -271,7 +277,7 @@ export default function FloatingAside({
           {/* Decorative Settings bottom block matching reference image */}
           <div className="relative group/bottom-settings">
             <button
-              onClick={() => handleNav('dashboard')}
+              onClick={() => handleNav('settings')}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all duration-200 cursor-pointer"
             >
               <Settings className="w-4.5 h-4.5 text-slate-400 group-hover/bottom-settings:text-slate-700" />
@@ -367,28 +373,40 @@ export default function FloatingAside({
                     <div className="p-2 bg-emerald-50 rounded-xl">
                       <img 
                         src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
-                        alt="Bioenergy Nexus Logo" 
+                        alt="Aurenix Research Logo" 
                         referrerPolicy="no-referrer"
                         className="w-6 h-6 object-contain"
                       />
                     </div>
                     <div>
                       <span className="block text-lg font-display font-extrabold text-slate-900 leading-none">
-                        Bioenergy <span className="text-emerald-600">Nexus</span>
+                        Aurenix <span className="text-emerald-600">Research</span>
                       </span>
                       <span className="block text-[9px] font-mono tracking-wider text-slate-400 uppercase mt-0.5">
                         Sustainability Menu
                       </span>
                     </div>
                   </div>
-                  <motion.button
-                    onClick={() => setIsMobileOpen(false)}
-                    whileTap={{ scale: 0.9 }}
-                    className="p-2 text-slate-400 hover:text-slate-800 rounded-xl hover:bg-slate-50 cursor-pointer"
-                    id="mobile_aside_close"
-                  >
-                    <X className="w-5 h-5" />
-                  </motion.button>
+                  <div className="flex items-center gap-2">
+                    {onToggleTheme && (
+                      <motion.button
+                        onClick={onToggleTheme}
+                        whileTap={{ scale: 0.9 }}
+                        className="p-2 text-slate-400 hover:text-slate-800 rounded-xl hover:bg-slate-50 cursor-pointer"
+                        id="mobile_aside_theme_toggle"
+                      >
+                        {theme === 'dark' ? <Sun className="w-5 h-5 text-emerald-500" /> : <Moon className="w-5 h-5" />}
+                      </motion.button>
+                    )}
+                    <motion.button
+                      onClick={() => setIsMobileOpen(false)}
+                      whileTap={{ scale: 0.9 }}
+                      className="p-2 text-slate-400 hover:text-slate-800 rounded-xl hover:bg-slate-50 cursor-pointer"
+                      id="mobile_aside_close"
+                    >
+                      <X className="w-5 h-5" />
+                    </motion.button>
+                  </div>
                 </div>
 
                 {/* Subtitle / User Card */}
@@ -472,7 +490,7 @@ export default function FloatingAside({
 
                 {/* Footer */}
                 <div className="pt-4 border-t border-slate-100 text-[10px] text-slate-400 text-center font-mono">
-                  BIOENERGY NEXUS v1.2 • SECURE SESSION
+                  AURENIX RESEARCH v1.2 • SECURE SESSION
                 </div>
               </motion.div>
             </>

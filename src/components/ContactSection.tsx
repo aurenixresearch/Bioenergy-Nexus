@@ -389,7 +389,7 @@ export default function ContactSection() {
                     <div className="space-y-2 max-w-md mx-auto">
                       <h4 className="text-lg font-bold text-slate-900 font-display">Inquiry Sent Successfully!</h4>
                       <p className="text-xs text-slate-500 leading-relaxed">
-                        Thank you for reaching out to Bioenergy Nexus. Your message has been routed to our direct desk.
+                        Thank you for reaching out to Aurenix Research. Your message has been routed to our direct desk.
                       </p>
                     </div>
 
