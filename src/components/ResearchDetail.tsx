@@ -15,7 +15,7 @@ interface ResearchDetailProps {
   onBack: () => void;
   isSaved: boolean;
   onSaveToggle: () => void;
-  onDownload: (title: string) => void;
+  onDownload: (paper: ResearchPaper) => void;
   user: FirebaseUser | null;
   onSignIn: () => void;
 }
@@ -139,7 +139,7 @@ export default function ResearchDetail({
   const handleDownloadClick = () => {
     const newDownloads = downloadsCount + 1;
     setDownloadsCount(newDownloads);
-    onDownload(currentVersionData.title);
+    onDownload(paper);
     if (paper.isCustom) {
       updateCustomPaper(paper.id, { downloadsCount: newDownloads });
     }

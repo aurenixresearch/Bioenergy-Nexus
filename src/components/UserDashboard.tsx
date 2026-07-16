@@ -43,6 +43,7 @@ interface UserDashboardProps {
   onRefreshAll: () => Promise<void>;
   onNavigateToProfile?: () => void;
   onNavigateToSettings?: () => void;
+  setSavedPaperIds?: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export default function UserDashboard({
@@ -52,7 +53,8 @@ export default function UserDashboard({
   activePartnerships,
   onRefreshAll,
   onNavigateToProfile,
-  onNavigateToSettings
+  onNavigateToSettings,
+  setSavedPaperIds
 }: UserDashboardProps) {
   const [savedPapers, setSavedPapers] = useState<ResearchPaper[]>([]);
   const [loading, setLoading] = useState(false);
@@ -126,6 +128,9 @@ export default function UserDashboard({
       await unsavePaper(user.uid, paperId);
       // Update local state
       setSavedPapers(prev => prev.filter(p => p.id !== paperId));
+      if (setSavedPaperIds) {
+        setSavedPaperIds(prev => prev.filter(id => id !== paperId));
+      }
     } catch (err) {
       console.error('Error removing bookmark:', err);
     }

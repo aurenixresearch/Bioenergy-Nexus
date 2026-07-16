@@ -428,5 +428,92 @@ html {
   border: none !important;
 }
 
+/* ==========================================================================
+   Tactile & Elegant Floating Elements (Cards and Buttons - Excluding Aside)
+   ========================================================================== */
+
+/* Cards of the website (excluding aside elements) */
+#app_layout_wrapper div.bg-white,
+#app_layout_wrapper div[class*="bg-white"],
+#app_layout_wrapper div.rounded-2xl,
+#app_layout_wrapper div.rounded-xl,
+#app_layout_wrapper .card,
+#app_layout_wrapper section div.shadow-sm,
+#app_layout_wrapper main div.shadow-sm {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -3px rgba(0, 0, 0, 0.03) !important;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease !important;
+}
+
+#app_layout_wrapper div.bg-white:hover,
+#app_layout_wrapper div[class*="bg-white"]:hover,
+#app_layout_wrapper div.rounded-2xl:hover,
+#app_layout_wrapper div.rounded-xl:hover,
+#app_layout_wrapper .card:hover,
+#app_layout_wrapper section div.shadow-sm:hover,
+#app_layout_wrapper main div.shadow-sm:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12), 0 10px 20px -6px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Buttons of the website (excluding aside elements and brand logo button) */
+#app_layout_wrapper button:not(#brand_logo_btn),
+#app_layout_wrapper a.btn,
+#app_layout_wrapper [role="button"] {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background-color 0.2s ease !important;
+}
+
+#app_layout_wrapper button:not(#brand_logo_btn):hover,
+#app_layout_wrapper a.btn:hover,
+#app_layout_wrapper [role="button"]:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+#app_layout_wrapper button:not(#brand_logo_btn):active,
+#app_layout_wrapper a.btn:active,
+#app_layout_wrapper [role="button"]:active {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Ensure active state feels tactile and responsive in dark mode */
+.dark #app_layout_wrapper div.bg-white,
+.dark #app_layout_wrapper div[class*="bg-white"],
+.dark #app_layout_wrapper div.rounded-2xl,
+.dark #app_layout_wrapper div.rounded-xl,
+.dark #app_layout_wrapper .card {
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65), 0 0 20px rgba(52, 211, 153, 0.03) !important;
+}
+
+.dark #app_layout_wrapper div.bg-white:hover,
+.dark #app_layout_wrapper div[class*="bg-white"]:hover,
+.dark #app_layout_wrapper div.rounded-2xl:hover,
+.dark #app_layout_wrapper div.rounded-xl:hover,
+.dark #app_layout_wrapper .card:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(52, 211, 153, 0.12) !important;
+}
+
+.dark #app_layout_wrapper button:not(#brand_logo_btn),
+.dark #app_layout_wrapper a.btn,
+.dark #app_layout_wrapper [role="button"] {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 8px rgba(52, 211, 153, 0.03) !important;
+}
+
+.dark #app_layout_wrapper button:not(#brand_logo_btn):hover,
+.dark #app_layout_wrapper a.btn:hover,
+.dark #app_layout_wrapper [role="button"]:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(52, 211, 153, 0.2) !important;
+}
+
+.dark #app_layout_wrapper button:not(#brand_logo_btn):active,
+.dark #app_layout_wrapper a.btn:active,
+.dark #app_layout_wrapper [role="button"]:active {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4) !important;
+}
+
 
 

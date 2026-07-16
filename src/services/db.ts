@@ -481,42 +481,20 @@ export async function getUserProfile(userId: string): Promise<any> {
       return { id: docSnap.id, ...docSnap.data() };
     }
 
-    // Auto-create a profile doc in Firestore using Google account information if the user is authenticated via Firebase
+    // Check if the user is authenticated via Firebase but does not have a profile document yet (e.g. Google Sign-In registration)
     const currentUser = auth.currentUser;
     if (currentUser && currentUser.uid === userId && !currentUser.isAnonymous) {
-      const defaultProfile = {
+      return {
+        id: userId,
+        needsOnboarding: true,
         fullName: currentUser.displayName || 'Google Scholar',
         email: currentUser.email || '',
-        role: 'Academic Partner',
-        country: 'Nigeria',
-        institution: 'Aurenix Research Network',
-        researchInterests: ['Bioenergy', 'Waste-to-Energy'],
-        termsAccepted: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        role: '',
+        country: '',
+        institution: '',
+        researchInterests: [],
+        termsAccepted: false
       };
-      
-      try {
-        await setDoc(docRef, {
-          fullName: defaultProfile.fullName,
-          email: defaultProfile.email,
-          role: defaultProfile.role,
-          country: defaultProfile.country,
-          institution: defaultProfile.institution,
-          researchInterests: defaultProfile.researchInterests,
-          termsAccepted: defaultProfile.termsAccepted,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-        return { id: userId, ...defaultProfile };
-      } catch (e) {
-        if (isOfflineError(e)) {
-          setFirestoreOffline(true);
-          return getUserProfile(userId);
-        }
-        console.warn('Error auto-creating profile in Firestore on fetch, returning local object:', e);
-        return { id: userId, ...defaultProfile };
-      }
     }
 
     return null;

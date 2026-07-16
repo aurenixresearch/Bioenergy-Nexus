@@ -1328,54 +1328,37 @@ export default function SignInPage({
 
           {/* Collapsible Sandbox Profile Selection Handlers */}
           <div className="pt-2 border-t border-slate-200/60" id="sandbox_profiles_block">
-            <button
-              type="button"
-              onClick={() => setHandlersOpen(!handlersOpen)}
-              className="w-full flex items-center justify-between text-slate-400 hover:text-slate-600 py-2.5 text-[10px] font-bold tracking-widest uppercase cursor-pointer"
-              id="sandbox_profiles_toggle"
+            <div
+              className="space-y-2 pt-2.5"
+              id="sandbox_profiles_dropdown"
             >
-              <span>Bend Profile Selection Handlers</span>
-              {handlersOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
-
-            <AnimatePresence>
-              {handlersOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden space-y-2 pt-2.5"
-                  id="sandbox_profiles_dropdown"
-                >
-                  <p className="text-[10px] text-slate-400 italic leading-relaxed pb-1">
-                    Select a verified profile below to immediately pop data and sign in safely within the sandbox interface:
-                  </p>
-                  <div className="grid grid-cols-1 gap-2">
-                    {demoProfiles.map((p) => (
-                      <button
-                        key={p.uid}
-                        type="button"
-                        onClick={() => selectDemoProfile(p)}
-                        className="flex items-center justify-between p-2.5 bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 rounded-xl text-left transition-all cursor-pointer group"
-                      >
-                        <div>
-                          <div className="text-xs font-bold text-slate-800 group-hover:text-emerald-800 flex items-center gap-1.5">
-                            <User className="w-3.5 h-3.5 text-emerald-600" />
-                            {p.displayName}
-                          </div>
-                          <div className="text-[9px] text-slate-400 font-mono mt-0.5">
-                            {p.role} • ID: {p.idNum}
-                          </div>
-                        </div>
-                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100/50 px-2 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
-                          LOAD
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+              <p className="text-[10px] text-slate-400 italic leading-relaxed pb-1">
+                Select a verified profile below to immediately pop data and sign in safely within the sandbox interface:
+              </p>
+              <div className="grid grid-cols-1 gap-2">
+                {demoProfiles.map((p) => (
+                  <button
+                    key={p.uid}
+                    type="button"
+                    onClick={() => selectDemoProfile(p)}
+                    className="flex items-center justify-between p-2.5 bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 rounded-xl text-left transition-all cursor-pointer group"
+                  >
+                    <div>
+                      <div className="text-xs font-bold text-slate-800 group-hover:text-emerald-800 flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-emerald-600" />
+                        {p.displayName}
+                      </div>
+                      <div className="text-[9px] text-slate-400 font-mono mt-0.5">
+                        {p.role} • ID: {p.idNum}
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100/50 px-2 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                      LOAD
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
         </div>

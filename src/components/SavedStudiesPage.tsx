@@ -6,6 +6,7 @@ import { RESEARCH_PAPERS } from '../data';
 import { unsavePaper, getSavedPaperIds, getCustomPapers } from '../services/db';
 import { motion } from 'motion/react';
 import ResearchDetail from './ResearchDetail';
+import { generateResearchPDF } from '../utils/pdfGenerator';
 
 interface SavedStudiesPageProps {
   user: FirebaseUser | null;
@@ -72,8 +73,14 @@ export default function SavedStudiesPage({
     }
   };
 
-  const handleDownload = (title: string) => {
-    showNotification(`Initiated transfer of: "${title}"`, 'success');
+  const handleDownload = (paper: ResearchPaper) => {
+    showNotification(`Preparing and downloading report: "${paper.title}"...`, 'success');
+    try {
+      generateResearchPDF(paper);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      showNotification('Failed to generate PDF. Please try again.', 'error');
+    }
   };
 
   // Filter papers
@@ -234,7 +241,7 @@ export default function SavedStudiesPage({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDownload(paper.title);
+                        handleDownload(paper);
                       }}
                       className="p-2 bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 rounded-lg transition-colors border-0 shadow-sm cursor-pointer"
                       title="Download Study"

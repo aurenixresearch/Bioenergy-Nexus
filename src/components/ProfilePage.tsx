@@ -64,6 +64,78 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
   // Local success/error alerts
   const [alertMsg, setAlertMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleAvatarChangeClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setAlertMsg({ type: 'error', text: 'Please select an image file only.' });
+      setTimeout(() => setAlertMsg(null), 4000);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 300;
+        const MAX_HEIGHT = 300;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+        if (profileData) {
+          const updated = {
+            ...profileData,
+            profilePicture: compressedBase64,
+            updatedAt: new Date().toISOString()
+          };
+          setLoading(true);
+          try {
+            await createUserProfile(user.uid, updated);
+            setProfileData(updated);
+            setEditForm(JSON.parse(JSON.stringify(updated)));
+            setAlertMsg({ type: 'success', text: 'Profile picture updated successfully.' });
+            setTimeout(() => setAlertMsg(null), 4000);
+          } catch (err) {
+            console.error('Error saving profile picture:', err);
+            setAlertMsg({ type: 'error', text: 'Failed to update profile picture.' });
+            setTimeout(() => setAlertMsg(null), 4000);
+          } finally {
+            setLoading(false);
+          }
+        }
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const ALL_INTERESTS_OPTIONS = [
     'Solar Energy', 'Wind Energy', 'Hydropower', 'Bioenergy', 'Energy Storage', 
     'Smart Grid', 'Climate Change', 'Circular Economy', 'Sustainable Development', 
@@ -358,8 +430,16 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
                   referrerPolicy="no-referrer"
                 />
               </div>
+              <input 
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+                id="profile_avatar_file_input"
+              />
               <button 
-                onClick={() => setIsEditModalOpen(true)}
+                onClick={handleAvatarChangeClick}
                 className="absolute bottom-1 right-1 p-2 bg-emerald-600 text-white rounded-full hover:bg-emerald-500 shadow-md cursor-pointer transition-transform duration-200 group-hover/avatar:scale-110"
                 title="Change Photo"
                 id="profile_avatar_change_btn"
@@ -465,7 +545,7 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
                     {task.check ? (
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     ) : (
-                      <div className="w-4 h-4 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700" />
+                      <div className="w-4 h-4 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-400" />
                     )}
                   </div>
                 ))}

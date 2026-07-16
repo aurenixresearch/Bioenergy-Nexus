@@ -7,6 +7,7 @@ import { savePaper, unsavePaper, addCustomPaper, getCustomPapers } from '../serv
 import { motion, AnimatePresence } from 'motion/react';
 import ResearchDetail from './ResearchDetail';
 import PublishWizard from './PublishWizard';
+import { generateResearchPDF } from '../utils/pdfGenerator';
 
 interface ResearchSectionProps {
   user: FirebaseUser | null;
@@ -147,8 +148,14 @@ export default function ResearchSection({
   };
 
   // Simulated download
-  const handleDownload = (title: string) => {
-    showNotification(`Downloading study: "${title}"... (Simulated)`, 'success');
+  const handleDownload = (paper: ResearchPaper) => {
+    showNotification(`Preparing and downloading report: "${paper.title}"...`, 'success');
+    try {
+      generateResearchPDF(paper);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      showNotification('Failed to generate PDF. Please try again.', 'error');
+    }
   };
 
   const categories = ['All', 'Bioenergy Technology', 'Waste-to-Energy', 'Environmental Sustainability', 'Climate & Energy Policy'];
@@ -324,7 +331,7 @@ export default function ResearchSection({
                   {/* Actions Bar */}
                   <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-4">
                     <motion.button
-                      onClick={() => handleDownload(paper.title)}
+                      onClick={() => handleDownload(paper)}
                       whileHover={{ scale: 1.05 }}
                       className="inline-flex items-center gap-2 text-xs font-bold text-emerald-800 hover:text-emerald-950 transition-colors focus:outline-none cursor-pointer"
                       id={`download_btn_${paper.id}`}

@@ -38,20 +38,19 @@ export function setFirestoreOffline(val: boolean) {
 }
 
 async function testConnection() {
+  const timeoutPromise = new Promise((_, reject) => 
+    setTimeout(() => reject(new Error('Connection timeout')), 2500)
+  );
+
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
+    await Promise.race([
+      getDocFromServer(doc(db, 'test', 'connection')),
+      timeoutPromise
+    ]);
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
-    if (
-      errMsg.includes('the client is offline') || 
-      errMsg.includes('unavailable') || 
-      errMsg.includes('Could not reach') || 
-      errMsg.includes('Connection failed') ||
-      errMsg.includes('failed to connect')
-    ) {
-      console.warn("Firestore is unreachable or offline. Activating local storage demo fallback mode.");
-      setFirestoreOffline(true);
-    }
+    console.warn("Firestore connection check failed or timed out:", errMsg, "- Activating local storage offline fallback mode.");
+    setFirestoreOffline(true);
   }
 }
 testConnection();

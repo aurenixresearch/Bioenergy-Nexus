@@ -7,7 +7,7 @@ import {
   User as FirebaseUser 
 } from 'firebase/auth';
 import { auth, googleProvider } from './firebase';
-import { getSavedPaperIds, getUserInquiries, getUserPartnerships } from './services/db';
+import { getSavedPaperIds, getUserInquiries, getUserPartnerships, getUserProfile } from './services/db';
 import { ConsultationInquiry, PartnershipSubmission } from './types';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, ShieldAlert, Sparkles, X, UserCheck, KeyRound, HelpCircle, BookOpen, Users, HeartHandshake, Leaf, Award, Quote, Building, CheckCircle2, FlaskConical } from 'lucide-react';
@@ -15,6 +15,7 @@ import { AlertCircle, ShieldAlert, Sparkles, X, UserCheck, KeyRound, HelpCircle,
 // Components
 import Navbar from './components/Navbar';
 import SignInPage from './components/SignInPage';
+import OnboardingPage from './components/OnboardingPage';
 import FloatingAside from './components/FloatingAside';
 import Hero from './components/Hero';
 import AboutSection from './components/AboutSection';
@@ -42,8 +43,9 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Layout View: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers' | 'console' | 'profile' | 'settings'
-  const [currentView, setView] = useState<'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers' | 'console' | 'profile' | 'settings'>('initializing');
+  // Layout View: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers' | 'console' | 'profile' | 'settings' | 'onboarding'
+  const [currentView, setView] = useState<'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers' | 'console' | 'profile' | 'settings' | 'onboarding'>('initializing');
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   // Sidebar collapsed state and mobile check
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -81,7 +83,7 @@ export default function App() {
 
   // Listen to Auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         // Real authenticated Firebase user is present (e.g. Google Sign-In)
         // We MUST clear any cached sandbox/guest demo mode and use the real user details.
@@ -90,11 +92,9 @@ export default function App() {
         
         setUser(currentUser);
         setAuthLoading(false);
-        refreshAllUserData(currentUser.uid);
+        await refreshAllUserData(currentUser.uid);
         if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
           setView('initializing');
-        } else {
-          setView('dashboard');
         }
         return;
       }
@@ -116,11 +116,9 @@ export default function App() {
             }
             setUser(demoObj);
             setAuthLoading(false);
-            refreshAllUserData(demoObj.uid);
+            await refreshAllUserData(demoObj.uid);
             if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
               setView('initializing');
-            } else {
-              setView('dashboard');
             }
             return;
           } catch (e) {
@@ -135,7 +133,7 @@ export default function App() {
       setActiveInquiries([]);
       setActivePartnerships([]);
       // Keep the view intact unless we're on dashboard (which requires login)
-      setView(prev => prev === 'dashboard' ? 'home' : prev);
+      setView(prev => prev === 'dashboard' || prev === 'onboarding' ? 'home' : prev);
     });
     return () => unsubscribe();
   }, []);
@@ -143,14 +141,25 @@ export default function App() {
   // Sync user info
   const refreshAllUserData = async (userId: string) => {
     try {
-      const [savedIds, inquiries, partnerships] = await Promise.all([
+      const [savedIds, inquiries, partnerships, profile] = await Promise.all([
         getSavedPaperIds(userId),
         getUserInquiries(userId),
-        getUserPartnerships(userId)
+        getUserPartnerships(userId),
+        getUserProfile(userId)
       ]);
       setSavedPaperIds(savedIds || []);
       setActiveInquiries(inquiries || []);
       setActivePartnerships(partnerships || []);
+
+      if (profile && profile.needsOnboarding) {
+        setNeedsOnboarding(true);
+        if (sessionStorage.getItem('nexus_system_initialized') === 'true') {
+          setView('onboarding');
+        }
+      } else {
+        setNeedsOnboarding(false);
+        setView(prev => prev === 'onboarding' ? 'dashboard' : prev);
+      }
     } catch (err) {
       console.error('Error synchronizing Firestore user data:', err);
     }
@@ -215,7 +224,7 @@ export default function App() {
     <div className="bg-slate-50 min-h-screen font-sans flex flex-col justify-between" id="app_root">
       
       {/* Collapsible Floating Aside Section */}
-      {currentView !== 'signin' && currentView !== 'initializing' && (
+      {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && (
         <FloatingAside 
           user={user}
           currentView={currentView}
@@ -231,7 +240,7 @@ export default function App() {
       {/* Main layout container with animated padding-left for the side menu */}
       <motion.div
         animate={{ 
-          paddingLeft: (user && !isMobile) ? (isCollapsed ? '94px' : '280px') : '0px'
+          paddingLeft: (user && !isMobile && currentView !== 'onboarding') ? (isCollapsed ? '94px' : '280px') : '0px'
         }}
         transition={{ type: 'spring', stiffness: 220, damping: 26 }}
         className="flex-grow flex flex-col justify-between min-h-screen w-full"
@@ -729,6 +738,7 @@ export default function App() {
                   onRefreshAll={handleRefreshAll}
                   onNavigateToProfile={() => setView('profile')}
                   onNavigateToSettings={() => setView('settings')}
+                  setSavedPaperIds={setSavedPaperIds}
                 />
               </motion.div>
             )}
@@ -848,6 +858,26 @@ export default function App() {
               </motion.div>
             )}
 
+            {currentView === 'onboarding' && user && (
+              <motion.div
+                key="onboarding-page"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <OnboardingPage 
+                  user={user}
+                  onComplete={async () => {
+                    setNeedsOnboarding(false);
+                    await refreshAllUserData(user.uid);
+                    setView('dashboard');
+                  }}
+                  onSignOut={handleSignOut}
+                />
+              </motion.div>
+            )}
+
             {currentView === 'initializing' && (
               <motion.div
                 key="initializing-page"
@@ -860,7 +890,7 @@ export default function App() {
                   user={user}
                   onComplete={() => {
                     sessionStorage.setItem('nexus_system_initialized', 'true');
-                    setView(user ? 'dashboard' : 'home');
+                    setView(user ? (needsOnboarding ? 'onboarding' : 'dashboard') : 'home');
                   }}
                 />
               </motion.div>
@@ -869,7 +899,7 @@ export default function App() {
         </main>
 
         {/* Footer */}
-        {currentView !== 'signin' && currentView !== 'initializing' && <Footer onNavClick={handlePageSelect} />}
+        {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && <Footer onNavClick={handlePageSelect} />}
       </motion.div>
 
     </div>
