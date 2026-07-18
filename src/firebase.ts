@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { initializeAuth, browserLocalPersistence, browserPopupRedirectResolver, GoogleAuthProvider } from 'firebase/auth';
 import { initializeFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import config from '../firebase-applet-config.json';
 
@@ -20,7 +20,10 @@ export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
 }, config.firestoreDatabaseId || '(default)');
 
-export const auth = getAuth(app);
+export const auth = initializeAuth(app, {
+  persistence: browserLocalPersistence,
+  popupRedirectResolver: browserPopupRedirectResolver,
+});
 export const googleProvider = new GoogleAuthProvider();
 
 // Standard scopes if needed
@@ -39,16 +42,32 @@ export function setFirestoreOffline(val: boolean) {
 
 async function testConnection() {
   const timeoutPromise = new Promise((_, reject) => 
-    setTimeout(() => reject(new Error('Connection timeout')), 2500)
+    setTimeout(() => reject(new Error('Connection timeout')), 4000)
   );
 
   try {
     await Promise.race([
-      getDocFromServer(doc(db, 'test', 'connection')),
+      getDocFromServer(doc(db, 'users', 'connection_test_doc')),
       timeoutPromise
     ]);
+    console.log("Firestore connection check succeeded. Operating in online mode.");
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
+    
+    // If the error is permission-denied or document-not-found, we actually reached the Firestore backend!
+    // It means the connection is active and healthy. Only activate offline mode for actual connectivity issues or timeouts.
+    const isPermissionOrExistsError = 
+      errMsg.includes('permission-denied') || 
+      errMsg.includes('Permission denied') ||
+      errMsg.includes('not-found') ||
+      errMsg.includes('not found') ||
+      errMsg.includes('permission');
+
+    if (isPermissionOrExistsError) {
+      console.log("Firestore reached successfully (confirmed via secure response). Operating in online mode.");
+      return;
+    }
+
     console.warn("Firestore connection check failed or timed out:", errMsg, "- Activating local storage offline fallback mode.");
     setFirestoreOffline(true);
   }

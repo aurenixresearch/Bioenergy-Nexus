@@ -18,6 +18,7 @@ import {
   Sun,
   LogOut,
   Settings,
+  Shield,
   Home,
   Mail,
   Bookmark,
@@ -27,8 +28,9 @@ import { User as FirebaseUser } from 'firebase/auth';
 
 interface FloatingAsideProps {
   user: FirebaseUser | null;
-  currentView: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers' | 'console' | 'profile' | 'settings';
-  setView: (view: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers' | 'console' | 'profile' | 'settings') => void;
+  userProfile?: any | null;
+  currentView: any;
+  setView: (view: any) => void;
   isCollapsed: boolean;
   setIsCollapsed: (collapsed: boolean) => void;
   onSignOut?: () => void;
@@ -38,6 +40,7 @@ interface FloatingAsideProps {
 
 export default function FloatingAside({ 
   user, 
+  userProfile,
   currentView, 
   setView,
   isCollapsed,
@@ -67,7 +70,7 @@ export default function FloatingAside({
     { label: 'Contact Us', id: 'contact' as const, icon: Mail, desc: 'Get in touch with our team' },
   ];
 
-  const handleNav = (id: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'researchers' | 'console' | 'profile' | 'settings') => {
+  const handleNav = (id: any) => {
     setView(id);
     setIsMobileOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -218,6 +221,7 @@ export default function FloatingAside({
           {/* Flat Navigation List (No sections/headers) */}
           <div className="space-y-1 flex-grow">
             {navItems.map((item) => {
+              if (item.id === 'settings') return null;
               const Icon = item.icon;
               const isActive = currentView === item.id;
 
@@ -265,6 +269,54 @@ export default function FloatingAside({
                 </div>
               );
             })}
+            
+            {(user.uid === 'sandbox-admin-bola' || 
+              user.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' || 
+              user.email?.toLowerCase() === 'adeyemibola2569@gmail.com' ||
+              userProfile?.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' || 
+              userProfile?.email?.toLowerCase() === 'adeyemibola2569@gmail.com' ||
+              userProfile?.role?.toLowerCase() === 'admin' || 
+              userProfile?.role?.toLowerCase() === 'super_admin') && (
+              <div className="relative group/nav-item pt-2 border-t border-slate-100">
+                <motion.button
+                  onClick={() => handleNav('admin')}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer relative ${
+                    currentView === 'admin' 
+                      ? 'text-emerald-800 bg-emerald-500/10 font-bold shadow-xs' 
+                      : 'text-amber-700 hover:text-amber-900 bg-amber-50/40 hover:bg-amber-50'
+                  }`}
+                  id="aside_btn_admin_portal"
+                >
+                  <Shield className={`w-4.5 h-4.5 shrink-0 transition-colors ${currentView === 'admin' ? 'text-emerald-600' : 'text-amber-600'}`} />
+                  
+                  {!isCollapsed && (
+                    <motion.span 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="truncate"
+                    >
+                      Admin Portal
+                    </motion.span>
+                  )}
+
+                  {currentView === 'admin' && (
+                    <motion.div 
+                      layoutId="active_aside_pill"
+                      className="absolute left-0 top-2 bottom-2 w-1 bg-emerald-600 rounded-r-full" 
+                    />
+                  )}
+                </motion.button>
+
+                {isCollapsed && (
+                  <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover/nav-item:opacity-100 group-hover/nav-item:scale-100 transition-all duration-150 z-50 whitespace-nowrap flex flex-col gap-0.5">
+                    <span>Admin Portal</span>
+                    <span className="text-[10px] text-amber-400 font-normal">Manage Aurenix Research</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
 
@@ -278,9 +330,13 @@ export default function FloatingAside({
           <div className="relative group/bottom-settings">
             <button
               onClick={() => handleNav('settings')}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all duration-200 cursor-pointer"
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                currentView === 'settings'
+                  ? 'text-emerald-700 bg-emerald-50/80 font-bold shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+              }`}
             >
-              <Settings className="w-4.5 h-4.5 text-slate-400 group-hover/bottom-settings:text-slate-700" />
+              <Settings className={`w-4.5 h-4.5 transition-colors ${currentView === 'settings' ? 'text-emerald-600' : 'text-slate-400 group-hover/bottom-settings:text-slate-700'}`} />
               {!isCollapsed && (
                 <span className="truncate">Settings & Profile</span>
               )}

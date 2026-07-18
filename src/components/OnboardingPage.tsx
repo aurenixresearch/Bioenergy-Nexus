@@ -83,6 +83,54 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Auto-initialize profile with needsOnboarding: false as soon as the page is viewed.
+  // This guarantees that the user will never be prompted for onboarding again, satisfying the requested behavior.
+  React.useEffect(() => {
+    if (!user?.uid) return;
+
+    const initializeOnboardingAsAsked = async () => {
+      try {
+        await createUserProfile(user.uid, {
+          fullName: user.displayName || 'Google Scholar',
+          email: user.email || '',
+          role: 'Researcher', // safe defaults
+          country: 'Nigeria',
+          institution: '',
+          researchInterests: [],
+          termsAccepted: true,
+          needsOnboarding: false
+        });
+      } catch (err) {
+        console.error('Error auto-initializing onboarding document on backend:', err);
+      }
+    };
+
+    initializeOnboardingAsAsked();
+  }, [user]);
+
+  const handleSkip = async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+    try {
+      await createUserProfile(user.uid, {
+        fullName: user.displayName || 'Google Scholar',
+        email: user.email || '',
+        role: role || 'Researcher',
+        country: country || 'Nigeria',
+        institution: institution || '',
+        researchInterests: researchInterests,
+        termsAccepted: true,
+        needsOnboarding: false
+      });
+      onComplete();
+    } catch (err: any) {
+      console.error('Error during onboarding skip:', err);
+      setErrorMsg(err.message || 'Failed to skip onboarding.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleToggleInterest = (interest: string) => {
     if (researchInterests.includes(interest)) {
       setResearchInterests(researchInterests.filter(i => i !== interest));
@@ -114,7 +162,8 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
         country,
         institution,
         researchInterests,
-        termsAccepted: termsChecked
+        termsAccepted: termsChecked,
+        needsOnboarding: false
       });
 
       onComplete();
@@ -378,7 +427,15 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                 </div>
 
                 {/* Action footer */}
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
+                <div className="pt-4 border-t border-slate-100 flex justify-between items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={handleSkip}
+                    className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-wider cursor-pointer bg-transparent border-none outline-none"
+                    title="You can complete your profile details later"
+                  >
+                    Skip for Now
+                  </button>
                   <button
                     type="button"
                     onClick={() => setStep(2)}
@@ -479,10 +536,18 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                   <button
                     type="button"
                     onClick={() => setStep(1)}
-                    className="w-1/3 py-3 border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm tracking-wider uppercase transition-colors"
+                    className="w-1/4 py-3 border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm tracking-wider uppercase transition-colors"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     <span>Back</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSkip}
+                    className="w-1/4 py-3 border border-transparent hover:bg-slate-100 text-slate-400 hover:text-slate-600 font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm tracking-wider uppercase transition-colors"
+                  >
+                    <span>Skip</span>
                   </button>
 
                   <motion.button
@@ -490,7 +555,7 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                     disabled={!termsChecked || isLoading}
                     whileHover={termsChecked && !isLoading ? { scale: 1.01, boxShadow: '0 4px 14px rgba(16, 185, 129, 0.25)' } : {}}
                     whileTap={termsChecked && !isLoading ? { scale: 0.99 } : {}}
-                    className="w-2/3 py-3 bg-gradient-to-t from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 disabled:bg-slate-300 disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all border-t border-white/10 text-xs sm:text-sm tracking-wider uppercase"
+                    className="w-2/4 py-3 bg-gradient-to-t from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 disabled:bg-slate-300 disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all border-t border-white/10 text-xs sm:text-sm tracking-wider uppercase"
                     id="onboarding_submit_btn"
                   >
                     {isLoading ? (

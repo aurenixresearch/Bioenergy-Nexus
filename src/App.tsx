@@ -31,6 +31,7 @@ import ExploreResearchers from './components/ExploreResearchers';
 import OperationalConsole from './components/collaboration/OperationalConsole';
 import ProfilePage from './components/ProfilePage';
 import SettingsPage from './components/SettingsPage';
+import AdminPortal from './components/admin/AdminPortal';
 
 export default function App() {
   // Sync sessionStorage for loading animation on fresh load or reload
@@ -43,8 +44,9 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Layout View: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers' | 'console' | 'profile' | 'settings' | 'onboarding'
-  const [currentView, setView] = useState<'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers' | 'console' | 'profile' | 'settings' | 'onboarding'>('initializing');
+  // Layout View: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers' | 'console' | 'profile' | 'settings' | 'onboarding' | 'admin'
+  const [currentView, setView] = useState<'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers' | 'console' | 'profile' | 'settings' | 'onboarding' | 'admin'>('initializing');
+  const [userProfile, setUserProfileState] = useState<any | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   // Sidebar collapsed state and mobile check
@@ -76,6 +78,12 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    if (window.location.pathname === '/admin') {
+      setView('admin');
+    }
+  }, []);
+
   // Firestore Saved State & Submissions
   const [savedPaperIds, setSavedPaperIds] = useState<string[]>([]);
   const [activeInquiries, setActiveInquiries] = useState<ConsultationInquiry[]>([]);
@@ -83,57 +91,62 @@ export default function App() {
 
   // Listen to Auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        // Real authenticated Firebase user is present (e.g. Google Sign-In)
-        // We MUST clear any cached sandbox/guest demo mode and use the real user details.
-        localStorage.removeItem('nexus_demo_mode');
-        localStorage.removeItem('nexus_demo_user');
-        
-        setUser(currentUser);
-        setAuthLoading(false);
-        await refreshAllUserData(currentUser.uid);
-        if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
-          setView('initializing');
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      const handleAuthChange = async () => {
+        if (currentUser) {
+          // Real authenticated Firebase user is present (e.g. Google Sign-In)
+          // We MUST clear any cached sandbox/guest demo mode and use the real user details.
+          localStorage.removeItem('nexus_demo_mode');
+          localStorage.removeItem('nexus_demo_user');
+          
+          setUser(currentUser);
+          setAuthLoading(false);
+          await refreshAllUserData(currentUser.uid);
+          if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
+            setView('initializing');
+          }
+          return;
         }
-        return;
-      }
 
-      // If no real Firebase user is logged in, fallback to sandbox demo mode if it was active
-      if (localStorage.getItem('nexus_demo_mode') === 'true') {
-        const storedDemoUser = localStorage.getItem('nexus_demo_user');
-        if (storedDemoUser) {
-          try {
-            const demoObj = JSON.parse(storedDemoUser);
-            // Clear and delete Guest Researcher session immediately if found
-            if (demoObj.uid === 'sandbox-guest-user' || demoObj.email === 'guest.researcher@aurenix-research.org') {
-              localStorage.removeItem('nexus_demo_mode');
-              localStorage.removeItem('nexus_demo_user');
-              setUser(null);
+        // If no real Firebase user is logged in, fallback to sandbox demo mode if it was active
+        if (localStorage.getItem('nexus_demo_mode') === 'true') {
+          const storedDemoUser = localStorage.getItem('nexus_demo_user');
+          if (storedDemoUser) {
+            try {
+              const demoObj = JSON.parse(storedDemoUser);
+              // Clear and delete Guest Researcher session immediately if found
+              if (demoObj.uid === 'sandbox-guest-user' || demoObj.email === 'guest.researcher@aurenix-research.org') {
+                localStorage.removeItem('nexus_demo_mode');
+                localStorage.removeItem('nexus_demo_user');
+                setUser(null);
+                setAuthLoading(false);
+                setView('home');
+                return;
+              }
+              setUser(demoObj);
               setAuthLoading(false);
-              setView('home');
+              await refreshAllUserData(demoObj.uid);
+              if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
+                setView('initializing');
+              }
               return;
+            } catch (e) {
+              console.error('Error parsing stored demo user:', e);
             }
-            setUser(demoObj);
-            setAuthLoading(false);
-            await refreshAllUserData(demoObj.uid);
-            if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
-              setView('initializing');
-            }
-            return;
-          } catch (e) {
-            console.error('Error parsing stored demo user:', e);
           }
         }
-      }
 
-      setUser(null);
-      setAuthLoading(false);
-      setSavedPaperIds([]);
-      setActiveInquiries([]);
-      setActivePartnerships([]);
-      // Keep the view intact unless we're on dashboard (which requires login)
-      setView(prev => prev === 'dashboard' || prev === 'onboarding' ? 'home' : prev);
+        setUser(null);
+        setAuthLoading(false);
+        setSavedPaperIds([]);
+        setActiveInquiries([]);
+        setActivePartnerships([]);
+        setUserProfileState(null);
+        // Keep the view intact unless we're on dashboard (which requires login)
+        setView(prev => prev === 'dashboard' || prev === 'onboarding' ? 'home' : prev);
+      };
+
+      handleAuthChange();
     });
     return () => unsubscribe();
   }, []);
@@ -150,6 +163,7 @@ export default function App() {
       setSavedPaperIds(savedIds || []);
       setActiveInquiries(inquiries || []);
       setActivePartnerships(partnerships || []);
+      setUserProfileState(profile || null);
 
       if (profile && profile.needsOnboarding) {
         setNeedsOnboarding(true);
@@ -158,7 +172,8 @@ export default function App() {
         }
       } else {
         setNeedsOnboarding(false);
-        setView(prev => prev === 'onboarding' ? 'dashboard' : prev);
+        // Do not force route to dashboard if current view is already 'admin'
+        setView(prev => (prev === 'admin') ? 'admin' : ((prev === 'onboarding' || prev === 'signin' || prev === 'home' || prev === 'initializing') ? 'dashboard' : prev));
       }
     } catch (err) {
       console.error('Error synchronizing Firestore user data:', err);
@@ -224,9 +239,10 @@ export default function App() {
     <div className="bg-slate-50 min-h-screen font-sans flex flex-col justify-between" id="app_root">
       
       {/* Collapsible Floating Aside Section */}
-      {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && (
+      {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && (
         <FloatingAside 
           user={user}
+          userProfile={userProfile}
           currentView={currentView}
           setView={setView}
           isCollapsed={isCollapsed}
@@ -240,14 +256,14 @@ export default function App() {
       {/* Main layout container with animated padding-left for the side menu */}
       <motion.div
         animate={{ 
-          paddingLeft: (user && !isMobile && currentView !== 'onboarding') ? (isCollapsed ? '94px' : '280px') : '0px'
+          paddingLeft: (user && !isMobile && currentView !== 'onboarding' && currentView !== 'admin') ? (isCollapsed ? '94px' : '280px') : '0px'
         }}
         transition={{ type: 'spring', stiffness: 220, damping: 26 }}
         className="flex-grow flex flex-col justify-between min-h-screen w-full"
         id="app_layout_wrapper"
       >
         {/* Dynamic Navigation */}
-        {!user && currentView !== 'signin' && currentView !== 'initializing' && (
+        {!user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'admin' && (
           <Navbar 
             user={user}
             onSignIn={() => setView('signin')}
@@ -600,7 +616,7 @@ export default function App() {
                       About Aurenix <span className="text-emerald-600">Research</span>
                     </h1>
                     <p className="text-base sm:text-lg text-slate-600 max-w-3xl leading-relaxed">
-                      Our mission is to establish waste-to-energy technologies and circular economy principles across Nigeria—bridging the critical gap between academic chemical research and the industrial-scale implementation of sustainable bio-waste systems.
+                      Aurenix is Africa's research and innovation platform dedicated to advancing energy, climate, and technology solutions. We connect students, researchers, institutions, and global stakeholders to document research, foster collaboration, and transform innovative ideas into real-world impact.
                     </p>
                   </div>
                 </div>
@@ -738,6 +754,7 @@ export default function App() {
                   onRefreshAll={handleRefreshAll}
                   onNavigateToProfile={() => setView('profile')}
                   onNavigateToSettings={() => setView('settings')}
+                  onNavigateToView={setView}
                   setSavedPaperIds={setSavedPaperIds}
                 />
               </motion.div>
@@ -895,11 +912,28 @@ export default function App() {
                 />
               </motion.div>
             )}
+
+            {currentView === 'admin' && (
+              <motion.div
+                key="admin-page"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <AdminPortal 
+                  user={user}
+                  userProfile={userProfile}
+                  setView={setView}
+                  theme={theme}
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
         </main>
 
         {/* Footer */}
-        {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && <Footer onNavClick={handlePageSelect} />}
+        {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && <Footer onNavClick={handlePageSelect} />}
       </motion.div>
 
     </div>

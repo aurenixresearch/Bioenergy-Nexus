@@ -12,6 +12,16 @@ service cloud.firestore {
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     function isSignedIn() { return request.auth != null; }
+    function isPlatformAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'bola.adeyemi@aurenix-research.org' ||
+        request.auth.token.email == 'adeyemibola2569@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin'
+        ))
+      );
+    }
 
     // Collection: saved_papers
     match /saved_papers/{savedPaperId} {
@@ -72,15 +82,15 @@ service cloud.firestore {
         // Action 1: Counter / Engagement metrics (Views, Downloads, Bookmarks) - Anyone can update
         (incoming().diff(existing()).affectedKeys().hasOnly(['viewsCount', 'downloadsCount', 'bookmarksCount']) &&
          incoming().userId == existing().userId && incoming().createdAt == existing().createdAt &&
-         (!incoming().keys().contains('viewsCount') || (incoming().viewsCount is int || incoming().viewsCount is float)) &&
-         (!incoming().keys().contains('downloadsCount') || (incoming().downloadsCount is int || incoming().downloadsCount is float)) &&
-         (!incoming().keys().contains('bookmarksCount') || (incoming().bookmarksCount is int || incoming().bookmarksCount is float))) ||
+         (!('viewsCount' in incoming()) || (incoming().viewsCount is int || incoming().viewsCount is float)) &&
+         (!('downloadsCount' in incoming()) || (incoming().downloadsCount is int || incoming().downloadsCount is float)) &&
+         (!('bookmarksCount' in incoming()) || (incoming().bookmarksCount is int || incoming().bookmarksCount is float))) ||
         
         // Action 2: Comments and Contributions - Signed in users
         (isSignedIn() && incoming().diff(existing()).affectedKeys().hasOnly(['comments', 'contributions']) &&
          incoming().userId == existing().userId && incoming().createdAt == existing().createdAt &&
-         (!incoming().keys().contains('comments') || (incoming().comments is list && incoming().comments.size() <= 500)) &&
-         (!incoming().keys().contains('contributions') || (incoming().contributions is list && incoming().contributions.size() <= 500))) ||
+         (!('comments' in incoming()) || (incoming().comments is list && incoming().comments.size() <= 500)) &&
+         (!('contributions' in incoming()) || (incoming().contributions is list && incoming().contributions.size() <= 500))) ||
         
         // Action 3: Paper edits or new versions - Only the author (owner)
         (isSignedIn() && existing().userId == request.auth.uid && incoming().userId == existing().userId && incoming().createdAt == existing().createdAt &&
@@ -101,22 +111,29 @@ service cloud.firestore {
              data.userId is string && data.userId.size() <= 128 &&
              data.userEmail is string && data.userEmail.size() <= 128 &&
              data.createdAt is string && data.createdAt.size() <= 100 &&
-             (!data.keys().contains('viewsCount') || (data.viewsCount is int || data.viewsCount is float)) &&
-             (!data.keys().contains('downloadsCount') || (data.downloadsCount is int || data.downloadsCount is float)) &&
-             (!data.keys().contains('bookmarksCount') || (data.bookmarksCount is int || data.bookmarksCount is float)) &&
-             (!data.keys().contains('comments') || (data.comments is list && data.comments.size() <= 500)) &&
-             (!data.keys().contains('contributions') || (data.contributions is list && data.contributions.size() <= 500)) &&
-             (!data.keys().contains('versions') || (data.versions is list && data.versions.size() <= 50)) &&
-             (!data.keys().contains('researchMethodology') || (data.researchMethodology is string && data.researchMethodology.size() <= 10000)) &&
-             (!data.keys().contains('keyFindings') || (data.keyFindings is string && data.keyFindings.size() <= 10000)) &&
-             (!data.keys().contains('conclusion') || (data.conclusion is string && data.conclusion.size() <= 10000));
+             (!('viewsCount' in data) || (data.viewsCount is int || data.viewsCount is float)) &&
+             (!('downloadsCount' in data) || (data.downloadsCount is int || data.downloadsCount is float)) &&
+             (!('bookmarksCount' in data) || (data.bookmarksCount is int || data.bookmarksCount is float)) &&
+             (!('comments' in data) || (data.comments is list && data.comments.size() <= 500)) &&
+             (!('contributions' in data) || (data.contributions is list && data.contributions.size() <= 500)) &&
+             (!('versions' in data) || (data.versions is list && data.versions.size() <= 50)) &&
+             (!('researchMethodology' in data) || (data.researchMethodology is string && data.researchMethodology.size() <= 10000)) &&
+             (!('keyFindings' in data) || (data.keyFindings is string && data.keyFindings.size() <= 10000)) &&
+             (!('conclusion' in data) || (data.conclusion is string && data.conclusion.size() <= 10000));
     }
 
     // Collection: users
     match /users/{userId} {
-      allow read: if isSignedIn() && userId == request.auth.uid;
-      allow create, update: if isSignedIn() && userId == request.auth.uid && isValidUserProfile(incoming());
-      allow delete: if isSignedIn() && userId == request.auth.uid;
+      allow read: if isSignedIn() && (userId == request.auth.uid || isPlatformAdmin());
+      allow create: if isSignedIn() && userId == request.auth.uid && (
+        isPlatformAdmin() || 
+        (isValidUserProfile(incoming()) && incoming().role != 'admin' && incoming().role != 'super_admin')
+      );
+      allow update: if isSignedIn() && (
+        (userId == request.auth.uid && isValidUserProfile(incoming()) && incoming().role == existing().role && (!('adminRoleName' in incoming()) || incoming().adminRoleName == existing().adminRoleName)) ||
+        isPlatformAdmin()
+      );
+      allow delete: if isSignedIn() && (userId == request.auth.uid || isPlatformAdmin());
     }
 
     function isValidUserProfile(data) {
@@ -126,14 +143,21 @@ service cloud.firestore {
              data.role is string && data.role.size() <= 128 &&
              data.country is string && data.country.size() <= 128 &&
              data.termsAccepted is bool &&
-             (!data.keys().contains('institution') || (data.institution is string && data.institution.size() <= 128)) &&
-             (!data.keys().contains('researchInterests') || (data.researchInterests is list && data.researchInterests.size() <= 50)) &&
-             (!data.keys().contains('verificationStatus') || (data.verificationStatus is string && data.verificationStatus.size() <= 50)) &&
-             (!data.keys().contains('verificationSubmittedAt') || (data.verificationSubmittedAt is string && data.verificationSubmittedAt.size() <= 50)) &&
-             (!data.keys().contains('uploadedResearchCount') || (data.uploadedResearchCount is int || data.uploadedResearchCount is float)) &&
-             (!data.keys().contains('verificationDetails') || (data.verificationDetails is map)) &&
-             (!data.keys().contains('verified') || (data.verified is bool)) &&
-             (!data.keys().contains('verificationApprovedAt') || (data.verificationApprovedAt is string && data.verificationApprovedAt.size() <= 50));
+             (!('institution' in data) || (data.institution is string && data.institution.size() <= 128)) &&
+             (!('researchInterests' in data) || (data.researchInterests is list && data.researchInterests.size() <= 50)) &&
+             (!('verificationStatus' in data) || (data.verificationStatus is string && data.verificationStatus.size() <= 50)) &&
+             (!('verificationSubmittedAt' in data) || (data.verificationSubmittedAt is string && data.verificationSubmittedAt.size() <= 50)) &&
+             (!('uploadedResearchCount' in data) || (data.uploadedResearchCount is int || data.uploadedResearchCount is float)) &&
+             (!('verificationDetails' in data) || (data.verificationDetails is map)) &&
+             (!('verified' in data) || (data.verified is bool)) &&
+             (!('verificationApprovedAt' in data) || (data.verificationApprovedAt is string && data.verificationApprovedAt.size() <= 50)) &&
+             (!('adminRoleName' in data) || (data.adminRoleName is string && data.adminRoleName.size() <= 128)) &&
+             (!('projects' in data) || (data.projects is int || data.projects is float)) &&
+             (!('followers' in data) || (data.followers is int || data.followers is float)) &&
+             (!('joinedDate' in data) || (data.joinedDate is string && data.joinedDate.size() <= 100)) &&
+             (!('status' in data) || (data.status is string && data.status.size() <= 50)) &&
+             (!('researchCount' in data) || (data.researchCount is int || data.researchCount is float)) &&
+             (!('needsOnboarding' in data) || (data.needsOnboarding is bool));
     }
 
     // Collection: researchers
@@ -186,6 +210,65 @@ service cloud.firestore {
       allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
       allow create: if isSignedIn();
       allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Collection: innovation_projects
+    match /innovation_projects/{projectId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create, update: if isSignedIn() && isValidInnovationProject(incoming()) && incoming().userId == request.auth.uid;
+      allow delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+    }
+
+    function isValidInnovationProject(data) {
+      return data.keys().hasAll(['userId', 'title', 'trl', 'status', 'fundingStatus', 'progress', 'industryPartner', 'laboratoryPartner', 'lastUpdated']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() <= 256 &&
+             (data.trl is int || data.trl is float) &&
+             data.status is string && data.status.size() <= 50 &&
+             data.fundingStatus is string && data.fundingStatus.size() <= 50 &&
+             (data.progress is int || data.progress is float) &&
+             data.industryPartner is string && data.industryPartner.size() <= 256 &&
+             data.laboratoryPartner is string && data.laboratoryPartner.size() <= 256 &&
+             data.lastUpdated is string && data.lastUpdated.size() <= 100 &&
+             (!('id' in data) || data.id is string) &&
+             (!('description' in data) || data.description is string && data.description.size() <= 2000);
+    }
+
+    // Collection: user_deadlines
+    match /user_deadlines/{deadlineId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create, update: if isSignedIn() && isValidUserDeadline(incoming()) && incoming().userId == request.auth.uid;
+      allow delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+    }
+
+    function isValidUserDeadline(data) {
+      return data.keys().hasAll(['userId', 'category', 'title', 'date', 'description', 'status']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.category is string && data.category.size() <= 50 &&
+             data.title is string && data.title.size() <= 256 &&
+             data.date is string && data.date.size() <= 100 &&
+             data.description is string && data.description.size() <= 1000 &&
+             data.status is string && data.status.size() <= 50 &&
+             (!('id' in data) || data.id is string);
+    }
+
+    // Collection: user_notifications
+    match /user_notifications/{notificationId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create, update: if isSignedIn() && isValidUserNotification(incoming()) && incoming().userId == request.auth.uid;
+      allow delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+    }
+
+    function isValidUserNotification(data) {
+      return data.keys().hasAll(['userId', 'type', 'title', 'message', 'isRead', 'createdAt']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.type is string && data.type.size() <= 50 &&
+             data.title is string && data.title.size() <= 256 &&
+             data.message is string && data.message.size() <= 1000 &&
+             data.isRead is bool &&
+             data.createdAt is string && data.createdAt.size() <= 100 &&
+             (!('id' in data) || data.id is string) &&
+             (!('actionUrl' in data) || data.actionUrl is string && data.actionUrl.size() <= 512);
     }
   }
 }

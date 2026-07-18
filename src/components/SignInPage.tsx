@@ -157,6 +157,13 @@ export default function SignInPage({
       displayName: 'Dr. Samuel Adebayo',
       role: 'Academic Partner',
       idNum: '8839011-AP'
+    },
+    {
+      uid: 'sandbox-admin-bola',
+      email: 'bola.adeyemi@aurenix-research.org',
+      displayName: 'Bola Adeyemi',
+      role: 'Platform Super Admin',
+      idNum: '1000001-ADM'
     }
   ];
 

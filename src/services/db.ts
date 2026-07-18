@@ -332,6 +332,34 @@ export async function getUserPartnerships(userId: string): Promise<PartnershipSu
   }
 }
 
+export async function updatePartnership(
+  partnershipId: string, 
+  userId: string, 
+  updatedFields: Partial<Omit<PartnershipSubmission, 'id' | 'createdAt'>>
+): Promise<void> {
+  if (isDemoModeActive(userId)) {
+    const partnerships = getLocalPartnerships(userId);
+    const updated = partnerships.map(p => p.id === partnershipId ? { ...p, ...updatedFields } : p);
+    setLocalPartnerships(userId, updated);
+    return;
+  }
+
+  const path = 'partnership_submissions';
+  try {
+    const docRef = doc(db, path, partnershipId);
+    await setDoc(docRef, {
+      ...updatedFields,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return updatePartnership(partnershipId, userId, updatedFields);
+    }
+    handleFirestoreError(error, OperationType.UPDATE, `${path}/${partnershipId}`);
+  }
+}
+
 // CUSTOM RESEARCH PAPERS (CONTRIBUTIONS)
 export async function addCustomPaper(paper: Omit<ResearchPaper, 'id'>, userId: string, userEmail: string): Promise<string> {
   if (isDemoModeActive(userId)) {
@@ -434,6 +462,7 @@ export async function createUserProfile(userId: string, profile: {
   institution?: string;
   researchInterests?: string[];
   termsAccepted: boolean;
+  needsOnboarding?: boolean;
 }): Promise<void> {
   if (isDemoModeActive(userId)) {
     localStorage.setItem(`nexus_demo_profile_${userId}`, JSON.stringify({
@@ -455,6 +484,7 @@ export async function createUserProfile(userId: string, profile: {
       institution: profile.institution || '',
       researchInterests: profile.researchInterests || [],
       termsAccepted: profile.termsAccepted,
+      needsOnboarding: profile.needsOnboarding !== undefined ? profile.needsOnboarding : false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -467,9 +497,76 @@ export async function createUserProfile(userId: string, profile: {
   }
 }
 
+export async function getAllUsers(): Promise<any[]> {
+  if (isFirestoreOffline) {
+    return [];
+  }
+  const path = 'users';
+  try {
+    const colRef = collection(db, path);
+    const querySnapshot = await getDocs(colRef);
+    const list: any[] = [];
+    querySnapshot.forEach((docSnap) => {
+      const d = docSnap.data();
+      list.push({
+        uid: docSnap.id,
+        id: docSnap.id,
+        ...d,
+        createdAt: d.createdAt?.toDate ? d.createdAt.toDate().toISOString() : d.createdAt,
+        updatedAt: d.updatedAt?.toDate ? d.updatedAt.toDate().toISOString() : d.updatedAt,
+      });
+    });
+    return list;
+  } catch (error) {
+    console.error('Error fetching all users from Firestore:', error);
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+    }
+    return [];
+  }
+}
+
+export async function saveUserProfileByAdmin(userId: string, data: any): Promise<void> {
+  // If in demo mode for this user, write to demo local storage profile
+  const isDemo = userId === 'sandbox-admin-bola' || userId.startsWith('sandbox-');
+  if (isFirestoreOffline || isDemo) {
+    const profileKey = `nexus_demo_profile_${userId}`;
+    const localProfile = localStorage.getItem(profileKey);
+    const parsed = localProfile ? JSON.parse(localProfile) : {};
+    localStorage.setItem(profileKey, JSON.stringify({ ...parsed, ...data, updatedAt: new Date().toISOString() }));
+    return;
+  }
+  const path = 'users';
+  try {
+    const docRef = doc(db, path, userId);
+    await setDoc(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return saveUserProfileByAdmin(userId, data);
+    }
+    handleFirestoreError(error, OperationType.UPDATE, `${path}/${userId}`);
+  }
+}
+
 export async function getUserProfile(userId: string): Promise<any> {
   if (isDemoModeActive(userId)) {
     const data = localStorage.getItem(`nexus_demo_profile_${userId}`);
+    if (!data && userId === 'sandbox-admin-bola') {
+      const defaultAdminProfile = {
+        fullName: 'Bola Adeyemi',
+        email: 'bola.adeyemi@aurenix-research.org',
+        role: 'super_admin',
+        country: 'Nigeria',
+        institution: 'Aurenix Core Labs',
+        researchInterests: ['Bioenergy', 'Circular Economy', 'Nuclear Energy'],
+        termsAccepted: true,
+        verified: true,
+        verificationStatus: 'verified'
+      };
+      localStorage.setItem(`nexus_demo_profile_${userId}`, JSON.stringify(defaultAdminProfile));
+      return defaultAdminProfile;
+    }
     return data ? JSON.parse(data) : null;
   }
 
@@ -928,5 +1025,491 @@ export async function incrementPublicationMetric(publicationId: string, metric: 
     setLocalPublications(updated);
   }
 }
+
+// ==========================================
+// INNOVATION PROJECTS HELPERS
+// ==========================================
+
+export interface InnovationProject {
+  id: string;
+  userId: string;
+  title: string;
+  trl: number;
+  status: 'Draft' | 'Active' | 'Completed' | 'Archived';
+  fundingStatus: 'Pending' | 'Approved' | 'Funded';
+  progress: number;
+  industryPartner: string;
+  laboratoryPartner: string;
+  description?: string;
+  lastUpdated: string;
+}
+
+function getLocalProjects(userId: string): InnovationProject[] {
+  const data = localStorage.getItem(`nexus_demo_projects_${userId}`);
+  if (data) return JSON.parse(data);
+  
+  // Default seed projects
+  const defaults: InnovationProject[] = [
+    {
+      id: 'proj_1',
+      userId,
+      title: 'Solar-Powered Bio-waste Digester for Off-grid Agro-processors',
+      trl: 6,
+      status: 'Active',
+      fundingStatus: 'Funded',
+      progress: 75,
+      industryPartner: 'GreenCycle West Africa Ltd',
+      laboratoryPartner: 'Renewable Energy Lab, UNILAG',
+      description: 'Developing an automated, off-grid digester combining waste heat from solar panels to accelerate organic solid waste degradation into high-yield methane.',
+      lastUpdated: new Date().toISOString()
+    },
+    {
+      id: 'proj_2',
+      userId,
+      title: 'Decentralized Microgrid Controller with Smart Contract Load-Shedding',
+      trl: 4,
+      status: 'Draft',
+      fundingStatus: 'Pending',
+      progress: 35,
+      industryPartner: 'NexaPower Grid Solutions',
+      laboratoryPartner: 'Smart Power Systems Center, ABU',
+      description: 'A hardware-in-the-loop microgrid controller using decentralized logic to coordinate agricultural processing loads based on localized battery states.',
+      lastUpdated: new Date().toISOString()
+    }
+  ];
+  localStorage.setItem(`nexus_demo_projects_${userId}`, JSON.stringify(defaults));
+  return defaults;
+}
+
+function setLocalProjects(userId: string, projects: InnovationProject[]) {
+  localStorage.setItem(`nexus_demo_projects_${userId}`, JSON.stringify(projects));
+}
+
+export async function getInnovationProjects(userId: string): Promise<InnovationProject[]> {
+  if (isDemoModeActive(userId)) {
+    return getLocalProjects(userId);
+  }
+
+  const path = 'innovation_projects';
+  try {
+    const colRef = collection(db, path);
+    const q = query(colRef, where('userId', '==', userId));
+    const snapshot = await getDocs(q);
+    const projects: InnovationProject[] = [];
+    snapshot.forEach(doc => {
+      projects.push({ id: doc.id, ...doc.data() } as InnovationProject);
+    });
+
+    if (projects.length === 0) {
+      // Seed initial projects to firestore
+      const defaults = getLocalProjects(userId);
+      for (const p of defaults) {
+        await setDoc(doc(db, path, p.id), p);
+      }
+      return defaults;
+    }
+    return projects;
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return getInnovationProjects(userId);
+    }
+    console.warn('Firestore getInnovationProjects error:', error);
+    return getLocalProjects(userId);
+  }
+}
+
+export async function addInnovationProject(userId: string, project: Omit<InnovationProject, 'id' | 'userId' | 'lastUpdated'>): Promise<string> {
+  const newId = 'proj_' + Math.random().toString(36).substring(2, 9);
+  const fullProject: InnovationProject = {
+    ...project,
+    id: newId,
+    userId,
+    lastUpdated: new Date().toISOString()
+  };
+
+  if (isDemoModeActive(userId)) {
+    const list = getLocalProjects(userId);
+    setLocalProjects(userId, [fullProject, ...list]);
+    return newId;
+  }
+
+  const path = 'innovation_projects';
+  try {
+    await setDoc(doc(db, path, newId), fullProject);
+    return newId;
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return addInnovationProject(userId, project);
+    }
+    console.warn('Firestore addInnovationProject error:', error);
+    const list = getLocalProjects(userId);
+    setLocalProjects(userId, [fullProject, ...list]);
+    return newId;
+  }
+}
+
+export async function updateInnovationProject(userId: string, projectId: string, fields: Partial<InnovationProject>): Promise<void> {
+  if (isDemoModeActive(userId)) {
+    const list = getLocalProjects(userId);
+    const updated = list.map(p => p.id === projectId ? { ...p, ...fields, lastUpdated: new Date().toISOString() } : p);
+    setLocalProjects(userId, updated);
+    return;
+  }
+
+  const path = 'innovation_projects';
+  try {
+    const docRef = doc(db, path, projectId);
+    await setDoc(docRef, { ...fields, lastUpdated: new Date().toISOString() }, { merge: true });
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return updateInnovationProject(userId, projectId, fields);
+    }
+    console.warn('Firestore updateInnovationProject error:', error);
+    const list = getLocalProjects(userId);
+    const updated = list.map(p => p.id === projectId ? { ...p, ...fields, lastUpdated: new Date().toISOString() } : p);
+    setLocalProjects(userId, updated);
+  }
+}
+
+export async function deleteInnovationProject(userId: string, projectId: string): Promise<void> {
+  if (isDemoModeActive(userId)) {
+    const list = getLocalProjects(userId);
+    setLocalProjects(userId, list.filter(p => p.id !== projectId));
+    return;
+  }
+
+  const path = 'innovation_projects';
+  try {
+    await deleteDoc(doc(db, path, projectId));
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return deleteInnovationProject(userId, projectId);
+    }
+    console.warn('Firestore deleteInnovationProject error:', error);
+    const list = getLocalProjects(userId);
+    setLocalProjects(userId, list.filter(p => p.id !== projectId));
+  }
+}
+
+// ==========================================
+// NOTIFICATIONS HELPERS
+// ==========================================
+
+export interface UserNotification {
+  id: string;
+  userId: string;
+  type: 'follower' | 'alliance' | 'grant' | 'citation' | 'comment' | 'workspace' | 'deadline';
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  actionUrl?: string;
+}
+
+function getLocalNotifications(userId: string): UserNotification[] {
+  const data = localStorage.getItem(`nexus_demo_notifications_${userId}`);
+  if (data) return JSON.parse(data);
+
+  const defaults: UserNotification[] = [
+    {
+      id: 'notif_1',
+      userId,
+      type: 'follower',
+      title: 'New Follower Joined',
+      message: 'Dr. Sarah Adebayo, Lab Director at UNILAG, started following your profile.',
+      isRead: false,
+      createdAt: new Date(Date.now() - 30 * 60000).toISOString() // 30 mins ago
+    },
+    {
+      id: 'notif_2',
+      userId,
+      type: 'alliance',
+      title: 'Alliance Invitation Received',
+      message: 'EcoEnergy Alliance Nigeria invited you to join the Solar-Bioenergy Integration Workgroup.',
+      isRead: false,
+      createdAt: new Date(Date.now() - 3 * 3600000).toISOString() // 3 hours ago
+    },
+    {
+      id: 'notif_3',
+      userId,
+      type: 'grant',
+      title: 'New Funding Opportunity Match',
+      message: 'The African Climate Foundation launched a $50k grant for Off-grid Agricultural Digitization.',
+      isRead: false,
+      createdAt: new Date(Date.now() - 24 * 3600000).toISOString() // 1 day ago
+    },
+    {
+      id: 'notif_4',
+      userId,
+      type: 'citation',
+      title: 'Research Citation Identified',
+      message: 'Your research paper on "Off-Grid Bio-waste Conversions" was cited in Journal of African Circular Science.',
+      isRead: true,
+      createdAt: new Date(Date.now() - 48 * 3600000).toISOString() // 2 days ago
+    }
+  ];
+  localStorage.setItem(`nexus_demo_notifications_${userId}`, JSON.stringify(defaults));
+  return defaults;
+}
+
+function setLocalNotifications(userId: string, notifications: UserNotification[]) {
+  localStorage.setItem(`nexus_demo_notifications_${userId}`, JSON.stringify(notifications));
+}
+
+export async function getUserNotifications(userId: string): Promise<UserNotification[]> {
+  if (isDemoModeActive(userId)) {
+    return getLocalNotifications(userId);
+  }
+
+  const path = 'user_notifications';
+  try {
+    const colRef = collection(db, path);
+    const q = query(colRef, where('userId', '==', userId));
+    const snapshot = await getDocs(q);
+    const notifs: UserNotification[] = [];
+    snapshot.forEach(doc => {
+      notifs.push({ id: doc.id, ...doc.data() } as UserNotification);
+    });
+
+    if (notifs.length === 0) {
+      const defaults = getLocalNotifications(userId);
+      for (const n of defaults) {
+        await setDoc(doc(db, path, n.id), n);
+      }
+      return defaults;
+    }
+    // Sort by creation date descending
+    return notifs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return getUserNotifications(userId);
+    }
+    console.warn('Firestore getUserNotifications error:', error);
+    return getLocalNotifications(userId);
+  }
+}
+
+export async function markNotificationAsRead(userId: string, notificationId: string): Promise<void> {
+  if (isDemoModeActive(userId)) {
+    const list = getLocalNotifications(userId);
+    const updated = list.map(n => n.id === notificationId ? { ...n, isRead: true } : n);
+    setLocalNotifications(userId, updated);
+    return;
+  }
+
+  const path = 'user_notifications';
+  try {
+    const docRef = doc(db, path, notificationId);
+    await setDoc(docRef, { isRead: true }, { merge: true });
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return markNotificationAsRead(userId, notificationId);
+    }
+    console.warn('Firestore markNotificationAsRead error:', error);
+    const list = getLocalNotifications(userId);
+    const updated = list.map(n => n.id === notificationId ? { ...n, isRead: true } : n);
+    setLocalNotifications(userId, updated);
+  }
+}
+
+export async function deleteNotification(userId: string, notificationId: string): Promise<void> {
+  if (isDemoModeActive(userId)) {
+    const list = getLocalNotifications(userId);
+    setLocalNotifications(userId, list.filter(n => n.id !== notificationId));
+    return;
+  }
+
+  const path = 'user_notifications';
+  try {
+    await deleteDoc(doc(db, path, notificationId));
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return deleteNotification(userId, notificationId);
+    }
+    console.warn('Firestore deleteNotification error:', error);
+    const list = getLocalNotifications(userId);
+    setLocalNotifications(userId, list.filter(n => n.id !== notificationId));
+  }
+}
+
+export async function addNotification(userId: string, notif: Omit<UserNotification, 'id' | 'userId' | 'createdAt' | 'isRead'>): Promise<string> {
+  const newId = 'notif_' + Math.random().toString(36).substring(2, 9);
+  const fullNotif: UserNotification = {
+    ...notif,
+    id: newId,
+    userId,
+    isRead: false,
+    createdAt: new Date().toISOString()
+  };
+
+  if (isDemoModeActive(userId)) {
+    const list = getLocalNotifications(userId);
+    setLocalNotifications(userId, [fullNotif, ...list]);
+    return newId;
+  }
+
+  const path = 'user_notifications';
+  try {
+    await setDoc(doc(db, path, newId), fullNotif);
+    return newId;
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return addNotification(userId, notif);
+    }
+    console.warn('Firestore addNotification error:', error);
+    const list = getLocalNotifications(userId);
+    setLocalNotifications(userId, [fullNotif, ...list]);
+    return newId;
+  }
+}
+
+// ==========================================
+// UPCOMING DEADLINES HELPERS
+// ==========================================
+
+export interface UserDeadline {
+  id: string;
+  userId: string;
+  category: 'Alliance' | 'Grant' | 'Milestone' | 'Deliverable' | 'Review' | 'Report';
+  title: string;
+  date: string;
+  description: string;
+  status: 'Pending' | 'Completed' | 'Overdue';
+}
+
+function getLocalDeadlines(userId: string): UserDeadline[] {
+  const data = localStorage.getItem(`nexus_demo_deadlines_${userId}`);
+  if (data) return JSON.parse(data);
+
+  const defaults: UserDeadline[] = [
+    {
+      id: 'dl_1',
+      userId,
+      category: 'Grant',
+      title: 'African Climate Foundation Grant Proposal Pitch',
+      date: new Date(Date.now() + 3 * 24 * 3600000).toISOString().split('T')[0], // 3 days from now
+      description: 'Prepare and upload the five-page concept slide deck for solar integration.',
+      status: 'Pending'
+    },
+    {
+      id: 'dl_2',
+      userId,
+      category: 'Milestone',
+      title: 'TRL-6 Bio-waste digester prototype trial run',
+      date: new Date(Date.now() + 10 * 24 * 3600000).toISOString().split('T')[0], // 10 days from now
+      description: 'Host initial physical validation session at UNILAG laboratories.',
+      status: 'Pending'
+    },
+    {
+      id: 'dl_3',
+      userId,
+      category: 'Alliance',
+      title: 'EcoEnergy Alliance Application Deadline',
+      date: new Date(Date.now() + 14 * 24 * 3600000).toISOString().split('T')[0], // 14 days from now
+      description: 'Provide final institutional signoff letters and ORCID references.',
+      status: 'Pending'
+    }
+  ];
+  localStorage.setItem(`nexus_demo_deadlines_${userId}`, JSON.stringify(defaults));
+  return defaults;
+}
+
+function setLocalDeadlines(userId: string, deadlines: UserDeadline[]) {
+  localStorage.setItem(`nexus_demo_deadlines_${userId}`, JSON.stringify(deadlines));
+}
+
+export async function getUserDeadlines(userId: string): Promise<UserDeadline[]> {
+  if (isDemoModeActive(userId)) {
+    return getLocalDeadlines(userId);
+  }
+
+  const path = 'user_deadlines';
+  try {
+    const colRef = collection(db, path);
+    const q = query(colRef, where('userId', '==', userId));
+    const snapshot = await getDocs(q);
+    const list: UserDeadline[] = [];
+    snapshot.forEach(doc => {
+      list.push({ id: doc.id, ...doc.data() } as UserDeadline);
+    });
+
+    if (list.length === 0) {
+      const defaults = getLocalDeadlines(userId);
+      for (const d of defaults) {
+        await setDoc(doc(db, path, d.id), d);
+      }
+      return defaults;
+    }
+    return list.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return getUserDeadlines(userId);
+    }
+    console.warn('Firestore getUserDeadlines error:', error);
+    return getLocalDeadlines(userId);
+  }
+}
+
+export async function addDeadline(userId: string, deadline: Omit<UserDeadline, 'id' | 'userId' | 'status'>): Promise<string> {
+  const newId = 'dl_' + Math.random().toString(36).substring(2, 9);
+  const fullDeadline: UserDeadline = {
+    ...deadline,
+    id: newId,
+    userId,
+    status: 'Pending'
+  };
+
+  if (isDemoModeActive(userId)) {
+    const list = getLocalDeadlines(userId);
+    setLocalDeadlines(userId, [...list, fullDeadline]);
+    return newId;
+  }
+
+  const path = 'user_deadlines';
+  try {
+    await setDoc(doc(db, path, newId), fullDeadline);
+    return newId;
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return addDeadline(userId, deadline);
+    }
+    console.warn('Firestore addDeadline error:', error);
+    const list = getLocalDeadlines(userId);
+    setLocalDeadlines(userId, [...list, fullDeadline]);
+    return newId;
+  }
+}
+
+export async function deleteDeadline(userId: string, deadlineId: string): Promise<void> {
+  if (isDemoModeActive(userId)) {
+    const list = getLocalDeadlines(userId);
+    setLocalDeadlines(userId, list.filter(d => d.id !== deadlineId));
+    return;
+  }
+
+  const path = 'user_deadlines';
+  try {
+    await deleteDoc(doc(db, path, deadlineId));
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return deleteDeadline(userId, deadlineId);
+    }
+    console.warn('Firestore deleteDeadline error:', error);
+    const list = getLocalDeadlines(userId);
+    setLocalDeadlines(userId, list.filter(d => d.id !== deadlineId));
+  }
+}
+
 
 

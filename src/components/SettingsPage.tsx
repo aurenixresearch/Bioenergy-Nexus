@@ -196,7 +196,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
   ];
 
   return (
-    <div className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen text-left" id="settings_system_view">
+    <div className="bg-[#FAFDFB] text-slate-800 min-h-screen text-left" id="settings_system_view">
       
       {/* Alert Notification */}
       <AnimatePresence>
@@ -207,38 +207,38 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
             exit={{ opacity: 0, y: -20 }}
             className={`fixed top-6 right-6 z-50 p-4 rounded-xl shadow-2xl flex items-center gap-3 border ${
               alertMsg.type === 'success' 
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/60 dark:border-emerald-500/20 dark:text-emerald-300' 
-                : 'bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/60 dark:border-rose-500/20 dark:text-rose-300'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                : 'bg-rose-50 border-rose-200 text-rose-800'
             }`}
             id="settings_alert_box"
           >
-            {alertMsg.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <ShieldAlert className="w-5 h-5 shrink-0" />}
+            {alertMsg.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600" /> : <ShieldAlert className="w-5 h-5 shrink-0 text-rose-600" />}
             <span className="text-xs font-semibold">{alertMsg.text}</span>
             <button onClick={() => setAlertMsg(null)} className="ml-2 hover:opacity-75">
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4 text-slate-400" />
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Main Layout Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-white dark:bg-slate-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-transparent">
         
         {/* Top Header Row */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 font-mono uppercase tracking-wider mb-1">
+            <div className="flex items-center gap-2 text-xs text-emerald-800 font-bold font-mono uppercase tracking-wider mb-1">
               <Settings className="w-4 h-4 text-emerald-600" />
               Aurenix Research Network Settings
             </div>
-            <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-900 dark:text-white">
+            <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-emerald-950">
               System Preferences
             </h1>
           </div>
           
           <button 
             onClick={() => onNavigateToView('dashboard')}
-            className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-colors text-slate-700 dark:text-slate-200"
+            className="px-4 py-2 bg-white hover:bg-emerald-50/50 text-emerald-800 border border-emerald-150 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-colors shadow-xs"
             id="settings_back_btn"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -253,7 +253,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
           <div className="lg:col-span-4 space-y-6">
             
             {/* Split Sidebar list */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 shadow-xs space-y-0.5" id="settings_sections_selector">
+            <div className="bg-white border border-emerald-100 rounded-3xl p-3 shadow-xs space-y-0.5" id="settings_sections_selector">
               {sectionsList.map((sec) => {
                 const SecIcon = sec.icon;
                 const isSecActive = activeSection === sec.id;
@@ -263,14 +263,14 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                     onClick={() => setActiveSection(sec.id)}
                     className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-xs font-semibold text-left transition-all duration-150 cursor-pointer ${
                       isSecActive 
-                        ? 'bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-extrabold shadow-inner' 
-                        : 'text-slate-400 dark:text-slate-400 hover:text-slate-200 dark:hover:text-slate-200 hover:bg-zinc-900 dark:hover:bg-zinc-900'
+                        ? 'bg-emerald-50 text-emerald-850 font-extrabold border border-emerald-100/80 shadow-xs' 
+                        : 'text-slate-600 hover:text-emerald-855 hover:bg-emerald-50/30'
                     }`}
                   >
-                    <SecIcon className={`w-4.5 h-4.5 shrink-0 ${isSecActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
+                    <SecIcon className={`w-4.5 h-4.5 shrink-0 ${isSecActive ? 'text-emerald-600' : 'text-slate-400'}`} />
                     <div className="min-w-0">
                       <div className="truncate">{sec.label}</div>
-                      <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate mt-0.5">{sec.desc}</div>
+                      <div className="text-[10px] text-slate-400 font-normal truncate mt-0.5">{sec.desc}</div>
                     </div>
                   </button>
                 );
@@ -278,21 +278,21 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
             </div>
 
             {/* Research Identity Score Panel */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs text-left">
+            <div className="bg-white border border-emerald-100 rounded-3xl p-6 shadow-xs text-left">
               <div className="flex items-center justify-between mb-3.5">
-                <span className="text-slate-400 dark:text-slate-500 text-[10px] font-mono font-bold uppercase tracking-wider">Research Identity Score</span>
-                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-100 dark:border-emerald-500/10">{completionPercent}%</span>
+                <span className="text-slate-400 text-[10px] font-mono font-bold uppercase tracking-wider">Research Identity Score</span>
+                <span className="text-xs font-bold text-emerald-700 font-mono bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">{completionPercent}%</span>
               </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mb-4">
+              <div className="w-full bg-emerald-50 h-1.5 rounded-full overflow-hidden mb-4">
                 <div className="bg-emerald-600 h-full rounded-full transition-all duration-500" style={{ width: `${completionPercent}%` }} />
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+              <p className="text-[11px] text-emerald-900/80 leading-relaxed font-medium">
                 Completing your research metadata improves the AI match engine accuracy by up to <strong>3.5x</strong>. Linking verified ORCID registers is required for grant access channels.
               </p>
               
               <button 
                 onClick={() => onNavigateToView('profile')}
-                className="w-full mt-4 py-2.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-extrabold rounded-xl text-xs text-center block cursor-pointer transition-colors"
+                className="w-full mt-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl text-xs text-center block cursor-pointer transition-colors border border-slate-200 shadow-xs"
               >
                 Go Complete Portfolio
               </button>
@@ -301,7 +301,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
           </div>
 
           {/* 2. RIGHT FORM PANEL (ACTIVE CONTENT PORTAL) */}
-          <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xs">
+          <div className="lg:col-span-8 bg-white border border-emerald-100 rounded-3xl p-6 sm:p-8 shadow-md">
             
             <form onSubmit={handleSaveSettings} className="space-y-8">
               
@@ -309,72 +309,72 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               {activeSection === 'account' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">Account Profile Credentials</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Personal identifiers, associated institutions and structural titles.</p>
+                    <h2 className="text-lg font-bold text-emerald-950 font-display">Account Profile Credentials</h2>
+                    <p className="text-xs text-slate-500">Personal identifiers, associated institutions and structural titles.</p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-200/60 dark:border-slate-800/80">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-emerald-100">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Full Name</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Full Name</label>
                       <input 
                         type="text"
                         required
                         value={formData.fullName || ''}
                         onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                        className="w-full px-3.5 py-2 bg-white border border-emerald-150 rounded-xl text-xs text-emerald-950 outline-none focus:border-emerald-600 transition-colors font-medium"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Username</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Username</label>
                       <input 
                         type="text"
                         required
                         value={formData.username || ''}
                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                        className="w-full px-3.5 py-2 bg-white border border-emerald-150 rounded-xl text-xs text-emerald-950 outline-none focus:border-emerald-600 transition-colors font-medium"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Primary Email</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Primary Email</label>
                       <input 
                         type="email"
                         disabled
                         value={formData.email || ''}
-                        className="w-full px-3.5 py-2 bg-zinc-950 dark:bg-zinc-950 border border-slate-700 text-slate-500 rounded-xl text-xs cursor-not-allowed outline-none"
+                        className="w-full px-3.5 py-2 bg-[#F8FAF9] border border-emerald-100 text-slate-400 rounded-xl text-xs cursor-not-allowed outline-none font-semibold"
                         title="Authorized ID cannot be changed."
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Mobile Phone</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Mobile Phone</label>
                       <input 
                         type="text"
                         placeholder="+234 (0) 803 123 4567"
                         value={formData.phone || ''}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                        className="w-full px-3.5 py-2 bg-white border border-emerald-150 rounded-xl text-xs text-emerald-950 outline-none focus:border-emerald-600 transition-colors font-medium"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Default Timezone</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Default Timezone</label>
                       <input 
                         type="text"
                         value={formData.timezone || 'UTC+1 (WAT)'}
                         onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                        className="w-full px-3.5 py-2 bg-white border border-emerald-150 rounded-xl text-xs text-emerald-950 outline-none focus:border-emerald-600 transition-colors font-medium"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Institution Location</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Institution Location</label>
                       <input 
                         type="text"
                         value={formData.country || ''}
                         onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                        className="w-full px-3.5 py-2 bg-white border border-emerald-150 rounded-xl text-xs text-emerald-950 outline-none focus:border-emerald-600 transition-colors font-medium"
                       />
                     </div>
                   </div>
@@ -385,50 +385,50 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               {activeSection === 'security' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">Security & Cryptography Gates</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Keep your login parameters, connected systems and authorization sessions secure.</p>
+                    <h2 className="text-lg font-bold text-emerald-950 font-display">Security & Cryptography Gates</h2>
+                    <p className="text-xs text-slate-500">Keep your login parameters, connected systems and authorization sessions secure.</p>
                   </div>
 
-                  <div className="space-y-5 pt-4 border-t border-slate-200/60 dark:border-slate-800/80">
+                  <div className="space-y-5 pt-4 border-t border-emerald-100">
                     {/* Google Linked Account */}
-                    <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-                      <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">Google Identity Authorization</h4>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Linked to: {formData.email}</p>
+                    <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-emerald-150">
+                      <div className="space-y-1 text-left">
+                        <h4 className="text-xs font-bold text-emerald-950">Google Identity Authorization</h4>
+                        <p className="text-[11px] text-slate-500">Linked to: {formData.email}</p>
                       </div>
-                      <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider">
+                      <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider">
                         Active & Synced
                       </span>
                     </div>
 
                     {/* Change Password Block */}
                     <div className="space-y-4 pt-2">
-                      <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">Change Security Password</h4>
+                      <h4 className="text-xs font-bold text-emerald-900">Change Security Password</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">New Password</label>
+                          <label className="text-xs font-extrabold text-emerald-850">New Password</label>
                           <input 
                             type="password"
                             placeholder="••••••••"
-                            className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                            className="w-full px-3.5 py-2 bg-white border border-emerald-150 rounded-xl text-xs text-emerald-950 outline-none focus:border-emerald-600 transition-colors font-medium"
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Confirm New Password</label>
+                          <label className="text-xs font-extrabold text-emerald-850">Confirm New Password</label>
                           <input 
                             type="password"
                             placeholder="••••••••"
-                            className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                            className="w-full px-3.5 py-2 bg-white border border-emerald-150 rounded-xl text-xs text-emerald-950 outline-none focus:border-emerald-600 transition-colors font-medium"
                           />
                         </div>
                       </div>
                     </div>
 
                     {/* 2FA Toggle Switch */}
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-200/60 dark:border-slate-800">
-                      <div className="space-y-1 pr-4">
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">Two-Factor Authentication (2FA)</h4>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Requires a secure mobile authenticator code upon signing in.</p>
+                    <div className="flex items-center justify-between pt-4 border-t border-emerald-100">
+                      <div className="space-y-1 pr-4 text-left">
+                        <h4 className="text-xs font-bold text-emerald-950">Two-Factor Authentication (2FA)</h4>
+                        <p className="text-[11px] text-slate-500">Requires a secure mobile authenticator code upon signing in.</p>
                       </div>
                       <button
                         type="button"
@@ -440,7 +440,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                           }
                         })}
                         className={`w-11 h-6 rounded-full p-1 transition-colors duration-200 focus:outline-none cursor-pointer ${
-                          formData.settings.security?.twoFactorEnabled ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-800'
+                          formData.settings.security?.twoFactorEnabled ? 'bg-emerald-600' : 'bg-slate-200'
                         }`}
                       >
                         <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${
@@ -450,15 +450,15 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                     </div>
 
                     {/* Active Sessions list */}
-                    <div className="pt-4 border-t border-slate-200/60 dark:border-[#10241b]">
-                      <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-3">Active Workspace Sessions</h4>
+                    <div className="pt-4 border-t border-emerald-100">
+                      <h4 className="text-xs font-bold text-emerald-900 mb-3">Active Workspace Sessions</h4>
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between text-xs p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl font-mono border border-slate-100 dark:border-slate-800/40">
-                          <div>
-                            <p className="font-bold text-slate-800 dark:text-slate-200">Chrome on Linux Container</p>
+                        <div className="flex items-center justify-between text-xs p-3 bg-emerald-50/10 rounded-xl font-mono border border-emerald-100">
+                          <div className="text-left">
+                            <p className="font-bold text-emerald-950">Chrome on Linux Container</p>
                             <p className="text-[10px] text-slate-400">IP: 10.244.12.8 • Active Now</p>
                           </div>
-                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Current Device</span>
+                          <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Current Device</span>
                         </div>
                       </div>
                     </div>
@@ -470,11 +470,11 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               {activeSection === 'notifications' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">Notifications & Digest Controls</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Configure what activities generate email, push, or in-app workspace prompts.</p>
+                    <h2 className="text-lg font-bold text-emerald-950 font-display">Notifications & Digest Controls</h2>
+                    <p className="text-xs text-slate-500">Configure what activities generate email, push, or in-app workspace prompts.</p>
                   </div>
 
-                  <div className="space-y-4 pt-4 border-t border-slate-200/60 dark:border-slate-800/80 text-xs">
+                  <div className="space-y-4 pt-4 border-t border-emerald-100 text-xs">
                     {[
                       { key: 'email', label: 'Global Email Notifications', desc: 'Allow Aurenix System to send research digests and alerts to your email.' },
                       { key: 'inApp', label: 'In-App Alerts', desc: 'Toggle structural toast highlights inside the researcher dashboard.' },
@@ -483,10 +483,10 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                       { key: 'aiRecommendations', label: 'AI Match Engine Suggestions', desc: 'Weekly custom researcher pairing and citation matching alerts.' },
                       { key: 'weeklyResearchDigest', label: 'Weekly Research Digest', desc: 'Aggregated analytics of most downloaded sub-Saharan bioenergy papers.' }
                     ].map((item) => (
-                      <div key={item.key} className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800/50 last:border-0">
+                      <div key={item.key} className="flex items-center justify-between py-3 border-b border-emerald-100/60 last:border-0">
                         <div className="space-y-0.5 text-left pr-4">
-                          <h4 className="font-extrabold text-slate-800 dark:text-slate-200">{item.label}</h4>
-                          <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">{item.desc}</p>
+                          <h4 className="font-extrabold text-emerald-950">{item.label}</h4>
+                          <p className="text-[11px] text-slate-500 leading-relaxed">{item.desc}</p>
                         </div>
                         <button
                           type="button"
@@ -501,7 +501,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                             }
                           })}
                           className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-150 focus:outline-none shrink-0 cursor-pointer ${
-                            formData.settings.notifications?.[item.key] ? 'bg-emerald-600' : 'bg-slate-200 dark:bg-slate-800'
+                            formData.settings.notifications?.[item.key] ? 'bg-emerald-600' : 'bg-slate-200'
                           }`}
                         >
                           <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-150 ${
@@ -518,14 +518,14 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               {activeSection === 'privacy' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">Profile Exposure & Privacy Gates</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Control who can view your credentials, papers, or send partnership requests.</p>
+                    <h2 className="text-lg font-bold text-emerald-950 font-display">Profile Exposure & Privacy Gates</h2>
+                    <p className="text-xs text-slate-500">Control who can view your credentials, papers, or send partnership requests.</p>
                   </div>
 
-                  <div className="space-y-5 pt-4 border-t border-slate-200/60 dark:border-slate-800/80 text-xs">
+                  <div className="space-y-5 pt-4 border-t border-emerald-100 text-xs">
                     {/* General profile visibility selection */}
                     <div className="space-y-2">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Profile Index Visibility</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Profile Index Visibility</label>
                       <select 
                         value={formData.settings.privacy?.visibility || 'Public'}
                         onChange={(e) => setFormData({
@@ -535,7 +535,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                             privacy: { ...formData.settings.privacy, visibility: e.target.value }
                           }
                         })}
-                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                        className="w-full px-3.5 py-2 bg-white border border-emerald-150 rounded-xl text-xs text-emerald-950 outline-none focus:border-emerald-600 transition-colors font-medium"
                       >
                         <option value="Public">Public (Indexed globally & indexed on search engines)</option>
                         <option value="Researchers Only">Registered Researchers Only</option>
@@ -544,18 +544,18 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                     </div>
 
                     {/* Feature-level toggles */}
-                    <div className="space-y-3 pt-4 border-t border-slate-200/60 dark:border-slate-800/80">
-                      <h4 className="font-extrabold text-slate-800 dark:text-slate-200 mb-3">Field Visibility Overrides</h4>
+                    <div className="space-y-3 pt-4 border-t border-emerald-100">
+                      <h4 className="font-extrabold text-emerald-900 mb-3">Field Visibility Overrides</h4>
                       
                       {[
                         { key: 'email', label: 'Expose Primary Email', desc: 'Let verified scholars view your email for co-author invitations.' },
                         { key: 'phone', label: 'Expose Mobile Phone Number', desc: 'Allows industrial partners to view your direct phone contact.' },
                         { key: 'projects', label: 'Show Active Innovation Milestones', desc: 'Expose active pilot TRL progresses on public portfolio pages.' }
                       ].map((item) => (
-                        <div key={item.key} className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800/40 last:border-0">
+                        <div key={item.key} className="flex items-center justify-between py-2 border-b border-emerald-100/50 last:border-0">
                           <div className="space-y-0.5 text-left pr-4 flex-grow">
-                            <h5 className="font-bold text-slate-700 dark:text-slate-300">{item.label}</h5>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500">{item.desc}</p>
+                            <h5 className="font-bold text-slate-700">{item.label}</h5>
+                            <p className="text-[10px] text-slate-400">{item.desc}</p>
                           </div>
                           <button
                             type="button"
@@ -570,7 +570,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                               }
                             })}
                             className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-150 focus:outline-none shrink-0 cursor-pointer ${
-                              formData.settings.privacy?.[item.key] ? 'bg-emerald-600' : 'bg-slate-200 dark:bg-slate-800'
+                              formData.settings.privacy?.[item.key] ? 'bg-emerald-600' : 'bg-slate-200'
                             }`}
                           >
                             <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-150 ${
@@ -588,13 +588,13 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               {activeSection === 'collaboration' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">Collaboration Preferences</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Select what resources you seek and your availability level for green-energy consortium alliances.</p>
+                    <h2 className="text-lg font-bold text-emerald-950 font-display">Collaboration Preferences</h2>
+                    <p className="text-xs text-slate-500">Select what resources you seek and your availability level for green-energy consortium alliances.</p>
                   </div>
 
-                  <div className="space-y-5 pt-4 border-t border-slate-200/60 dark:border-slate-800/80 text-xs">
+                  <div className="space-y-5 pt-4 border-t border-emerald-100 text-xs">
                     <div className="space-y-2">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Availability Level</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Availability Level</label>
                       <select 
                         value={formData.settings.collaborationPreferences?.availability || 'Open to Collaborate'}
                         onChange={(e) => setFormData({
@@ -604,7 +604,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                             collaborationPreferences: { ...formData.settings.collaborationPreferences, availability: e.target.value }
                           }
                         })}
-                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                        className="w-full px-3.5 py-2 bg-white border border-emerald-150 rounded-xl text-xs text-emerald-950 outline-none focus:border-emerald-600 transition-colors font-medium"
                       >
                         <option value="Open to Collaborate">Open to Collaborate (Actively seeking partnership proposals)</option>
                         <option value="Invite Only">Invite Only (Will accept proposals from verified institutions only)</option>
@@ -613,7 +613,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                     </div>
 
                     <div className="space-y-3 pt-2">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Resources & Partners Desired</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Resources & Partners Desired</label>
                       <div className="grid grid-cols-2 gap-2.5">
                         {[
                           'Funding', 'Laboratory Access', 'Equipment', 'Technical Mentor', 
@@ -639,12 +639,12 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                               }}
                               className={`p-3 border rounded-xl text-left font-semibold cursor-pointer transition-all flex items-center justify-between ${
                                 isChecked 
-                                  ? 'bg-emerald-950/20 border-emerald-600 text-emerald-400' 
-                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400'
+                                  ? 'bg-emerald-50 border-emerald-500 text-emerald-800' 
+                                  : 'bg-white border-emerald-100 text-slate-500 hover:bg-emerald-50/10'
                               }`}
                             >
                               <span>{resource}</span>
-                              {isChecked ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <div className="w-4 h-4 rounded-full border border-slate-200 dark:border-slate-700" />}
+                              {isChecked ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <div className="w-4 h-4 rounded-full border border-slate-200" />}
                             </button>
                           );
                         })}
@@ -658,13 +658,13 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               {activeSection === 'aimatch' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">AI Matching Engine Constraints</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Instruct our background recommendation pipelines on how to target matches for you.</p>
+                    <h2 className="text-lg font-bold text-emerald-950 font-display">AI Matching Engine Constraints</h2>
+                    <p className="text-xs text-slate-500">Instruct our background recommendation pipelines on how to target matches for you.</p>
                   </div>
 
-                  <div className="space-y-5 pt-4 border-t border-slate-200/60 dark:border-slate-800/80 text-xs">
+                  <div className="space-y-5 pt-4 border-t border-emerald-100 text-xs">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Preferred Technology Readiness Levels (TRL)</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Preferred Technology Readiness Levels (TRL)</label>
                       <p className="text-[10px] text-slate-400 mb-2">TRL 1-3 indicates Basic Research; TRL 4-6 is Bench Validation; TRL 7-9 is Operational Pilot Deployments.</p>
                       
                       <div className="flex flex-wrap gap-2">
@@ -688,7 +688,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                               className={`w-9 h-9 rounded-lg border font-mono font-bold flex items-center justify-center transition-all cursor-pointer ${
                                 isSelected 
                                   ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' 
-                                  : 'bg-black dark:bg-black border border-slate-700 text-slate-400'
+                                  : 'bg-white border-emerald-150 text-emerald-850 hover:bg-emerald-50/20'
                               }`}
                             >
                               T{lvl}
@@ -699,7 +699,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                     </div>
 
                     <div className="space-y-1.5 pt-2">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Target Funding Ranges</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Target Funding Ranges</label>
                       <select 
                         value={formData.settings.aiMatchPreferences?.fundingRange || '$100k - $250k'}
                         onChange={(e) => setFormData({
@@ -709,7 +709,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                             aiMatchPreferences: { ...formData.settings.aiMatchPreferences, fundingRange: e.target.value }
                           }
                         })}
-                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                        className="w-full px-3.5 py-2 bg-white border border-emerald-150 rounded-xl text-xs text-emerald-950 outline-none focus:border-emerald-600 transition-colors font-medium"
                       >
                         <option value="Under $50k">Under $50k USD (Seed scale & student fellowships)</option>
                         <option value="$50k - $250k">$50k — $250k USD (Standard institutional academic grants)</option>
@@ -725,13 +725,13 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               {activeSection === 'research' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">Research Documentation Preferences</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Configure default rendering metadata parameters for studies you submit.</p>
+                    <h2 className="text-lg font-bold text-emerald-950 font-display">Research Documentation Preferences</h2>
+                    <p className="text-xs text-slate-500">Configure default rendering metadata parameters for studies you submit.</p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-200/60 dark:border-slate-800/80 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-emerald-100 text-xs">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Default Study Privacy</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Default Study Privacy</label>
                       <select 
                         value={formData.settings.researchPreferences?.defaultVisibility || 'Public'}
                         onChange={(e) => setFormData({
@@ -741,7 +741,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                             researchPreferences: { ...formData.settings.researchPreferences, defaultVisibility: e.target.value }
                           }
                         })}
-                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-600"
+                        className="w-full px-3.5 py-2 bg-white border border-emerald-150 rounded-xl text-xs text-emerald-950 outline-none focus:border-emerald-600 font-medium"
                       >
                         <option value="Public">Public (Accessible to everyone)</option>
                         <option value="Private">Private Draft (Only you can access)</option>
@@ -750,7 +750,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Default Citation Format</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Default Citation Format</label>
                       <select 
                         value={formData.settings.researchPreferences?.citationStyle || 'IEEE'}
                         onChange={(e) => setFormData({
@@ -760,7 +760,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                             researchPreferences: { ...formData.settings.researchPreferences, citationStyle: e.target.value }
                           }
                         })}
-                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-600"
+                        className="w-full px-3.5 py-2 bg-white border border-emerald-150 rounded-xl text-xs text-emerald-950 outline-none focus:border-emerald-600 font-medium"
                       >
                         <option value="IEEE">IEEE Reference style (Scientific standard)</option>
                         <option value="APA">APA 7th Reference Style (Social sciences)</option>
@@ -776,13 +776,13 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               {activeSection === 'appearance' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">Appearance & Accessibility Styles</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Control visual scaling, typography weighting and contrast layers.</p>
+                    <h2 className="text-lg font-bold text-emerald-950 font-display">Appearance & Accessibility Styles</h2>
+                    <p className="text-xs text-slate-500">Control visual scaling, typography weighting and contrast layers.</p>
                   </div>
 
-                  <div className="space-y-5 pt-4 border-t border-slate-200/60 dark:border-slate-800/80 text-xs">
+                  <div className="space-y-5 pt-4 border-t border-emerald-100 text-xs">
                     <div className="space-y-2">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Visual Mode Theme</label>
+                      <label className="text-xs font-extrabold text-emerald-900">Visual Mode Theme</label>
                       <div className="grid grid-cols-2 gap-4">
                         <button
                           type="button"
@@ -791,13 +791,13 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                           }}
                           className={`p-4 border rounded-2xl cursor-pointer text-left transition-all ${
                             theme === 'light' 
-                              ? 'bg-emerald-950/20 border-emerald-600 font-extrabold text-emerald-400' 
-                              : 'bg-black dark:bg-black border border-slate-700 text-slate-500 hover:bg-zinc-900'
+                              ? 'bg-emerald-50 border-emerald-500 font-extrabold text-emerald-800' 
+                              : 'bg-white border-emerald-100 text-slate-500 hover:bg-emerald-50/10'
                           }`}
                         >
-                          <Monitor className="w-5 h-5 mb-2" />
+                          <Monitor className="w-5 h-5 mb-2 text-emerald-600" />
                           <div>Aurenix Emerald Light</div>
-                          <p className="text-[10px] font-normal text-slate-400 pt-0.5">High-contrast slate off-whites</p>
+                          <p className="text-[10px] font-normal text-slate-500 pt-0.5">High-contrast slate off-whites</p>
                         </button>
 
                         <button
@@ -807,11 +807,11 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                           }}
                           className={`p-4 border rounded-2xl cursor-pointer text-left transition-all ${
                             theme === 'dark' 
-                              ? 'bg-emerald-950/40 border-emerald-500/30 font-extrabold text-emerald-400' 
-                              : 'bg-black dark:bg-black border border-slate-700 text-slate-500 hover:bg-zinc-900'
+                              ? 'bg-emerald-50 border-emerald-500 font-extrabold text-emerald-800' 
+                              : 'bg-white border-emerald-100 text-slate-500 hover:bg-emerald-50/10'
                           }`}
                         >
-                          <Monitor className="w-5 h-5 mb-2" />
+                          <Monitor className="w-5 h-5 mb-2 text-slate-400" />
                           <div>Forest Obsidian Dark</div>
                           <p className="text-[10px] font-normal text-slate-500 pt-0.5">Energy efficient Pitch-Black backdrop</p>
                         </button>
@@ -825,23 +825,23 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               {activeSection === 'connected' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">Linked Credentials Directories</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Consolidate your digital academic footprints inside Aurenix.</p>
+                    <h2 className="text-lg font-bold text-emerald-950 font-display">Linked Credentials Directories</h2>
+                    <p className="text-xs text-slate-500">Consolidate your digital academic footprints inside Aurenix.</p>
                   </div>
 
-                  <div className="space-y-4 pt-4 border-t border-slate-200/60 dark:border-slate-800/80 text-xs">
-                    <div className="flex items-center justify-between p-4 bg-black dark:bg-black rounded-2xl border border-slate-700">
-                      <div>
-                        <h4 className="font-extrabold text-slate-200 dark:text-slate-200">Google Workspace Identity</h4>
-                        <p className="text-[10px] text-slate-400">Authenticated: {user.email}</p>
+                  <div className="space-y-4 pt-4 border-t border-emerald-100 text-xs">
+                    <div className="flex items-center justify-between p-4 bg-[#F8FAF9] rounded-2xl border border-emerald-150">
+                      <div className="text-left">
+                        <h4 className="font-extrabold text-emerald-950">Google Workspace Identity</h4>
+                        <p className="text-[10px] text-slate-500">Authenticated: {user.email}</p>
                       </div>
-                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Connected</span>
+                      <span className="text-xs font-bold text-emerald-700">Connected</span>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-black dark:bg-black rounded-2xl border border-slate-700">
-                      <div>
-                        <h4 className="font-extrabold text-slate-200 dark:text-slate-200">ORCID Registry Identifier</h4>
-                        <p className="text-[10px] text-slate-400">Allows automatic synchronizations of global publications metadata.</p>
+                    <div className="flex items-center justify-between p-4 bg-[#F8FAF9] rounded-2xl border border-emerald-150">
+                      <div className="text-left">
+                        <h4 className="font-extrabold text-emerald-950">ORCID Registry Identifier</h4>
+                        <p className="text-[10px] text-slate-500">Allows automatic synchronizations of global publications metadata.</p>
                       </div>
                       <button 
                         type="button"
@@ -862,17 +862,17 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               {activeSection === 'data' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">Data & Archive Portability</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Export, package or review storage consumption inside your personal sandbox.</p>
+                    <h2 className="text-lg font-bold text-emerald-950 font-display">Data & Archive Portability</h2>
+                    <p className="text-xs text-slate-500">Export, package or review storage consumption inside your personal sandbox.</p>
                   </div>
 
-                  <div className="space-y-5 pt-4 border-t border-slate-200/60 dark:border-slate-800/80 text-xs">
-                    <div className="p-4 bg-black dark:bg-black rounded-2xl border border-slate-700">
+                  <div className="space-y-5 pt-4 border-t border-emerald-100 text-xs">
+                    <div className="p-4 bg-[#F8FAF9] rounded-2xl border border-emerald-150">
                       <div className="flex justify-between items-center mb-2.5">
-                        <span className="font-bold text-slate-300 dark:text-slate-300">Workspace Storage Allocated</span>
-                        <span className="font-mono text-slate-400">12.5 MB of 1.00 GB</span>
+                        <span className="font-bold text-emerald-950">Workspace Storage Allocated</span>
+                        <span className="font-mono text-slate-500 font-semibold">12.5 MB of 1.00 GB</span>
                       </div>
-                      <div className="w-full bg-zinc-900 dark:bg-zinc-900 h-1 rounded-full overflow-hidden">
+                      <div className="w-full bg-emerald-100 h-1 rounded-full overflow-hidden">
                         <div className="bg-emerald-600 h-full rounded-full" style={{ width: '1.2%' }} />
                       </div>
                     </div>
@@ -884,7 +884,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                           setAlertMsg({ type: 'success', text: 'Compiling research portfolio JSON backup...' });
                           setTimeout(() => setAlertMsg(null), 3000);
                         }}
-                        className="px-4 py-2 bg-black dark:bg-black border border-slate-700 hover:bg-zinc-900 text-slate-200 font-bold rounded-xl"
+                        className="px-4 py-2 bg-white hover:bg-emerald-50/50 border border-emerald-150 text-emerald-800 font-bold rounded-xl transition cursor-pointer"
                       >
                         Download My Data
                       </button>
@@ -894,7 +894,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                           setAlertMsg({ type: 'success', text: 'Exporting publication bibliography in BibTeX format...' });
                           setTimeout(() => setAlertMsg(null), 3000);
                         }}
-                        className="px-4 py-2 bg-black dark:bg-black border border-slate-700 hover:bg-zinc-900 text-slate-200 font-bold rounded-xl"
+                        className="px-4 py-2 bg-white hover:bg-emerald-50/50 border border-emerald-150 text-emerald-800 font-bold rounded-xl transition cursor-pointer"
                       >
                         Export Bibliography (.bib)
                       </button>
@@ -907,17 +907,17 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               {activeSection === 'subscription' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">Subscription Tier & Funding Roles</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Control subscription parameters, view invoice histories or raise matching roles.</p>
+                    <h2 className="text-lg font-bold text-emerald-950 font-display">Subscription Tier & Funding Roles</h2>
+                    <p className="text-xs text-slate-500">Control subscription parameters, view invoice histories or raise matching roles.</p>
                   </div>
 
-                  <div className="space-y-5 pt-4 border-t border-slate-200/60 dark:border-slate-800/80 text-xs">
+                  <div className="space-y-5 pt-4 border-t border-emerald-100 text-xs">
                     <div className="p-5 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-3xl relative overflow-hidden">
                       <div className="absolute right-0 top-0 p-8 opacity-10 pointer-events-none">
                         <UserCheck className="w-40 h-40" />
                       </div>
 
-                      <div className="space-y-4 relative z-10">
+                      <div className="space-y-4 relative z-10 text-left">
                         <div>
                           <span className="px-2.5 py-0.5 bg-white/20 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider">Active Consortium Role</span>
                           <h3 className="text-xl font-extrabold mt-2">Aurenix Professional Scholar</h3>
@@ -936,29 +936,29 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               {activeSection === 'help' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">Help & Structural Support Center</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Connect with operations teams, submit technical bug reports or propose platform enhancements.</p>
+                    <h2 className="text-lg font-bold text-emerald-950 font-display">Help & Structural Support Center</h2>
+                    <p className="text-xs text-slate-500">Connect with operations teams, submit technical bug reports or propose platform enhancements.</p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-200/60 dark:border-slate-800/80 text-xs">
-                    <div className="p-4 bg-black dark:bg-black rounded-2xl text-left border border-slate-700 space-y-2">
-                      <h4 className="font-extrabold text-slate-200 dark:text-slate-200">Contact Help Operations</h4>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-400 leading-relaxed">Have a query regarding co-author credentials verification or publication indexing? File a support case.</p>
-                      <a href="mailto:support@aurenix-research.org" className="text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center gap-1 hover:underline">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-emerald-100 text-xs">
+                    <div className="p-4 bg-[#F8FAF9] rounded-2xl text-left border border-emerald-150 space-y-2">
+                      <h4 className="font-extrabold text-emerald-950">Contact Help Operations</h4>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">Have a query regarding co-author credentials verification or publication indexing? File a support case.</p>
+                      <a href="mailto:support@aurenix-research.org" className="text-emerald-700 font-extrabold flex items-center gap-1 hover:underline">
                         support@aurenix-research.org
                       </a>
                     </div>
 
-                    <div className="p-4 bg-black dark:bg-black rounded-2xl text-left border border-slate-700 space-y-2">
-                      <h4 className="font-extrabold text-slate-800 dark:text-slate-200">Community Consortium Forum</h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Collaborate and chat with other process chemistry and bioenergy researchers across West Africa.</p>
+                    <div className="p-4 bg-[#F8FAF9] rounded-2xl text-left border border-emerald-150 space-y-2">
+                      <h4 className="font-extrabold text-emerald-950">Community Consortium Forum</h4>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">Collaborate and chat with other process chemistry and bioenergy researchers across West Africa.</p>
                       <button 
                         type="button"
                         onClick={() => {
                           setAlertMsg({ type: 'success', text: 'Navigating to decentralized forum...' });
                           setTimeout(() => setAlertMsg(null), 3000);
                         }}
-                        className="text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center gap-1 hover:underline"
+                        className="text-emerald-700 font-extrabold flex items-center gap-1 hover:underline"
                       >
                         Enter Forum
                       </button>
@@ -971,14 +971,14 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               {activeSection === 'danger' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-rose-600 dark:text-rose-400 font-display">Danger Zone</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Irreversible actions regarding account ownership, research deactivations and data wipes.</p>
+                    <h2 className="text-lg font-bold text-rose-600 font-display">Danger Zone</h2>
+                    <p className="text-xs text-slate-500">Irreversible actions regarding account ownership, research deactivations and data wipes.</p>
                   </div>
 
-                  <div className="p-5 bg-black dark:bg-black border border-rose-900/50 rounded-2xl space-y-4 text-xs text-left pt-4">
+                  <div className="p-5 bg-rose-50/50 border border-rose-200 rounded-2xl space-y-4 text-xs text-left pt-4">
                     <div className="space-y-1">
-                      <h4 className="font-extrabold text-rose-800 dark:text-rose-400">Deactivate Researcher Account</h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      <h4 className="font-extrabold text-rose-800">Deactivate Researcher Account</h4>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
                         Temporarily hide your public portfolio page, active innovation projects and publications from our AI matching pipelines and Explore page indexes.
                       </p>
                     </div>
@@ -1001,17 +1001,17 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               )}
 
               {/* BOTTOM ACTIONS BAR */}
-              <div className="pt-6 border-t border-slate-200/60 dark:border-slate-800/80 flex items-center justify-end gap-3 bg-black dark:bg-black">
+              <div className="pt-6 border-t border-emerald-100 flex items-center justify-end gap-3 bg-transparent">
                 <button 
                   type="button" 
                   onClick={() => onNavigateToView('dashboard')}
-                  className="px-4 py-2.5 bg-black hover:bg-zinc-900 dark:bg-black dark:hover:bg-zinc-900 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 cursor-pointer"
+                  className="px-4 py-2.5 bg-white hover:bg-emerald-50/50 text-emerald-800 text-xs font-bold rounded-xl border border-emerald-150 cursor-pointer transition"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-900/10"
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-900/10 transition"
                 >
                   <Save className="w-4 h-4" />
                   Save Preferences
