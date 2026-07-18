@@ -543,6 +543,8 @@ export default function AdminPortal({
   const isUserPlatformAdmin = 
     userProfile?.role?.toLowerCase() === 'admin' ||
     userProfile?.role?.toLowerCase() === 'super_admin' ||
+    userProfile?.role?.toLowerCase()?.includes('admin') ||
+    !!userProfile?.adminRoleName ||
     user?.uid === 'sandbox-admin-bola' ||
     user?.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' ||
     user?.email?.toLowerCase() === 'adeyemibola2569@gmail.com' ||

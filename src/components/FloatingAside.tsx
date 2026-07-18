@@ -275,8 +275,10 @@ export default function FloatingAside({
               user.email?.toLowerCase() === 'adeyemibola2569@gmail.com' ||
               userProfile?.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' || 
               userProfile?.email?.toLowerCase() === 'adeyemibola2569@gmail.com' ||
+              userProfile?.role?.toLowerCase()?.includes('admin') || 
               userProfile?.role?.toLowerCase() === 'admin' || 
-              userProfile?.role?.toLowerCase() === 'super_admin') && (
+              userProfile?.role?.toLowerCase() === 'super_admin' ||
+              !!userProfile?.adminRoleName) && (
               <div className="relative group/nav-item pt-2 border-t border-slate-100">
                 <motion.button
                   onClick={() => handleNav('admin')}
