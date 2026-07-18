@@ -184,100 +184,630 @@ export default function AdminPortal({
     });
   };
 
-  const [adminResearch, setAdminResearch] = useState<AdminResearch[]>(() => {
-    const data = localStorage.getItem('aurenix_admin_research');
-    return data ? JSON.parse(data) : MOCK_RESEARCH;
-  });
+  const [adminResearch, setAdminResearch] = useState<AdminResearch[]>([]);
+  const [adminProjects, setAdminProjects] = useState<AdminProject[]>([]);
+  const [adminAlliances, setAdminAlliances] = useState<AdminAlliance[]>([]);
+  const [adminOrgs, setAdminOrgs] = useState<AdminOrganization[]>([]);
+  const [adminConsulting, setAdminConsulting] = useState<AdminConsulting[]>([]);
+  const [adminFunding, setAdminFunding] = useState<AdminFunding[]>([]);
+  const [adminChallenges, setAdminChallenges] = useState<AdminChallenge[]>([]);
+  const [adminReports, setAdminReports] = useState<AdminReportedItem[]>([]);
+  const [adminAuditLogs, setAdminAuditLogs] = useState<AdminAuditLog[]>([]);
+  const [adminRoles, setAdminRoles] = useState<AdminRoleConfig[]>([]);
 
-  const [adminProjects, setAdminProjects] = useState<AdminProject[]>(() => {
-    const data = localStorage.getItem('aurenix_admin_projects');
-    return data ? JSON.parse(data) : MOCK_PROJECTS;
-  });
-
-  const [adminAlliances, setAdminAlliances] = useState<AdminAlliance[]>(() => {
-    const data = localStorage.getItem('aurenix_admin_alliances');
-    return data ? JSON.parse(data) : MOCK_ALLIANCES;
-  });
-
-  const [adminOrgs, setAdminOrgs] = useState<AdminOrganization[]>(() => {
-    const data = localStorage.getItem('aurenix_admin_orgs');
-    return data ? JSON.parse(data) : MOCK_ORGANIZATIONS;
-  });
-
-  const [adminConsulting, setAdminConsulting] = useState<AdminConsulting[]>(() => {
-    const data = localStorage.getItem('aurenix_admin_consulting');
-    return data ? JSON.parse(data) : MOCK_CONSULTING;
-  });
-
-  const [adminFunding, setAdminFunding] = useState<AdminFunding[]>(() => {
-    const data = localStorage.getItem('aurenix_admin_funding');
-    return data ? JSON.parse(data) : MOCK_FUNDING;
-  });
-
-  const [adminChallenges, setAdminChallenges] = useState<AdminChallenge[]>(() => {
-    const data = localStorage.getItem('aurenix_admin_challenges');
-    return data ? JSON.parse(data) : MOCK_CHALLENGES;
-  });
-
-  const [adminReports, setAdminReports] = useState<AdminReportedItem[]>(() => {
-    const data = localStorage.getItem('aurenix_admin_reports');
-    return data ? JSON.parse(data) : MOCK_REPORTS;
-  });
-
-  const [adminAuditLogs, setAdminAuditLogs] = useState<AdminAuditLog[]>(() => {
-    const data = localStorage.getItem('aurenix_admin_audit_logs');
-    return data ? JSON.parse(data) : MOCK_AUDIT_LOGS;
-  });
-
-  const [adminRoles, setAdminRoles] = useState<AdminRoleConfig[]>(() => {
-    const data = localStorage.getItem('aurenix_admin_roles');
-    return data ? JSON.parse(data) : MOCK_ADMIN_ROLES;
-  });
-
-  // Keep LocalStorage synchronized
+  // 1. Listen to Publications -> AdminResearch
   useEffect(() => {
-    localStorage.setItem('aurenix_admin_users', JSON.stringify(adminUsers));
-  }, [adminUsers]);
+    const colRef = collection(db, 'publications');
+    const unsubscribe = onSnapshot(colRef, (querySnapshot) => {
+      if (querySnapshot.empty) {
+        MOCK_RESEARCH.forEach((r) => {
+          setDoc(doc(db, 'publications', r.id), r).catch(err => console.error('Seeding publication failed:', err));
+        });
+        return;
+      }
+      const list: AdminResearch[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          title: d.title || '',
+          author: d.author || d.authorName || 'Anonymous Researcher',
+          institution: d.institution || 'Individual',
+          category: d.category || 'Bioenergy Technology',
+          views: Number(d.views || 0),
+          downloads: Number(d.downloads || 0),
+          citations: Number(d.citations || 0),
+          status: d.status || 'Approved',
+          date: d.date || (d.createdAt ? d.createdAt.substring(0, 10) : new Date().toISOString().substring(0, 10)),
+          coverImage: d.coverImage,
+          abstract: d.abstract || '',
+          feedback: d.feedback || '',
+          featured: !!d.featured
+        });
+      });
+      setAdminResearch(list);
+    }, (error) => {
+      console.warn('Publications listener error:', error);
+    });
+    return () => unsubscribe();
+  }, []);
 
+  // 2. Listen to Projects -> AdminProject
   useEffect(() => {
-    localStorage.setItem('aurenix_admin_research', JSON.stringify(adminResearch));
-  }, [adminResearch]);
+    const colRef = collection(db, 'projects');
+    const unsubscribe = onSnapshot(colRef, (querySnapshot) => {
+      if (querySnapshot.empty) {
+        MOCK_PROJECTS.forEach((p) => {
+          setDoc(doc(db, 'projects', p.id), p).catch(err => console.error('Seeding project failed:', err));
+        });
+        return;
+      }
+      const list: AdminProject[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          title: d.title || '',
+          researcher: d.researcher || d.createdBy || 'Unknown Researcher',
+          trl: Number(d.trl || 1),
+          fundingStatus: d.fundingStatus || 'Pending',
+          progress: Number(d.progress || 0),
+          industryPartner: d.industryPartner || 'None',
+          laboratory: d.laboratory || d.laboratoryPartner || 'General Labs',
+          country: d.country || 'Unknown',
+          status: d.status || 'Active',
+          description: d.description || '',
+          featured: !!d.featured
+        });
+      });
+      setAdminProjects(list);
+    }, (error) => {
+      console.warn('Projects listener error:', error);
+    });
+    return () => unsubscribe();
+  }, []);
 
+  // 3. Listen to Alliance Opportunities -> AdminAlliance
   useEffect(() => {
-    localStorage.setItem('aurenix_admin_projects', JSON.stringify(adminProjects));
-  }, [adminProjects]);
+    const colRef = collection(db, 'alliance_opportunities');
+    const unsubscribe = onSnapshot(colRef, (querySnapshot) => {
+      if (querySnapshot.empty) {
+        MOCK_ALLIANCES.forEach((a) => {
+          setDoc(doc(db, 'alliance_opportunities', a.id), a).catch(err => console.error('Seeding alliance failed:', err));
+        });
+        return;
+      }
+      const list: AdminAlliance[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          organization: d.organization || d.sponsor || 'Unknown Sponsor',
+          opportunity: d.opportunity || d.title || '',
+          funding: d.funding || d.budget || '$0',
+          deadline: d.deadline || '',
+          applicationsCount: Number(d.applicationsCount || 0),
+          views: Number(d.views || 0),
+          status: d.status || 'Active',
+          applications: d.applications || []
+        });
+      });
+      setAdminAlliances(list);
+    }, (error) => {
+      console.warn('Alliance opportunities listener error:', error);
+    });
+    return () => unsubscribe();
+  }, []);
 
+  // 4. Listen to Organizations -> AdminOrganization
   useEffect(() => {
-    localStorage.setItem('aurenix_admin_alliances', JSON.stringify(adminAlliances));
-  }, [adminAlliances]);
+    const colRef = collection(db, 'organizations');
+    const unsubscribe = onSnapshot(colRef, (querySnapshot) => {
+      if (querySnapshot.empty) {
+        MOCK_ORGANIZATIONS.forEach((o) => {
+          setDoc(doc(db, 'organizations', o.id), o).catch(err => console.error('Seeding organization failed:', err));
+        });
+        return;
+      }
+      const list: AdminOrganization[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          name: d.name || '',
+          category: d.category || 'Universities',
+          logo: d.logo || '',
+          country: d.country || 'Unknown',
+          website: d.website || '',
+          verified: !!d.verified,
+          allianceCount: Number(d.allianceCount || 0),
+          projectsSupported: Number(d.projectsSupported || 0),
+          followers: Number(d.followers || 0),
+          status: d.status || 'active'
+        });
+      });
+      setAdminOrgs(list);
+    }, (error) => {
+      console.warn('Organizations listener error:', error);
+    });
+    return () => unsubscribe();
+  }, []);
 
+  // 5. Listen to Consultation Inquiries -> AdminConsulting
   useEffect(() => {
-    localStorage.setItem('aurenix_admin_orgs', JSON.stringify(adminOrgs));
-  }, [adminOrgs]);
+    const colRef = collection(db, 'consultation_inquiries');
+    const unsubscribe = onSnapshot(colRef, (querySnapshot) => {
+      if (querySnapshot.empty) {
+        MOCK_CONSULTING.forEach((c) => {
+          setDoc(doc(db, 'consultation_inquiries', c.id), c).catch(err => console.error('Seeding consultation failed:', err));
+        });
+        return;
+      }
+      const list: AdminConsulting[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          researcher: d.researcher || d.userName || 'Anonymous',
+          consultant: d.consultant || '',
+          subject: d.subject || d.serviceType || '',
+          status: d.status || 'Pending',
+          priority: d.priority || 'Medium',
+          date: d.date || (d.createdAt ? d.createdAt.substring(0, 10) : new Date().toISOString().substring(0, 10)),
+          message: d.message || '',
+          files: d.files || [],
+          chat: d.chat || []
+        });
+      });
+      setAdminConsulting(list);
+    }, (error) => {
+      console.warn('Consultation inquiries listener error:', error);
+    });
+    return () => unsubscribe();
+  }, []);
 
+  // 6. Listen to Funding Opportunities -> AdminFunding
   useEffect(() => {
-    localStorage.setItem('aurenix_admin_consulting', JSON.stringify(adminConsulting));
-  }, [adminConsulting]);
+    const colRef = collection(db, 'funding_opportunities');
+    const unsubscribe = onSnapshot(colRef, (querySnapshot) => {
+      if (querySnapshot.empty) {
+        MOCK_FUNDING.forEach((f) => {
+          setDoc(doc(db, 'funding_opportunities', f.id), f).catch(err => console.error('Seeding funding failed:', err));
+        });
+        return;
+      }
+      const list: AdminFunding[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          sponsor: d.sponsor || d.organization || '',
+          amount: d.amount || d.budget || '$0',
+          deadline: d.deadline || '',
+          applicantsCount: Number(d.applicantsCount || 0),
+          status: d.status || 'Open',
+          type: d.type || 'Grant',
+          description: d.description || '',
+          applications: d.applications || []
+        });
+      });
+      setAdminFunding(list);
+    }, (error) => {
+      console.warn('Funding opportunities listener error:', error);
+    });
+    return () => unsubscribe();
+  }, []);
 
+  // 7. Listen to Innovation Challenges -> AdminChallenge
   useEffect(() => {
-    localStorage.setItem('aurenix_admin_funding', JSON.stringify(adminFunding));
-  }, [adminFunding]);
+    const colRef = collection(db, 'innovation_challenges');
+    const unsubscribe = onSnapshot(colRef, (querySnapshot) => {
+      if (querySnapshot.empty) {
+        MOCK_CHALLENGES.forEach((c) => {
+          setDoc(doc(db, 'innovation_challenges', c.id), c).catch(err => console.error('Seeding challenge failed:', err));
+        });
+        return;
+      }
+      const list: AdminChallenge[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          title: d.title || '',
+          description: d.description || '',
+          funding: d.funding || '$0',
+          timeline: d.timeline || '',
+          expectedDeliverables: d.expectedDeliverables || '',
+          deadline: d.deadline || '',
+          supportingOrganization: d.supportingOrganization || '',
+          researchArea: d.researchArea || '',
+          status: d.status || 'Active',
+          featured: !!d.featured
+        });
+      });
+      setAdminChallenges(list);
+    }, (error) => {
+      console.warn('Innovation challenges listener error:', error);
+    });
+    return () => unsubscribe();
+  }, []);
 
+  // 8. Listen to Reports -> AdminReportedItem
   useEffect(() => {
-    localStorage.setItem('aurenix_admin_challenges', JSON.stringify(adminChallenges));
-  }, [adminChallenges]);
+    const colRef = collection(db, 'reports');
+    const unsubscribe = onSnapshot(colRef, (querySnapshot) => {
+      if (querySnapshot.empty) {
+        MOCK_REPORTS.forEach((r) => {
+          setDoc(doc(db, 'reports', r.id), r).catch(err => console.error('Seeding report failed:', err));
+        });
+        return;
+      }
+      const list: AdminReportedItem[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          type: d.type || 'Research',
+          reporter: d.reporter || '',
+          reportedEntityName: d.reportedEntityName || '',
+          entityId: d.entityId || '',
+          reason: d.reason || '',
+          severity: d.severity || 'Minor',
+          date: d.date || (d.createdAt ? d.createdAt.substring(0, 10) : new Date().toISOString().substring(0, 10)),
+          status: d.status || 'Pending',
+          aiFlagged: !!d.aiFlagged,
+          contentSnippet: d.contentSnippet || ''
+        });
+      });
+      setAdminReports(list);
+    }, (error) => {
+      console.warn('Reports listener error:', error);
+    });
+    return () => unsubscribe();
+  }, []);
 
+  // 9. Listen to Audit Logs -> AdminAuditLog
   useEffect(() => {
-    localStorage.setItem('aurenix_admin_reports', JSON.stringify(adminReports));
-  }, [adminReports]);
+    const colRef = collection(db, 'audit_logs');
+    const unsubscribe = onSnapshot(colRef, (querySnapshot) => {
+      if (querySnapshot.empty) {
+        MOCK_AUDIT_LOGS.forEach((a) => {
+          setDoc(doc(db, 'audit_logs', a.id), a).catch(err => console.error('Seeding audit log failed:', err));
+        });
+        return;
+      }
+      const list: AdminAuditLog[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          administrator: d.administrator || '',
+          action: d.action || '',
+          affectedResource: d.affectedResource || '',
+          oldValue: d.oldValue || '',
+          newValue: d.newValue || '',
+          timestamp: d.timestamp || (d.createdAt ? d.createdAt.substring(0, 10) : new Date().toISOString()),
+          ipAddress: d.ipAddress || '127.0.0.1',
+          browser: d.browser || 'Chrome',
+          device: d.device || 'Desktop'
+        });
+      });
+      setAdminAuditLogs(list);
+    }, (error) => {
+      console.warn('Audit logs listener error:', error);
+    });
+    return () => unsubscribe();
+  }, []);
 
+  // 10. Listen to Admin Roles -> AdminRoleConfig
   useEffect(() => {
-    localStorage.setItem('aurenix_admin_audit_logs', JSON.stringify(adminAuditLogs));
-  }, [adminAuditLogs]);
+    const colRef = collection(db, 'admin_roles');
+    const unsubscribe = onSnapshot(colRef, (querySnapshot) => {
+      if (querySnapshot.empty) {
+        MOCK_ADMIN_ROLES.forEach((r) => {
+          setDoc(doc(db, 'admin_roles', r.id), r).catch(err => console.error('Seeding admin role failed:', err));
+        });
+        return;
+      }
+      const list: AdminRoleConfig[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          roleName: d.roleName || '',
+          description: d.description || '',
+          permissions: d.permissions || {
+            dashboard: true,
+            users: true,
+            research: true,
+            projects: true,
+            alliances: true,
+            organizations: true,
+            consulting: true,
+            funding: true,
+            challenges: true,
+            moderation: true,
+            settings: true,
+            auditLogs: true
+          }
+        });
+      });
+      setAdminRoles(list);
+    }, (error) => {
+      console.warn('Admin roles listener error:', error);
+    });
+    return () => unsubscribe();
+  }, []);
 
+  // Access check: User must be signed in AND have 'super_admin' or 'admin' role (or developer credentials bypass)
+  const isUserPlatformAdmin = 
+    userProfile?.role?.toLowerCase() === 'admin' ||
+    userProfile?.role?.toLowerCase() === 'super_admin' ||
+    user?.uid === 'sandbox-admin-bola' ||
+    user?.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' ||
+    user?.email?.toLowerCase() === 'adeyemibola2569@gmail.com' ||
+    userProfile?.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' ||
+    userProfile?.email?.toLowerCase() === 'adeyemibola2569@gmail.com';
+
+  // Redirect non-super-admins to user dashboard
   useEffect(() => {
-    localStorage.setItem('aurenix_admin_roles', JSON.stringify(adminRoles));
-  }, [adminRoles]);
+    if (userProfile && !isUserPlatformAdmin) {
+      console.log('Redirecting non-super-admin user to normal dashboard.');
+      setView('home');
+      window.history.pushState(null, '', '/');
+    }
+  }, [userProfile, isUserPlatformAdmin, setView]);
+
+  // Setters bound directly to dynamic Firestore collections
+  const handleUpdateResearch = (updatedResearch: AdminResearch[]) => {
+    setAdminResearch(updatedResearch);
+    updatedResearch.forEach(async (r) => {
+      const prev = adminResearch.find(p => p.id === r.id);
+      if (!prev || JSON.stringify(prev) !== JSON.stringify(r)) {
+        try {
+          await setDoc(doc(db, 'publications', r.id), r, { merge: true });
+        } catch (err) {
+          console.error('Error writing publication update to Firestore:', err);
+        }
+      }
+    });
+
+    adminResearch.forEach(async (p) => {
+      const isStillPresent = updatedResearch.some(r => r.id === p.id);
+      if (!isStillPresent) {
+        try {
+          await deleteDoc(doc(db, 'publications', p.id));
+        } catch (err) {
+          console.error(`Error deleting publication ${p.id} from Firestore:`, err);
+        }
+      }
+    });
+  };
+
+  const handleUpdateProjects = (updatedProjects: AdminProject[]) => {
+    setAdminProjects(updatedProjects);
+    updatedProjects.forEach(async (p) => {
+      const prev = adminProjects.find(prevP => prevP.id === p.id);
+      if (!prev || JSON.stringify(prev) !== JSON.stringify(p)) {
+        try {
+          await setDoc(doc(db, 'projects', p.id), p, { merge: true });
+        } catch (err) {
+          console.error('Error writing project update to Firestore:', err);
+        }
+      }
+    });
+
+    adminProjects.forEach(async (oldP) => {
+      const isStillPresent = updatedProjects.some(newP => newP.id === oldP.id);
+      if (!isStillPresent) {
+        try {
+          await deleteDoc(doc(db, 'projects', oldP.id));
+        } catch (err) {
+          console.error(`Error deleting project ${oldP.id} from Firestore:`, err);
+        }
+      }
+    });
+  };
+
+  const handleUpdateAlliances = (updatedAlliances: AdminAlliance[]) => {
+    setAdminAlliances(updatedAlliances);
+    updatedAlliances.forEach(async (a) => {
+      const prev = adminAlliances.find(prevA => prevA.id === a.id);
+      if (!prev || JSON.stringify(prev) !== JSON.stringify(a)) {
+        try {
+          await setDoc(doc(db, 'alliance_opportunities', a.id), a, { merge: true });
+        } catch (err) {
+          console.error('Error writing alliance update to Firestore:', err);
+        }
+      }
+    });
+
+    adminAlliances.forEach(async (oldA) => {
+      const isStillPresent = updatedAlliances.some(newA => newA.id === oldA.id);
+      if (!isStillPresent) {
+        try {
+          await deleteDoc(doc(db, 'alliance_opportunities', oldA.id));
+        } catch (err) {
+          console.error(`Error deleting alliance ${oldA.id} from Firestore:`, err);
+        }
+      }
+    });
+  };
+
+  const handleUpdateOrganizations = (updatedOrgs: AdminOrganization[]) => {
+    setAdminOrgs(updatedOrgs);
+    updatedOrgs.forEach(async (o) => {
+      const prev = adminOrgs.find(prevO => prevO.id === o.id);
+      if (!prev || JSON.stringify(prev) !== JSON.stringify(o)) {
+        try {
+          await setDoc(doc(db, 'organizations', o.id), o, { merge: true });
+        } catch (err) {
+          console.error('Error writing organization update to Firestore:', err);
+        }
+      }
+    });
+
+    adminOrgs.forEach(async (oldO) => {
+      const isStillPresent = updatedOrgs.some(newO => newO.id === oldO.id);
+      if (!isStillPresent) {
+        try {
+          await deleteDoc(doc(db, 'organizations', oldO.id));
+        } catch (err) {
+          console.error(`Error deleting organization ${oldO.id} from Firestore:`, err);
+        }
+      }
+    });
+  };
+
+  const handleUpdateConsulting = (updatedConsulting: AdminConsulting[]) => {
+    setAdminConsulting(updatedConsulting);
+    updatedConsulting.forEach(async (c) => {
+      const prev = adminConsulting.find(prevC => prevC.id === c.id);
+      if (!prev || JSON.stringify(prev) !== JSON.stringify(c)) {
+        try {
+          await setDoc(doc(db, 'consultation_inquiries', c.id), c, { merge: true });
+        } catch (err) {
+          console.error('Error writing consulting update to Firestore:', err);
+        }
+      }
+    });
+
+    adminConsulting.forEach(async (oldC) => {
+      const isStillPresent = updatedConsulting.some(newC => newC.id === oldC.id);
+      if (!isStillPresent) {
+        try {
+          await deleteDoc(doc(db, 'consultation_inquiries', oldC.id));
+        } catch (err) {
+          console.error(`Error deleting consulting ${oldC.id} from Firestore:`, err);
+        }
+      }
+    });
+  };
+
+  const handleUpdateFunding = (updatedFunding: AdminFunding[]) => {
+    setAdminFunding(updatedFunding);
+    updatedFunding.forEach(async (f) => {
+      const prev = adminFunding.find(prevF => prevF.id === f.id);
+      if (!prev || JSON.stringify(prev) !== JSON.stringify(f)) {
+        try {
+          await setDoc(doc(db, 'funding_opportunities', f.id), f, { merge: true });
+        } catch (err) {
+          console.error('Error writing funding update to Firestore:', err);
+        }
+      }
+    });
+
+    adminFunding.forEach(async (oldF) => {
+      const isStillPresent = updatedFunding.some(newF => newF.id === oldF.id);
+      if (!isStillPresent) {
+        try {
+          await deleteDoc(doc(db, 'funding_opportunities', oldF.id));
+        } catch (err) {
+          console.error(`Error deleting funding ${oldF.id} from Firestore:`, err);
+        }
+      }
+    });
+  };
+
+  const handleUpdateChallenges = (updatedChallenges: AdminChallenge[]) => {
+    setAdminChallenges(updatedChallenges);
+    updatedChallenges.forEach(async (c) => {
+      const prev = adminChallenges.find(prevC => prevC.id === c.id);
+      if (!prev || JSON.stringify(prev) !== JSON.stringify(c)) {
+        try {
+          await setDoc(doc(db, 'innovation_challenges', c.id), c, { merge: true });
+        } catch (err) {
+          console.error('Error writing challenge update to Firestore:', err);
+        }
+      }
+    });
+
+    adminChallenges.forEach(async (oldC) => {
+      const isStillPresent = updatedChallenges.some(newC => newC.id === oldC.id);
+      if (!isStillPresent) {
+        try {
+          await deleteDoc(doc(db, 'innovation_challenges', oldC.id));
+        } catch (err) {
+          console.error(`Error deleting challenge ${oldC.id} from Firestore:`, err);
+        }
+      }
+    });
+  };
+
+  const handleUpdateReports = (updatedReports: AdminReportedItem[]) => {
+    setAdminReports(updatedReports);
+    updatedReports.forEach(async (r) => {
+      const prev = adminReports.find(prevR => prevR.id === r.id);
+      if (!prev || JSON.stringify(prev) !== JSON.stringify(r)) {
+        try {
+          await setDoc(doc(db, 'reports', r.id), r, { merge: true });
+        } catch (err) {
+          console.error('Error writing report update to Firestore:', err);
+        }
+      }
+    });
+
+    adminReports.forEach(async (oldR) => {
+      const isStillPresent = updatedReports.some(newR => newR.id === oldR.id);
+      if (!isStillPresent) {
+        try {
+          await deleteDoc(doc(db, 'reports', oldR.id));
+        } catch (err) {
+          console.error(`Error deleting report ${oldR.id} from Firestore:`, err);
+        }
+      }
+    });
+  };
+
+  const handleUpdateAuditLogs = (updatedAuditLogs: AdminAuditLog[]) => {
+    setAdminAuditLogs(updatedAuditLogs);
+    updatedAuditLogs.forEach(async (a) => {
+      const prev = adminAuditLogs.find(prevA => prevA.id === a.id);
+      if (!prev || JSON.stringify(prev) !== JSON.stringify(a)) {
+        try {
+          await setDoc(doc(db, 'audit_logs', a.id), a, { merge: true });
+        } catch (err) {
+          console.error('Error writing audit log update to Firestore:', err);
+        }
+      }
+    });
+
+    adminAuditLogs.forEach(async (oldA) => {
+      const isStillPresent = updatedAuditLogs.some(newA => newA.id === oldA.id);
+      if (!isStillPresent) {
+        try {
+          await deleteDoc(doc(db, 'audit_logs', oldA.id));
+        } catch (err) {
+          console.error(`Error deleting audit log ${oldA.id} from Firestore:`, err);
+        }
+      }
+    });
+  };
+
+  const handleUpdateAdminRoles = (updatedRoles: AdminRoleConfig[]) => {
+    setAdminRoles(updatedRoles);
+    updatedRoles.forEach(async (r) => {
+      const prev = adminRoles.find(prevR => prevR.id === r.id);
+      if (!prev || JSON.stringify(prev) !== JSON.stringify(r)) {
+        try {
+          await setDoc(doc(db, 'admin_roles', r.id), r, { merge: true });
+        } catch (err) {
+          console.error('Error writing admin role update to Firestore:', err);
+        }
+      }
+    });
+
+    adminRoles.forEach(async (oldR) => {
+      const isStillPresent = updatedRoles.some(newR => newR.id === oldR.id);
+      if (!isStillPresent) {
+        try {
+          await deleteDoc(doc(db, 'admin_roles', oldR.id));
+        } catch (err) {
+          console.error(`Error deleting admin role ${oldR.id} from Firestore:`, err);
+        }
+      }
+    });
+  };
 
   // Synchronize URL pathname on view mount
   useEffect(() => {
@@ -285,16 +815,6 @@ export default function AdminPortal({
       window.history.pushState(null, '', '/admin');
     }
   }, []);
-
-  // Access check: User must be signed in AND have 'admin' or 'super_admin' role
-  const isUserPlatformAdmin = 
-    userProfile?.role?.toLowerCase() === 'admin' || 
-    userProfile?.role?.toLowerCase() === 'super_admin' ||
-    user?.uid === 'sandbox-admin-bola' ||
-    user?.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' ||
-    user?.email?.toLowerCase() === 'adeyemibola2569@gmail.com' ||
-    userProfile?.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' ||
-    userProfile?.email?.toLowerCase() === 'adeyemibola2569@gmail.com'; // Allow immediately for admin emails
 
   // Role permissions checker based on the dynamic Admin Role Matrix
   const hasPermission = (tabId: AdminTab): boolean => {

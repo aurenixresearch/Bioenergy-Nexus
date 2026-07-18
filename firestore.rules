@@ -39,8 +39,8 @@ service cloud.firestore {
 
     // Collection: consultation_inquiries
     match /consultation_inquiries/{inquiryId} {
-      allow read, delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
-      allow create, update: if isSignedIn() && isValidConsultationInquiry(incoming()) && incoming().userId == request.auth.uid;
+      allow read, delete: if isSignedIn() && (isPlatformAdmin() || resource == null || resource.data.userId == request.auth.uid);
+      allow create, update: if isSignedIn() && (isPlatformAdmin() || (isValidConsultationInquiry(incoming()) && incoming().userId == request.auth.uid));
     }
 
     function isValidConsultationInquiry(data) {
@@ -175,22 +175,22 @@ service cloud.firestore {
     // Collection: projects (Collaboration)
     match /projects/{projectId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() && incoming().createdBy == request.auth.uid;
-      allow update, delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+      allow create: if isSignedIn() && (isPlatformAdmin() || incoming().createdBy == request.auth.uid);
+      allow update, delete: if isSignedIn() && (isPlatformAdmin() || (resource != null && 'createdBy' in resource.data && resource.data.createdBy == request.auth.uid));
     }
 
     // Collection: alliance_opportunities (Collaboration)
     match /alliance_opportunities/{opportunityId} {
       allow read: if true;
-      allow create: if isSignedIn() && incoming().createdBy == request.auth.uid;
-      allow update, delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+      allow create: if isSignedIn() && (isPlatformAdmin() || incoming().createdBy == request.auth.uid);
+      allow update, delete: if isSignedIn() && (isPlatformAdmin() || (resource != null && 'createdBy' in resource.data && resource.data.createdBy == request.auth.uid));
     }
 
     // Collection: applications (Collaboration)
     match /applications/{applicationId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() && incoming().applicantId == request.auth.uid;
-      allow update, delete: if isSignedIn();
+      allow create: if isSignedIn() && (isPlatformAdmin() || incoming().applicantId == request.auth.uid);
+      allow update, delete: if isSignedIn() && (isPlatformAdmin() || (resource != null && 'applicantId' in resource.data && resource.data.applicantId == request.auth.uid));
     }
 
     // Collection: workspaces (Collaboration)
@@ -269,6 +269,34 @@ service cloud.firestore {
              data.createdAt is string && data.createdAt.size() <= 100 &&
              (!('id' in data) || data.id is string) &&
              (!('actionUrl' in data) || data.actionUrl is string && data.actionUrl.size() <= 512);
+    }
+
+    // Collection: organizations
+    match /organizations/{orgId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isPlatformAdmin();
+    }
+
+    // Collection: funding_opportunities
+    match /funding_opportunities/{fundId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isPlatformAdmin();
+    }
+
+    // Collection: reports
+    match /reports/{reportId} {
+      allow read, write: if isSignedIn() && isPlatformAdmin();
+    }
+
+    // Collection: audit_logs
+    match /audit_logs/{logId} {
+      allow read, write: if isSignedIn() && isPlatformAdmin();
+    }
+
+    // Collection: admin_roles
+    match /admin_roles/{roleId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isPlatformAdmin();
     }
   }
 }
