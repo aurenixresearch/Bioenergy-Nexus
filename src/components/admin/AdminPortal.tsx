@@ -532,6 +532,15 @@ export default function AdminPortal({
           }
         });
       });
+
+      // Seeding safety: automatically seed any of the standard roles from MOCK_ADMIN_ROLES that aren't in Firestore yet
+      MOCK_ADMIN_ROLES.forEach((r) => {
+        const exists = list.some(existing => existing.roleName.toLowerCase() === r.roleName.toLowerCase());
+        if (!exists) {
+          setDoc(doc(db, 'admin_roles', r.id), r).catch(err => console.error(`Seeding missing role ${r.roleName} failed:`, err));
+        }
+      });
+
       setAdminRoles(list);
     }, (error) => {
       console.warn('Admin roles listener error:', error);
@@ -539,11 +548,9 @@ export default function AdminPortal({
     return () => unsubscribe();
   }, []);
 
-  // Access check: User must be signed in AND have 'super_admin' or 'admin' role (or developer credentials bypass)
+  // Access check: User must be signed in AND have an assigned role (or developer credentials bypass)
   const isUserPlatformAdmin = 
-    userProfile?.role?.toLowerCase() === 'admin' ||
-    userProfile?.role?.toLowerCase() === 'super_admin' ||
-    userProfile?.role?.toLowerCase()?.includes('admin') ||
+    !!userProfile?.role ||
     !!userProfile?.adminRoleName ||
     user?.uid === 'sandbox-admin-bola' ||
     user?.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' ||
@@ -820,12 +827,14 @@ export default function AdminPortal({
 
   // Role permissions checker based on the dynamic Admin Role Matrix
   const hasPermission = (tabId: AdminTab): boolean => {
-    // If we're on the simulated role choice, choose that, otherwise actual role profile adminRoleName
-    const activeRoleName = simulatedAdminRole || userProfile?.adminRoleName || (userProfile?.role?.toLowerCase() === 'super_admin' ? 'Super Admin' : '');
+    // If we're on the simulated role choice, choose that, otherwise actual role profile adminRoleName or role
+    const activeRoleName = simulatedAdminRole || userProfile?.adminRoleName || userProfile?.role || '';
 
     // Check if user is Super Admin or the platform owner - they get unrestricted master control
     if (
-      activeRoleName === 'Super Admin' ||
+      activeRoleName.toLowerCase() === 'super admin' ||
+      activeRoleName.toLowerCase() === 'platform super admin' ||
+      activeRoleName.toLowerCase() === 'super_admin' ||
       user?.uid === 'sandbox-admin-bola' ||
       user?.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' ||
       user?.email?.toLowerCase() === 'adeyemibola2569@gmail.com' ||
@@ -837,7 +846,28 @@ export default function AdminPortal({
 
     const roleConfig = adminRoles.find(r => r.roleName.toLowerCase() === activeRoleName.toLowerCase());
     if (!roleConfig) {
-      return true; // Default fallback for dev/testing robustness
+      // Fallback fallback logic for non-admin user roles to make sure they can only access specified sections
+      const rName = activeRoleName.toLowerCase();
+      if (rName.includes('moderator')) {
+        return ['dashboard', 'users', 'research', 'organizations', 'moderation'].includes(tabId);
+      }
+      if (rName.includes('funding') || rName.includes('manager')) {
+        return ['dashboard', 'projects', 'alliances', 'organizations', 'consulting', 'funding', 'challenges'].includes(tabId);
+      }
+      if (rName.includes('researcher') || rName.includes('partner') || rName.includes('lecturer') || rName.includes('professor')) {
+        return ['dashboard', 'research', 'projects', 'alliances'].includes(tabId);
+      }
+      if (rName.includes('student') || rName.includes('cohort')) {
+        return ['dashboard', 'research', 'challenges'].includes(tabId);
+      }
+      if (rName.includes('consultant')) {
+        return ['dashboard', 'consulting', 'projects'].includes(tabId);
+      }
+      if (rName.includes('professional') || rName.includes('ngo') || rName.includes('development')) {
+        return ['dashboard', 'alliances', 'organizations'].includes(tabId);
+      }
+      // Tight restriction by default if role is totally unknown
+      return ['dashboard'].includes(tabId);
     }
 
     const perms = roleConfig.permissions;
