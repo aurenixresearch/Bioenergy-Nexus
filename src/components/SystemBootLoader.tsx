@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { Leaf } from 'lucide-react';
 
 interface SystemBootLoaderProps {
@@ -179,18 +179,15 @@ export default function SystemBootLoader({ user, onComplete }: SystemBootLoaderP
           
           {/* Animated Status Cycling Text */}
           <div className="h-6 flex items-center justify-center text-center" id="loader_status_text_wrapper">
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={loadingText}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                transition={{ duration: 0.2 }}
-                className="text-xs font-semibold text-slate-600 tracking-wide font-mono"
-              >
-                {loadingText}
-              </motion.p>
-            </AnimatePresence>
+            <motion.p
+              key={loadingText}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="text-xs font-semibold text-slate-600 tracking-wide font-mono"
+            >
+              {loadingText}
+            </motion.p>
           </div>
 
           {/* Thin rounded green progress bar */}

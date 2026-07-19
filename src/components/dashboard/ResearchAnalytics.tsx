@@ -22,58 +22,77 @@ interface ChartPoint {
   value: number;
 }
 
-export default function ResearchAnalytics() {
+interface ResearchAnalyticsProps {
+  views?: number;
+  downloads?: number;
+  citations?: number;
+  followers?: number;
+  reads?: number;
+  requests?: number;
+  funding?: string;
+  progress?: string;
+}
+
+export default function ResearchAnalytics({
+  views = 0,
+  downloads = 0,
+  citations = 0,
+  followers = 0,
+  reads = 0,
+  requests = 0,
+  funding = '$0',
+  progress = '0%'
+}: ResearchAnalyticsProps) {
   const [filter, setFilter] = useState<TimeFilter>('Month');
   const [metric, setMetric] = useState<MetricType>('Views');
 
   const metrics = [
-    { type: 'Views' as const, label: 'Profile Views', icon: Eye, color: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/20', count: '1,429' },
-    { type: 'Downloads' as const, label: 'Downloads', icon: Download, color: 'text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950/20', count: '382' },
-    { type: 'Citations' as const, label: 'Citations', icon: Award, color: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/20', count: '19' },
-    { type: 'Followers' as const, label: 'Followers', icon: Users, color: 'text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950/20', count: '142' },
-    { type: 'Reads' as const, label: 'Research Reads', icon: BookOpen, color: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/20', count: '891' },
-    { type: 'Requests' as const, label: 'Collaboration Requests', icon: HeartHandshake, color: 'text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950/20', count: '34' },
-    { type: 'Funding' as const, label: 'Funding', icon: DollarSign, color: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/20', count: '$120K' },
-    { type: 'Progress' as const, label: 'Project Progress', icon: Gauge, color: 'text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950/20', count: '78%' }
+    { type: 'Views' as const, label: 'Profile Views', icon: Eye, color: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/20', count: views.toLocaleString() },
+    { type: 'Downloads' as const, label: 'Downloads', icon: Download, color: 'text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950/20', count: downloads.toLocaleString() },
+    { type: 'Citations' as const, label: 'Citations', icon: Award, color: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/20', count: citations.toLocaleString() },
+    { type: 'Followers' as const, label: 'Followers', icon: Users, color: 'text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950/20', count: followers.toLocaleString() },
+    { type: 'Reads' as const, label: 'Research Reads', icon: BookOpen, color: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/20', count: reads.toLocaleString() },
+    { type: 'Requests' as const, label: 'Collaboration Requests', icon: HeartHandshake, color: 'text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950/20', count: requests.toLocaleString() },
+    { type: 'Funding' as const, label: 'Funding', icon: DollarSign, color: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/20', count: funding },
+    { type: 'Progress' as const, label: 'Project Progress', icon: Gauge, color: 'text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950/20', count: progress }
   ];
 
   // Realistic data depending on metric & time filter
   const getChartData = (): ChartPoint[] => {
-    switch (filter) {
-      case 'Week':
-        return [
-          { label: 'Mon', value: metric === 'Views' ? 24 : metric === 'Downloads' ? 8 : 12 },
-          { label: 'Tue', value: metric === 'Views' ? 42 : metric === 'Downloads' ? 14 : 18 },
-          { label: 'Wed', value: metric === 'Views' ? 18 : metric === 'Downloads' ? 6 : 9 },
-          { label: 'Thu', value: metric === 'Views' ? 55 : metric === 'Downloads' ? 22 : 28 },
-          { label: 'Fri', value: metric === 'Views' ? 68 : metric === 'Downloads' ? 30 : 34 },
-          { label: 'Sat', value: metric === 'Views' ? 30 : metric === 'Downloads' ? 12 : 15 },
-          { label: 'Sun', value: metric === 'Views' ? 38 : metric === 'Downloads' ? 16 : 20 }
-        ];
-      case 'Month':
-        return [
-          { label: 'Week 1', value: metric === 'Views' ? 240 : metric === 'Downloads' ? 60 : 120 },
-          { label: 'Week 2', value: metric === 'Views' ? 310 : metric === 'Downloads' ? 95 : 150 },
-          { label: 'Week 3', value: metric === 'Views' ? 420 : metric === 'Downloads' ? 130 : 210 },
-          { label: 'Week 4', value: metric === 'Views' ? 459 : metric === 'Downloads' ? 97 : 190 }
-        ];
-      case 'Year':
-        return [
-          { label: 'Jan', value: metric === 'Views' ? 80 : metric === 'Downloads' ? 20 : 40 },
-          { label: 'Mar', value: metric === 'Views' ? 150 : metric === 'Downloads' ? 45 : 75 },
-          { label: 'May', value: metric === 'Views' ? 290 : metric === 'Downloads' ? 80 : 130 },
-          { label: 'Jul', value: metric === 'Views' ? 420 : metric === 'Downloads' ? 110 : 190 },
-          { label: 'Sep', value: metric === 'Views' ? 380 : metric === 'Downloads' ? 95 : 170 },
-          { label: 'Nov', value: metric === 'Views' ? 510 : metric === 'Downloads' ? 160 : 260 }
-        ];
-      case 'All Time':
-        return [
-          { label: '2023', value: metric === 'Views' ? 1200 : metric === 'Downloads' ? 300 : 500 },
-          { label: '2024', value: metric === 'Views' ? 2800 : metric === 'Downloads' ? 850 : 1300 },
-          { label: '2025', value: metric === 'Views' ? 4500 : metric === 'Downloads' ? 1200 : 2400 },
-          { label: '2026', value: metric === 'Views' ? 6100 : metric === 'Downloads' ? 1900 : 3800 }
-        ];
-    }
+    let currentVal = 0;
+    if (metric === 'Views') currentVal = views;
+    else if (metric === 'Downloads') currentVal = downloads;
+    else if (metric === 'Citations') currentVal = citations;
+    else if (metric === 'Followers') currentVal = followers;
+    else if (metric === 'Reads') currentVal = reads;
+    else if (metric === 'Requests') currentVal = requests;
+    else if (metric === 'Funding') currentVal = parseInt(funding.replace(/[^0-9]/g, '')) || 0;
+    else if (metric === 'Progress') currentVal = parseInt(progress.replace(/[^0-9]/g, '')) || 0;
+
+    const baseRatios = {
+      Week: [0.08, 0.15, 0.07, 0.22, 0.25, 0.10, 0.13],
+      Month: [0.18, 0.23, 0.31, 0.28],
+      Year: [0.05, 0.10, 0.18, 0.26, 0.22, 0.19],
+      'All Time': [0.10, 0.22, 0.33, 0.35]
+    };
+
+    const labels = {
+      Week: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      Month: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+      Year: ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'],
+      'All Time': ['2023', '2024', '2025', '2026']
+    };
+
+    const ratios = baseRatios[filter] || baseRatios.Month;
+    const lbls = labels[filter] || labels.Month;
+
+    return ratios.map((ratio, index) => {
+      const calculatedVal = Math.round((currentVal || 10) * ratio);
+      return {
+        label: lbls[index],
+        value: calculatedVal
+      };
+    });
   };
 
   const data = getChartData();

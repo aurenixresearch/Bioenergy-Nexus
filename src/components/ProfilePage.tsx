@@ -552,10 +552,10 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
                 ))}
               </div>
 
-              <div className="mt-5 p-3.5 bg-emerald-50/40 dark:bg-emerald-50/40 border border-emerald-100 dark:border-emerald-100 rounded-2xl flex items-start gap-2.5">
-                <Sparkles className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-600 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-slate-600 dark:text-slate-600 leading-relaxed font-medium">
-                  <strong>Verification Boost:</strong> Reaching 100% completions unlocks priority indexing in our decentralized AI matching engine.
+              <div className="mt-5 p-3.5 bg-black border border-emerald-900 rounded-2xl flex items-start gap-2.5">
+                <Sparkles className="w-4.5 h-4.5 text-emerald-400 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
+                  <strong className="text-white">Verification Boost:</strong> Reaching 100% completions unlocks priority indexing in our decentralized AI matching engine.
                 </p>
               </div>
             </div>
@@ -655,22 +655,22 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
                 Research Metrics
               </h3>
               
-              <div className="grid grid-cols-2 gap-3.5">
-                <div className="p-3 bg-emerald-50/20 dark:bg-emerald-50/20 border border-emerald-100/30 dark:border-emerald-100/30 rounded-2xl">
-                  <div className="text-slate-500 dark:text-slate-500 text-[10px] font-mono font-bold uppercase">Citations</div>
-                  <div className="text-lg font-bold text-slate-900 dark:text-slate-900 mt-0.5">{profileData?.stats?.citations || 0}</div>
+              <div className="grid grid-cols-2 gap-3.5 bg-black p-3.5 rounded-2xl">
+                <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-2xl">
+                  <div className="text-slate-400 text-[10px] font-mono font-bold uppercase">Citations</div>
+                  <div className="text-lg font-bold text-white mt-0.5">{profileData?.stats?.citations || 0}</div>
                 </div>
-                <div className="p-3 bg-emerald-50/20 dark:bg-emerald-50/20 border border-emerald-100/30 dark:border-emerald-100/30 rounded-2xl">
-                  <div className="text-slate-500 dark:text-slate-500 text-[10px] font-mono font-bold uppercase">Downloads</div>
-                  <div className="text-lg font-bold text-slate-900 dark:text-slate-900 mt-0.5">{profileData?.stats?.downloads || 0}</div>
+                <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-2xl">
+                  <div className="text-slate-400 text-[10px] font-mono font-bold uppercase">Downloads</div>
+                  <div className="text-lg font-bold text-white mt-0.5">{profileData?.stats?.downloads || 0}</div>
                 </div>
-                <div className="p-3 bg-emerald-50/20 dark:bg-emerald-50/20 border border-emerald-100/30 dark:border-emerald-100/30 rounded-2xl">
-                  <div className="text-slate-500 dark:text-slate-500 text-[10px] font-mono font-bold uppercase">Profile Views</div>
-                  <div className="text-lg font-bold text-slate-900 dark:text-slate-900 mt-0.5">{profileData?.stats?.views || 0}</div>
+                <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-2xl">
+                  <div className="text-slate-400 text-[10px] font-mono font-bold uppercase">Profile Views</div>
+                  <div className="text-lg font-bold text-white mt-0.5">{profileData?.stats?.views || 0}</div>
                 </div>
-                <div className="p-3 bg-emerald-50/20 dark:bg-emerald-50/20 border border-emerald-100/30 dark:border-emerald-100/30 rounded-2xl">
-                  <div className="text-slate-500 dark:text-slate-500 text-[10px] font-mono font-bold uppercase">AI Match Score</div>
-                  <div className="text-lg font-bold text-emerald-600 dark:text-emerald-600 mt-0.5">{profileData?.stats?.aiMatchScore || 85}%</div>
+                <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-2xl">
+                  <div className="text-slate-400 text-[10px] font-mono font-bold uppercase">AI Match Score</div>
+                  <div className="text-lg font-bold text-emerald-400 mt-0.5">{profileData?.stats?.aiMatchScore || 85}%</div>
                 </div>
               </div>
 
@@ -787,7 +787,11 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
                           {profileData?.researchInterests?.map((interest: string, index: number) => (
                             <span 
                               key={index}
-                              className="px-3 py-1 bg-emerald-50/60 dark:bg-emerald-50/60 text-emerald-850 dark:text-emerald-850 border border-emerald-200/40 dark:border-emerald-200/40 rounded-lg text-xs font-semibold"
+                              className={`px-3 py-1 rounded-lg text-xs font-semibold border ${
+                                index === 0 
+                                  ? 'bg-black text-white border-black dark:bg-black dark:text-white dark:border-black' 
+                                  : 'bg-emerald-50/60 dark:bg-emerald-50/60 text-emerald-850 dark:text-emerald-850 border-emerald-200/40 dark:border-emerald-200/40'
+                              }`}
                             >
                               {interest}
                             </span>

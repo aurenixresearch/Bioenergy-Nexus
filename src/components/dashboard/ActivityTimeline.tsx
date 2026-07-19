@@ -22,8 +22,12 @@ interface ActivityItem {
   detail: string;
 }
 
-export default function ActivityTimeline() {
-  const [activities, setActivities] = useState<ActivityItem[]>([
+interface ActivityTimelineProps {
+  customActivities?: ActivityItem[];
+}
+
+export default function ActivityTimeline({ customActivities }: ActivityTimelineProps) {
+  const defaultActivities: ActivityItem[] = [
     {
       id: 'act_1',
       type: 'publish',
@@ -72,7 +76,9 @@ export default function ActivityTimeline() {
       time: '4 days ago',
       detail: 'The Advisory board at Aurenix is checking relevant ECOWAS policy drafts. Under review timeline updated.'
     }
-  ]);
+  ];
+
+  const activities = customActivities && customActivities.length > 0 ? customActivities : defaultActivities;
 
   const [selectedActivity, setSelectedActivity] = useState<ActivityItem | null>(null);
 

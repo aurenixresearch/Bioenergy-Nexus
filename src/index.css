@@ -429,18 +429,35 @@ html {
 }
 
 /* ==========================================================================
-   Tactile & Elegant Floating Elements (Cards and Buttons - Excluding Aside)
+   PREMIUM SAAS GLOW & TACTILE INTERACTION SYSTEM (CARDS, BUTTONS, INPUTS, MODALS)
    ========================================================================== */
 
-/* Cards of the website (excluding aside elements) */
+/* 1. Cards, Dashboard Widgets, and Statistics Panels */
 #app_layout_wrapper div.bg-white,
 #app_layout_wrapper div[class*="bg-white"],
 #app_layout_wrapper div.rounded-2xl,
 #app_layout_wrapper div.rounded-xl,
 #app_layout_wrapper .card,
+#app_layout_wrapper [class*="shadow"],
 #app_layout_wrapper section div.shadow-sm,
-#app_layout_wrapper main div.shadow-sm {
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -3px rgba(0, 0, 0, 0.03) !important;
+#app_layout_wrapper main div.shadow-sm,
+#admin_portal_layout div.bg-white,
+#admin_portal_layout div[class*="bg-white"],
+#admin_portal_layout div.rounded-2xl,
+#admin_portal_layout div.rounded-xl,
+#admin_portal_layout .card,
+#admin_portal_layout [class*="shadow"],
+#admin_portal_layout section div.shadow-sm,
+#admin_portal_layout main div.shadow-sm,
+.card,
+div[class*="rounded-"][class*="shadow"],
+div.rounded-2xl.shadow-sm,
+div.rounded-xl.shadow-sm,
+div.rounded-2xl.shadow-md,
+div.rounded-xl.shadow-md,
+div.rounded-2xl.shadow-lg,
+div.rounded-xl.shadow-lg {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 0 16px 3px rgba(16, 185, 129, 0.16), 0 0 0 1.5px rgba(16, 185, 129, 0.15) !important;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease !important;
 }
 
@@ -449,70 +466,311 @@ html {
 #app_layout_wrapper div.rounded-2xl:hover,
 #app_layout_wrapper div.rounded-xl:hover,
 #app_layout_wrapper .card:hover,
+#app_layout_wrapper [class*="shadow"]:hover,
 #app_layout_wrapper section div.shadow-sm:hover,
-#app_layout_wrapper main div.shadow-sm:hover {
+#app_layout_wrapper main div.shadow-sm:hover,
+#admin_portal_layout div.bg-white:hover,
+#admin_portal_layout div[class*="bg-white"]:hover,
+#admin_portal_layout div.rounded-2xl:hover,
+#admin_portal_layout div.rounded-xl:hover,
+#admin_portal_layout .card:hover,
+#admin_portal_layout [class*="shadow"]:hover,
+#admin_portal_layout section div.shadow-sm:hover,
+#admin_portal_layout main div.shadow-sm:hover,
+.card:hover,
+div[class*="rounded-"][class*="shadow"]:hover,
+div.rounded-2xl.shadow-sm:hover,
+div.rounded-xl.shadow-sm:hover,
+div.rounded-2xl.shadow-md:hover,
+div.rounded-xl.shadow-md:hover,
+div.rounded-2xl.shadow-lg:hover,
+div.rounded-xl.shadow-lg:hover {
   transform: translateY(-6px) !important;
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12), 0 10px 20px -6px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 22px 45px -12px rgba(0, 0, 0, 0.12), 0 8px 24px -8px rgba(0, 0, 0, 0.05), 0 0 28px 4px rgba(16, 185, 129, 0.28), 0 0 0 1px rgba(16, 185, 129, 0.12) !important;
 }
 
-/* Buttons of the website (excluding aside elements and brand logo button) */
-#app_layout_wrapper button:not(#brand_logo_btn),
-#app_layout_wrapper a.btn,
-#app_layout_wrapper [role="button"] {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03) !important;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background-color 0.2s ease !important;
+/* 2. Primary Buttons (Vibrant Emerald/Green theme) */
+#app_layout_wrapper button[class*="bg-emerald-"],
+#app_layout_wrapper button[class*="bg-green-"],
+#app_layout_wrapper a.btn[class*="bg-emerald-"],
+#app_layout_wrapper a.btn[class*="bg-green-"],
+#app_layout_wrapper .btn[class*="bg-emerald-"],
+#app_layout_wrapper .btn[class*="bg-green-"],
+#admin_portal_layout button[class*="bg-emerald-"],
+#admin_portal_layout button[class*="bg-green-"],
+#admin_portal_layout a.btn[class*="bg-emerald-"],
+#admin_portal_layout a.btn[class*="bg-green-"],
+#admin_portal_layout .btn[class*="bg-emerald-"],
+#admin_portal_layout .btn[class*="bg-green-"],
+button[class*="bg-emerald-"]:not(aside button):not([id*="aside"]),
+button[class*="bg-green-"]:not(aside button):not([id*="aside"]),
+a.btn[class*="bg-emerald-"],
+a.btn[class*="bg-green-"],
+.btn[class*="bg-emerald-"],
+.btn[class*="bg-green-"] {
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.12), 0 2px 4px rgba(16, 185, 129, 0.08), 0 0 10px rgba(16, 185, 129, 0.06) !important;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, background-color 0.25s ease !important;
 }
 
-#app_layout_wrapper button:not(#brand_logo_btn):hover,
-#app_layout_wrapper a.btn:hover,
-#app_layout_wrapper [role="button"]:hover {
+#app_layout_wrapper button[class*="bg-emerald-"]:hover,
+#app_layout_wrapper button[class*="bg-green-"]:hover,
+#app_layout_wrapper a.btn[class*="bg-emerald-"]:hover,
+#app_layout_wrapper a.btn[class*="bg-green-"]:hover,
+#app_layout_wrapper .btn[class*="bg-emerald-"]:hover,
+#app_layout_wrapper .btn[class*="bg-green-"]:hover,
+#admin_portal_layout button[class*="bg-emerald-"]:hover,
+#admin_portal_layout button[class*="bg-green-"]:hover,
+#admin_portal_layout a.btn[class*="bg-emerald-"]:hover,
+#admin_portal_layout a.btn[class*="bg-green-"]:hover,
+#admin_portal_layout .btn[class*="bg-emerald-"]:hover,
+#admin_portal_layout .btn[class*="bg-green-"]:hover,
+button[class*="bg-emerald-"]:not(aside button):not([id*="aside"]):hover,
+button[class*="bg-green-"]:not(aside button):not([id*="aside"]):hover,
+a.btn[class*="bg-emerald-"]:hover,
+a.btn[class*="bg-green-"]:hover,
+.btn[class*="bg-emerald-"]:hover,
+.btn[class*="bg-green-"]:hover {
   transform: translateY(-3px) !important;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.22), 0 4px 8px rgba(16, 185, 129, 0.12), 0 0 18px rgba(16, 185, 129, 0.18) !important;
 }
 
-#app_layout_wrapper button:not(#brand_logo_btn):active,
-#app_layout_wrapper a.btn:active,
-#app_layout_wrapper [role="button"]:active {
+#app_layout_wrapper button[class*="bg-emerald-"]:active,
+#app_layout_wrapper button[class*="bg-green-"]:active,
+#admin_portal_layout button[class*="bg-emerald-"]:active,
+#admin_portal_layout button[class*="bg-green-"]:active,
+button[class*="bg-emerald-"]:not(aside button):not([id*="aside"]):active,
+button[class*="bg-green-"]:not(aside button):not([id*="aside"]):active {
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.1), 0 0 8px rgba(16, 185, 129, 0.1) !important;
 }
 
-/* Ensure active state feels tactile and responsive in dark mode */
+/* 3. Secondary/Neutral/Text Buttons (Slate, White, outline, etc.) */
+#app_layout_wrapper button:not([class*="bg-emerald-"]):not([class*="bg-green-"]):not(#brand_logo_btn):not(aside button):not([id*="aside"]),
+#app_layout_wrapper a.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+#app_layout_wrapper [role="button"]:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+#app_layout_wrapper .btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+#admin_portal_layout button:not([class*="bg-emerald-"]):not([class*="bg-green-"]):not(#brand_logo_btn):not(aside button):not([id*="aside"]),
+#admin_portal_layout a.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+#admin_portal_layout [role="button"]:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+#admin_portal_layout .btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+button:not(aside button):not([id*="aside"]):not(#brand_logo_btn):not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+a.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+[role="button"]:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]) {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03), 0 2px 4px rgba(0, 0, 0, 0.01), 0 0 8px rgba(148, 163, 184, 0.03) !important;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, background-color 0.25s ease !important;
+}
+
+#app_layout_wrapper button:not([class*="bg-emerald-"]):not([class*="bg-green-"]):not(#brand_logo_btn):not(aside button):not([id*="aside"]):hover,
+#app_layout_wrapper a.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+#app_layout_wrapper [role="button"]:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+#app_layout_wrapper .btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+#admin_portal_layout button:not([class*="bg-emerald-"]):not([class*="bg-green-"]):not(#brand_logo_btn):not(aside button):not([id*="aside"]):hover,
+#admin_portal_layout a.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+#admin_portal_layout [role="button"]:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+#admin_portal_layout .btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+button:not(aside button):not([id*="aside"]):not(#brand_logo_btn):not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+a.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+[role="button"]:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05), 0 4px 8px rgba(0, 0, 0, 0.02), 0 0 12px rgba(148, 163, 184, 0.08) !important;
+}
+
+#app_layout_wrapper button:not([class*="bg-emerald-"]):not([class*="bg-green-"]):not(#brand_logo_btn):not(aside button):not([id*="aside"]):active,
+button:not(aside button):not([id*="aside"]):not(#brand_logo_btn):not([class*="bg-emerald-"]):not([class*="bg-green-"]):active {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* 4. Form Controls & Inputs (Light Mode overrides + focus transitions) */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02), 0 0 8px rgba(16, 185, 129, 0.01) !important;
+  transition: border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s ease !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
+select:focus,
+textarea:focus {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12), 0 2px 8px rgba(16, 185, 129, 0.08) !important;
+}
+
+/* 5. Modals, Dialogs, Dropdowns, Listboxes, and Alerts (Light Mode) */
+div[role="dialog"],
+div.modal,
+div[class*="fixed"][class*="z-50"] > div.bg-white,
+ul[role="listbox"],
+div[role="listbox"],
+.dropdown-menu,
+[role="menu"],
+[role="status"],
+[role="alert"] {
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.1), 0 10px 25px -10px rgba(0, 0, 0, 0.05), 0 0 28px 2px rgba(16, 185, 129, 0.22), 0 0 0 1px rgba(16, 185, 129, 0.14) !important;
+  border: 1px solid rgba(16, 185, 129, 0.18) !important;
+}
+
+/* ==========================================================================
+   DARK MODE COMPREHENSIVE OVERRIDES
+   ========================================================================== */
+
+/* 1. Dark Mode Cards, Widgets, and Panels with Subtle Illuminated Depth & Soft Emerald Glow */
 .dark #app_layout_wrapper div.bg-white,
 .dark #app_layout_wrapper div[class*="bg-white"],
 .dark #app_layout_wrapper div.rounded-2xl,
 .dark #app_layout_wrapper div.rounded-xl,
-.dark #app_layout_wrapper .card {
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65), 0 0 20px rgba(52, 211, 153, 0.03) !important;
+.dark #app_layout_wrapper .card,
+.dark #app_layout_wrapper [class*="shadow"],
+.dark #admin_portal_layout div.bg-white,
+.dark #admin_portal_layout div[class*="bg-white"],
+.dark #admin_portal_layout div.rounded-2xl,
+.dark #admin_portal_layout div.rounded-xl,
+.dark #admin_portal_layout .card,
+.dark #admin_portal_layout [class*="shadow"],
+.dark .card,
+.dark div[class*="rounded-"][class*="shadow"],
+.dark div.rounded-2xl.shadow-sm,
+.dark div.rounded-xl.shadow-sm,
+.dark div.rounded-2xl.shadow-md,
+.dark div.rounded-xl.shadow-md,
+.dark div.rounded-2xl.shadow-lg,
+.dark div.rounded-xl.shadow-lg {
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75), 0 0 20px 4px rgba(52, 211, 153, 0.35), 0 0 0 1.5px rgba(52, 211, 153, 0.3) !important;
 }
 
 .dark #app_layout_wrapper div.bg-white:hover,
 .dark #app_layout_wrapper div[class*="bg-white"]:hover,
 .dark #app_layout_wrapper div.rounded-2xl:hover,
 .dark #app_layout_wrapper div.rounded-xl:hover,
-.dark #app_layout_wrapper .card:hover {
+.dark #app_layout_wrapper .card:hover,
+.dark #app_layout_wrapper [class*="shadow"]:hover,
+.dark #admin_portal_layout div.bg-white:hover,
+.dark #admin_portal_layout div[class*="bg-white"]:hover,
+.dark #admin_portal_layout div.rounded-2xl:hover,
+.dark #admin_portal_layout div.rounded-xl:hover,
+.dark #admin_portal_layout .card:hover,
+.dark #admin_portal_layout [class*="shadow"]:hover,
+.dark .card:hover,
+.dark div[class*="rounded-"][class*="shadow"]:hover,
+.dark div.rounded-2xl.shadow-sm:hover,
+.dark div.rounded-xl.shadow-sm:hover,
+.dark div.rounded-2xl.shadow-md:hover,
+.dark div.rounded-xl.shadow-md:hover,
+.dark div.rounded-2xl.shadow-lg:hover,
+.dark div.rounded-xl.shadow-lg:hover {
   transform: translateY(-6px) !important;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(52, 211, 153, 0.12) !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.75), 0 0 35px 5px rgba(52, 211, 153, 0.45), 0 0 0 1px rgba(52, 211, 153, 0.22) !important;
 }
 
-.dark #app_layout_wrapper button:not(#brand_logo_btn),
-.dark #app_layout_wrapper a.btn,
-.dark #app_layout_wrapper [role="button"] {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 8px rgba(52, 211, 153, 0.03) !important;
+/* 2. Dark Mode Primary Buttons (Vibrant Emerald with Deep Ambient Glow) */
+.dark #app_layout_wrapper button[class*="bg-emerald-"],
+.dark #app_layout_wrapper button[class*="bg-green-"],
+.dark #app_layout_wrapper a.btn[class*="bg-emerald-"],
+.dark #app_layout_wrapper a.btn[class*="bg-green-"],
+.dark #app_layout_wrapper .btn[class*="bg-emerald-"],
+.dark #app_layout_wrapper .btn[class*="bg-green-"],
+.dark #admin_portal_layout button[class*="bg-emerald-"],
+.dark #admin_portal_layout button[class*="bg-green-"],
+.dark #admin_portal_layout a.btn[class*="bg-emerald-"],
+.dark #admin_portal_layout a.btn[class*="bg-green-"],
+.dark #admin_portal_layout .btn[class*="bg-emerald-"],
+.dark #admin_portal_layout .btn[class*="bg-green-"],
+.dark button[class*="bg-emerald-"]:not(aside button):not([id*="aside"]),
+.dark button[class*="bg-green-"]:not(aside button):not([id*="aside"]),
+.dark a.btn[class*="bg-emerald-"],
+.dark a.btn[class*="bg-green-"],
+.dark .btn[class*="bg-emerald-"],
+.dark .btn[class*="bg-green-"] {
+  box-shadow: 0 4px 15px rgba(52, 211, 153, 0.25), 0 0 12px rgba(52, 211, 153, 0.15) !important;
 }
 
-.dark #app_layout_wrapper button:not(#brand_logo_btn):hover,
-.dark #app_layout_wrapper a.btn:hover,
-.dark #app_layout_wrapper [role="button"]:hover {
+.dark #app_layout_wrapper button[class*="bg-emerald-"]:hover,
+.dark #app_layout_wrapper button[class*="bg-green-"]:hover,
+.dark #app_layout_wrapper a.btn[class*="bg-emerald-"]:hover,
+.dark #app_layout_wrapper a.btn[class*="bg-green-"]:hover,
+.dark #app_layout_wrapper .btn[class*="bg-emerald-"]:hover,
+.dark #app_layout_wrapper .btn[class*="bg-green-"]:hover,
+.dark #admin_portal_layout button[class*="bg-emerald-"]:hover,
+.dark #admin_portal_layout button[class*="bg-green-"]:hover,
+.dark button[class*="bg-emerald-"]:not(aside button):not([id*="aside"]):hover,
+.dark button[class*="bg-green-"]:not(aside button):not([id*="aside"]):hover,
+.dark a.btn[class*="bg-emerald-"]:hover,
+.dark a.btn[class*="bg-green-"]:hover,
+.dark .btn[class*="bg-emerald-"]:hover,
+.dark .btn[class*="bg-green-"]:hover {
   transform: translateY(-3px) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(52, 211, 153, 0.2) !important;
+  box-shadow: 0 8px 24px rgba(52, 211, 153, 0.4), 0 0 22px rgba(52, 211, 153, 0.3) !important;
 }
 
-.dark #app_layout_wrapper button:not(#brand_logo_btn):active,
-.dark #app_layout_wrapper a.btn:active,
-.dark #app_layout_wrapper [role="button"]:active {
+.dark #app_layout_wrapper button[class*="bg-emerald-"]:active,
+.dark #app_layout_wrapper button[class*="bg-green-"]:active,
+.dark button[class*="bg-emerald-"]:not(aside button):not([id*="aside"]):active,
+.dark button[class*="bg-green-"]:not(aside button):not([id*="aside"]):active {
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 4px 10px rgba(52, 211, 153, 0.18), 0 0 10px rgba(52, 211, 153, 0.12) !important;
+}
+
+/* 3. Dark Mode Secondary/Neutral/Text Buttons (Slate, White, outline, etc. with subtle depth glow) */
+.dark #app_layout_wrapper button:not([class*="bg-emerald-"]):not([class*="bg-green-"]):not(#brand_logo_btn):not(aside button):not([id*="aside"]),
+.dark #app_layout_wrapper a.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+.dark #app_layout_wrapper [role="button"]:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+.dark #app_layout_wrapper .btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+.dark #admin_portal_layout button:not([class*="bg-emerald-"]):not([class*="bg-green-"]):not(#brand_logo_btn):not(aside button):not([id*="aside"]),
+.dark #admin_portal_layout a.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+.dark #admin_portal_layout [role="button"]:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+.dark #admin_portal_layout .btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+.dark button:not(aside button):not([id*="aside"]):not(#brand_logo_btn):not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+.dark a.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+.dark [role="button"]:not([class*="bg-emerald-"]):not([class*="bg-green-"]),
+.dark .btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]) {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 10px rgba(52, 211, 153, 0.05) !important;
+}
+
+.dark #app_layout_wrapper button:not([class*="bg-emerald-"]):not([class*="bg-green-"]):not(#brand_logo_btn):not(aside button):not([id*="aside"]):hover,
+.dark #app_layout_wrapper a.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+.dark #app_layout_wrapper [role="button"]:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+.dark #app_layout_wrapper .btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+.dark #admin_portal_layout button:not([class*="bg-emerald-"]):not([class*="bg-green-"]):not(#brand_logo_btn):not(aside button):not([id*="aside"]):hover,
+.dark #admin_portal_layout a.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+.dark #admin_portal_layout [role="button"]:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+.dark #admin_portal_layout .btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+.dark button:not(aside button):not([id*="aside"]):not(#brand_logo_btn):not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+.dark a.btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+.dark [role="button"]:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover,
+.dark .btn:not([class*="bg-emerald-"]):not([class*="bg-green-"]):hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), 0 0 16px rgba(52, 211, 153, 0.15) !important;
+}
+
+/* 4. Dark Mode Form Controls & Inputs (Vibrant Green Focus Glow) */
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark select,
+.dark textarea {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 10px rgba(52, 211, 153, 0.04) !important;
+  border-color: rgba(52, 211, 153, 0.25) !important;
+}
+
+.dark input:not([type="checkbox"]):not([type="radio"]):focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: #34d399 !important;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2), 0 0 15px rgba(52, 211, 153, 0.15) !important;
+}
+
+/* 5. Dark Mode Modals, Dialogs, Dropdowns, Listboxes, and Alerts */
+.dark div[role="dialog"],
+.dark div.modal,
+.dark div[class*="fixed"][class*="z-50"] > div.bg-white,
+.dark ul[role="listbox"],
+.dark div[role="listbox"],
+.dark .dropdown-menu,
+.dark [role="menu"],
+.dark [role="status"],
+.dark [role="alert"] {
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 35px 3px rgba(52, 211, 153, 0.35), 0 0 0 1px rgba(52, 211, 153, 0.25) !important;
+  border: 1px solid rgba(52, 211, 153, 0.25) !important;
 }
 
 

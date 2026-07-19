@@ -30,7 +30,9 @@ import {
   HeartHandshake,
   BarChart3,
   Edit3,
-  Download
+  Download,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { User as FirebaseUser, signOut } from 'firebase/auth';
 import { auth, db } from '../../firebase';
@@ -71,6 +73,7 @@ interface AdminPortalProps {
   userProfile: any | null;
   setView: (view: any) => void;
   theme?: 'light' | 'dark';
+  onToggleTheme?: () => void;
 }
 
 type AdminTab = 
@@ -83,7 +86,8 @@ export default function AdminPortal({
   user,
   userProfile,
   setView,
-  theme = 'light'
+  theme = 'light',
+  onToggleTheme
 }: AdminPortalProps) {
   // Collapsible sidebar state
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -1053,7 +1057,7 @@ export default function AdminPortal({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex font-sans" id="admin_portal_layout">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0b0f19] flex font-sans transition-colors duration-300" id="admin_portal_layout">
       
       {/* 1. COLLAPSIBLE SIDERAIL Grouped by Nested categories */}
       <motion.aside
@@ -1127,19 +1131,19 @@ export default function AdminPortal({
                                 setActiveTab('users');
                                 setUserDirectoryFilter('admin_only');
                               }}
-                              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                              className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-bold transition-all cursor-pointer ${
                                 isActive 
-                                  ? 'bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs' 
-                                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900'
+                                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-l-4 border-emerald-500 rounded-r-xl rounded-l-none pl-2.5 shadow-xs font-bold' 
+                                  : 'rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200'
                               } ${isSidebarCollapsed ? 'justify-center' : ''}`}
                               title="Administrators"
                             >
                               <div className="flex items-center gap-3">
-                                <item.icon className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                <item.icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
                                 {!isSidebarCollapsed && <span>{item.label}</span>}
                               </div>
                               {!isSidebarCollapsed && (
-                                <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${isAdminDropdownOpen ? 'rotate-90 text-emerald-600' : 'text-slate-400'}`} />
+                                <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${isAdminDropdownOpen ? 'rotate-90 text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
                               )}
                             </button>
 
@@ -1160,7 +1164,7 @@ export default function AdminPortal({
                                     }}
                                     className={`w-full text-left px-3 py-2 rounded-lg text-[10px] font-bold tracking-tight transition-colors flex items-center gap-1.5 cursor-pointer ${
                                       activeTab === 'users' && userDirectoryFilter === 'admin_only'
-                                        ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20'
+                                        ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/10'
                                         : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                                     }`}
                                   >
@@ -1173,8 +1177,8 @@ export default function AdminPortal({
                                     }}
                                     className={`w-full text-left px-3 py-2 rounded-lg text-[10px] font-bold tracking-tight transition-colors flex items-center gap-1.5 cursor-pointer ${
                                       activeTab === 'accounts'
-                                        ? 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/20'
-                                        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                                        ? 'text-purple-700 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-950/10'
+                                        : 'text-slate-500 hover:text-slate-850 dark:text-slate-400 dark:hover:text-slate-200'
                                     }`}
                                   >
                                     <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
@@ -1197,14 +1201,14 @@ export default function AdminPortal({
                               setUserDirectoryFilter(''); // Reset admins-only filter when General User Directory clicked
                             }
                           }}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold transition-all cursor-pointer ${
                             isActive 
-                              ? 'bg-emerald-600 text-white shadow-xs' 
-                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900'
+                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-l-4 border-emerald-500 rounded-r-xl rounded-l-none pl-2.5 shadow-xs font-bold' 
+                              : 'rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200'
                           } ${isSidebarCollapsed ? 'justify-center' : ''}`}
                           title={item.label}
                         >
-                          <item.icon className="w-4 h-4 shrink-0" />
+                          <item.icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
                           {!isSidebarCollapsed && <span>{item.label}</span>}
                         </button>
                       );
@@ -1242,7 +1246,7 @@ export default function AdminPortal({
         style={{ paddingLeft: isSidebarCollapsed ? '98px' : '280px' }}
       >
         {/* Top bar with Search & Identity */}
-        <header className="sticky top-0 z-30 bg-slate-50/85 dark:bg-slate-950/85 backdrop-blur-md py-4 px-6 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-30 bg-[#f8fafc]/80 dark:bg-[#0b0f19]/80 backdrop-blur-md py-4 px-6 border-b border-slate-100 dark:border-slate-800/40 flex items-center justify-between gap-4">
           
           {/* Top Search bar */}
           <div className="relative flex-grow max-w-sm">
@@ -1328,6 +1332,16 @@ export default function AdminPortal({
               </span>
             </div>
             
+            {onToggleTheme && (
+              <button
+                onClick={onToggleTheme}
+                className="p-2 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 bg-white dark:bg-slate-900 cursor-pointer transition-colors"
+                title="Toggle visual style mode"
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4 text-emerald-400" /> : <Moon className="w-4 h-4 text-slate-500" />}
+              </button>
+            )}
+
             <button
               onClick={handleSignOut}
               className="p-2 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 bg-white dark:bg-slate-900 cursor-pointer transition-colors"

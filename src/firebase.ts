@@ -1,6 +1,12 @@
 import { initializeApp } from 'firebase/app';
 import { initializeAuth, browserLocalPersistence, browserPopupRedirectResolver, GoogleAuthProvider } from 'firebase/auth';
-import { initializeFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager,
+  doc, 
+  getDocFromServer 
+} from 'firebase/firestore';
 import config from '../firebase-applet-config.json';
 
 const firebaseConfig = {
@@ -11,13 +17,18 @@ const firebaseConfig = {
   messagingSenderId: config.messagingSenderId,
   appId: config.appId,
   measurementId: config.measurementId,
-};
+ };
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore with custom settings to use long polling, which is robust in sandboxed/iframe/reverse proxy environments.
+// Initialize Firestore with custom settings to use long polling, which is robust in sandboxed/iframe/reverse proxy environments,
+// and enable multi-tab persistent cache so the app functions instantly offline/online.
 export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+  }),
   experimentalForceLongPolling: true,
+  experimentalAutoDetectLongPolling: false,
 }, config.firestoreDatabaseId || '(default)');
 
 export const auth = initializeAuth(app, {

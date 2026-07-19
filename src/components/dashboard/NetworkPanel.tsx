@@ -103,11 +103,11 @@ export default function NetworkPanel({
         </button>
         <button 
           onClick={() => setActiveModal('following')}
-          className="p-4 bg-teal-50/50 hover:bg-teal-100/50 dark:bg-teal-50/50 dark:hover:bg-teal-100/50 border border-teal-100 rounded-2xl transition-all cursor-pointer hover:scale-[1.02] text-center"
+          className="p-4 bg-black border border-slate-800 rounded-2xl transition-all cursor-pointer hover:scale-[1.02] text-center"
           title="See Who You Are Following"
         >
-          <span className="block text-2xl font-black text-teal-600 dark:text-teal-600 font-mono">{followingIds.length + 18}</span>
-          <span className="block text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase mt-1">Following</span>
+          <span className="block text-2xl font-black text-teal-400 font-mono">{followingIds.length + 18}</span>
+          <span className="block text-[10px] text-slate-300 font-bold uppercase mt-1">Following</span>
         </button>
         <div className="p-4 bg-blue-50/50 dark:bg-blue-50/50 border border-blue-100 rounded-2xl">
           <span className="block text-2xl font-black text-blue-600 dark:text-blue-600 font-mono flex items-center justify-center gap-1">

@@ -386,8 +386,8 @@ export default function App() {
 
         {/* Main Container */}
         <main className="flex-grow">
-          <AnimatePresence mode="wait">
-            {currentView === 'home' && (
+          {/* Bypassing AnimatePresence prevents the fatal React 19 "Expected static flag was missing" reconciler assertion crash while preserving mounting fade-ins */}
+          {currentView === 'home' && (
               <motion.div
                 key="home-page"
                 initial={{ opacity: 0, y: 15 }}
@@ -1035,10 +1035,10 @@ export default function App() {
                   userProfile={userProfile}
                   setView={setView}
                   theme={theme}
+                  onToggleTheme={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
                 />
               </motion.div>
             )}
-          </AnimatePresence>
         </main>
 
         {/* Footer */}
