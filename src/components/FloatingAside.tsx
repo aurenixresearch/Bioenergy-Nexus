@@ -52,6 +52,10 @@ export default function FloatingAside({
   // If no user is logged in, do not render the floating aside
   if (!user) return null;
 
+  React.useEffect(() => {
+    console.log(`[REAL-TIME ROLE AUDIT] Sidebar role used for rendering: "${userProfile?.role}"`);
+  }, [userProfile]);
+
   // Mobile drawer open state
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -275,21 +279,21 @@ export default function FloatingAside({
               user.email?.toLowerCase() === 'adeyemibola2569@gmail.com' ||
               userProfile?.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' || 
               userProfile?.email?.toLowerCase() === 'adeyemibola2569@gmail.com' ||
-              !!userProfile?.role ||
-              !!userProfile?.adminRoleName) && (
+              userProfile?.role?.toLowerCase() === 'admin' || 
+              userProfile?.role?.toLowerCase() === 'super_admin') && (
               <div className="relative group/nav-item pt-2 border-t border-slate-100">
                 <motion.button
                   onClick={() => handleNav('admin')}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer relative ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer relative ${
                     currentView === 'admin' 
-                      ? 'text-emerald-800 bg-emerald-500/10 font-bold shadow-xs' 
-                      : 'text-amber-700 hover:text-amber-900 bg-amber-50/40 hover:bg-amber-50'
+                      ? 'text-emerald-700 bg-emerald-50/80 font-bold shadow-xs' 
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                   id="aside_btn_admin_portal"
                 >
-                  <Shield className={`w-4.5 h-4.5 shrink-0 transition-colors ${currentView === 'admin' ? 'text-emerald-600' : 'text-amber-600'}`} />
+                  <Shield className={`w-4.5 h-4.5 shrink-0 transition-colors ${currentView === 'admin' ? 'text-emerald-600' : 'text-slate-400 group-hover/nav-item:text-slate-700'}`} />
                   
                   {!isCollapsed && (
                     <motion.span 
@@ -297,7 +301,7 @@ export default function FloatingAside({
                       animate={{ opacity: 1 }}
                       className="truncate"
                     >
-                      Admin Portal
+                      🛡️ Admin Portal
                     </motion.span>
                   )}
 
@@ -311,8 +315,8 @@ export default function FloatingAside({
 
                 {isCollapsed && (
                   <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover/nav-item:opacity-100 group-hover/nav-item:scale-100 transition-all duration-150 z-50 whitespace-nowrap flex flex-col gap-0.5">
-                    <span>Admin Portal</span>
-                    <span className="text-[10px] text-amber-400 font-normal">Manage Aurenix Research</span>
+                    <span>🛡️ Admin Portal</span>
+                    <span className="text-[10px] text-slate-400 font-normal">Manage Aurenix Research</span>
                   </div>
                 )}
               </div>
@@ -521,6 +525,36 @@ export default function FloatingAside({
                       </button>
                     );
                   })}
+
+                  {(user.uid === 'sandbox-admin-bola' || 
+                    user.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' || 
+                    user.email?.toLowerCase() === 'adeyemibola2569@gmail.com' ||
+                    userProfile?.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' || 
+                    userProfile?.email?.toLowerCase() === 'adeyemibola2569@gmail.com' ||
+                    userProfile?.role?.toLowerCase() === 'admin' || 
+                    userProfile?.role?.toLowerCase() === 'super_admin') && (
+                    <button
+                      onClick={() => handleNav('admin')}
+                      className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer text-left relative ${
+                        currentView === 'admin' 
+                          ? 'text-emerald-700 bg-emerald-50 shadow-inner' 
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                      id="mobile_aside_btn_admin"
+                    >
+                      <Shield className={`w-5 h-5 ${currentView === 'admin' ? 'text-emerald-700' : 'text-slate-400'}`} />
+                      <div>
+                        <span className="block">🛡️ Admin Portal</span>
+                        <span className="block text-[10px] text-slate-400 font-normal mt-0.5">
+                          Manage Aurenix Research
+                        </span>
+                      </div>
+
+                      {currentView === 'admin' && (
+                        <div className="absolute left-0 top-3 bottom-3 w-1 bg-emerald-600 rounded-r-full" />
+                      )}
+                    </button>
+                  )}
                 </div>
 
                 {/* Mobile Sign Out button */}

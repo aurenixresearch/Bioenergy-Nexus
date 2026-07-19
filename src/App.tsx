@@ -6,8 +6,9 @@ import {
   signOut, 
   User as FirebaseUser 
 } from 'firebase/auth';
-import { auth, googleProvider } from './firebase';
-import { getSavedPaperIds, getUserInquiries, getUserPartnerships, getUserProfile } from './services/db';
+import { auth, googleProvider, db } from './firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { getSavedPaperIds, getUserInquiries, getUserPartnerships, getUserProfile, isDemoModeActive } from './services/db';
 import { ConsultationInquiry, PartnershipSubmission } from './types';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, ShieldAlert, Sparkles, X, UserCheck, KeyRound, HelpCircle, BookOpen, Users, HeartHandshake, Leaf, Award, Quote, Building, CheckCircle2, FlaskConical } from 'lucide-react';
@@ -150,6 +151,114 @@ export default function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  // Real-time Firestore onSnapshot listener for User Profile (Source of Truth)
+  useEffect(() => {
+    if (!user) {
+      setUserProfileState(null);
+      return;
+    }
+
+    const userId = user.uid;
+    console.log(`[REAL-TIME ROLE AUDIT] Initiating real-time snapshot listener for: ${userId}`);
+
+    if (isDemoModeActive(userId)) {
+      // Local Storage profile polling for sandbox demo mode
+      const loadProfile = () => {
+        const localData = localStorage.getItem(`nexus_demo_profile_${userId}`);
+        if (localData) {
+          try {
+            const profile = JSON.parse(localData);
+            console.log(`[REAL-TIME ROLE AUDIT] Role loaded from LocalStorage (Demo Mode): "${profile?.role}"`);
+            setUserProfileState(profile);
+          } catch (e) {
+            console.error('Error parsing local storage profile:', e);
+          }
+        } else if (userId === 'sandbox-admin-bola') {
+          const defaultAdminProfile = {
+            fullName: 'Bola Adeyemi',
+            email: 'bola.adeyemi@aurenix-research.org',
+            role: 'super_admin',
+            country: 'Nigeria',
+            institution: 'Aurenix Core Labs',
+            researchInterests: ['Bioenergy', 'Circular Economy', 'Nuclear Energy'],
+            termsAccepted: true,
+            verified: true,
+            verificationStatus: 'verified'
+          };
+          localStorage.setItem(`nexus_demo_profile_${userId}`, JSON.stringify(defaultAdminProfile));
+          setUserProfileState(defaultAdminProfile);
+        }
+      };
+
+      loadProfile();
+      const interval = setInterval(loadProfile, 1000);
+      return () => clearInterval(interval);
+    }
+
+    // Real Firebase Firestore onSnapshot listener for online users
+    try {
+      const docRef = doc(db, 'users', userId);
+      const unsubscribeSnap = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const profileData = { id: docSnap.id, ...docSnap.data() } as any;
+          console.log(`[REAL-TIME ROLE AUDIT] Role loaded from Firestore for ${userId}: "${profileData?.role}"`);
+          setUserProfileState(profileData);
+        } else {
+          console.warn(`[REAL-TIME ROLE AUDIT] No Firestore document found for user: ${userId}`);
+          // If no doc exists but user is authenticated, construct a default onboarding/transient profile
+          const currentUser = auth.currentUser;
+          if (currentUser && currentUser.uid === userId && !currentUser.isAnonymous) {
+            const transientProfile = {
+              id: userId,
+              needsOnboarding: true,
+              fullName: currentUser.displayName || 'Google Scholar',
+              email: currentUser.email || '',
+              role: '',
+              country: '',
+              institution: '',
+              researchInterests: [],
+              termsAccepted: false
+            };
+            console.log(`[REAL-TIME ROLE AUDIT] Constructing transient profile for onboarding: "${transientProfile.role}"`);
+            setUserProfileState(transientProfile);
+          }
+        }
+      }, (error) => {
+        console.error(`[REAL-TIME ROLE AUDIT] error onSnapshot:`, error);
+      });
+
+      return () => unsubscribeSnap();
+    } catch (err) {
+      console.error(`[REAL-TIME ROLE AUDIT] Error setting up Firestore listener:`, err);
+    }
+  }, [user]);
+
+  // Temporary logging to trace role stored in application state
+  useEffect(() => {
+    console.log(`[REAL-TIME ROLE AUDIT] Role stored in application state (userProfile): "${userProfile?.role}"`);
+  }, [userProfile]);
+
+  // Route Guard check and access restriction
+  useEffect(() => {
+    if (currentView === 'admin') {
+      const isUserPlatformAdmin = 
+        userProfile?.role?.toLowerCase() === 'admin' ||
+        userProfile?.role?.toLowerCase() === 'super_admin' ||
+        user?.uid === 'sandbox-admin-bola' ||
+        user?.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' ||
+        user?.email?.toLowerCase() === 'adeyemibola2569@gmail.com' ||
+        userProfile?.email?.toLowerCase() === 'bola.adeyemi@aurenix-research.org' ||
+        userProfile?.email?.toLowerCase() === 'adeyemibola2569@gmail.com';
+      
+      console.log(`[REAL-TIME ROLE AUDIT] Route guard role check - currentView: "${currentView}", role: "${userProfile?.role}", authorized: ${isUserPlatformAdmin}`);
+
+      if (!isUserPlatformAdmin) {
+        console.warn(`[REAL-TIME ROLE AUDIT] Route guard access restriction triggered! Redirecting user to dashboard.`);
+        setView('dashboard');
+      }
+    }
+  }, [currentView, userProfile, user]);
 
   // Sync user info
   const refreshAllUserData = async (userId: string) => {

@@ -215,6 +215,13 @@ export default function SystemOperations({
     onUpdateAdminRoles(updated);
   };
 
+  const handleDeleteRole = (roleId: string) => {
+    if (window.confirm("Are you sure you want to delete this administrative role? Users assigned to this role may lose access permissions.")) {
+      const updated = adminRoles.filter(role => role.id !== roleId);
+      onUpdateAdminRoles(updated);
+    }
+  };
+
   return (
     <div className="space-y-6" id={`system_ops_${currentTab}`}>
       
@@ -644,6 +651,15 @@ export default function SystemOperations({
                   <span className="px-3 py-1 bg-purple-50 dark:bg-purple-950/20 text-purple-700 dark:text-purple-400 text-xs font-bold rounded-xl font-display">
                     {role.roleName}
                   </span>
+                  {role.roleName !== 'Super Admin' && (
+                    <button
+                      onClick={() => handleDeleteRole(role.id)}
+                      className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg cursor-pointer transition-colors"
+                      title="Delete Role"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
 
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
