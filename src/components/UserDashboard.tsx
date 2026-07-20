@@ -747,7 +747,7 @@ export default function UserDashboard({
             </div>
           </div>
 
-          <div className="flex gap-4 shrink-0 relative z-10 font-mono text-xs text-emerald-700">
+          <div className="flex flex-wrap gap-4 justify-center sm:justify-start shrink-0 relative z-10 font-mono text-xs text-emerald-700">
             <div className="px-4 py-3 bg-emerald-50/50 border border-emerald-100/60 rounded-xl text-center min-w-[70px]">
               <span className="block text-2xl font-bold text-emerald-950">{savedPapers.length}</span>
               <span className="font-sans font-bold text-[10px] text-emerald-800">Saved Papers</span>

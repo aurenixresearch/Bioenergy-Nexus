@@ -91,6 +91,16 @@ export default function AdminPortal({
 }: AdminPortalProps) {
   // Collapsible sidebar state
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
   const [userDirectoryFilter, setUserDirectoryFilter] = useState('');
@@ -1243,11 +1253,22 @@ export default function AdminPortal({
       {/* 2. MAIN BODY WRAPPER */}
       <div 
         className="flex-grow flex flex-col min-h-screen transition-all"
-        style={{ paddingLeft: isSidebarCollapsed ? '98px' : '280px' }}
+        style={{ paddingLeft: isMobile ? '0px' : (isSidebarCollapsed ? '98px' : '280px') }}
       >
         {/* Top bar with Search & Identity */}
         <header className="sticky top-0 z-30 bg-[#f8fafc]/80 dark:bg-[#0b0f19]/80 backdrop-blur-md py-4 px-6 border-b border-slate-100 dark:border-slate-800/40 flex items-center justify-between gap-4">
           
+          {/* Mobile menu trigger */}
+          {isMobile && (
+            <button
+              onClick={() => setIsMobileDrawerOpen(true)}
+              className="md:hidden p-2 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 bg-white dark:bg-slate-900 cursor-pointer transition-colors shrink-0"
+              title="Open Administrative Menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          )}
+
           {/* Top Search bar */}
           <div className="relative flex-grow max-w-sm">
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
@@ -1436,6 +1457,121 @@ export default function AdminPortal({
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Mobile drawer for admin nav */}
+      <AnimatePresence>
+        {isMobile && isMobileDrawerOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileDrawerOpen(false)}
+              className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50"
+              id="mobile_admin_backdrop"
+            />
+
+            {/* Mobile Admin Drawer Panel */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+              className="fixed left-0 top-0 bottom-0 w-80 bg-white dark:bg-slate-900 z-50 shadow-2xl flex flex-col p-6 overflow-y-auto"
+              id="mobile_admin_drawer"
+            >
+              <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-emerald-50 rounded-xl animate-pulse">
+                    <img 
+                      src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
+                      alt="Aurenix Research Logo" 
+                      referrerPolicy="no-referrer"
+                      className="w-5 h-5 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <span className="block text-sm font-display font-black text-slate-900 dark:text-slate-50 tracking-tight leading-none">
+                      Admin <span className="text-emerald-600">Portal</span>
+                    </span>
+                    <span className="block text-[8px] font-mono tracking-widest text-slate-400 uppercase mt-1">
+                      Mobile Control
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsMobileDrawerOpen(false)}
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Mobile Admin Navigation */}
+              <div className="flex-grow py-6 space-y-6">
+                {sideCategories.map((cat, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <span className="block text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase">
+                      {cat.name}
+                    </span>
+                    <div className="space-y-1">
+                      {cat.items.map((item) => {
+                        const isActive = activeTab === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => {
+                              if (item.id === 'admins_scroll') {
+                                setActiveTab('users');
+                                setUserDirectoryFilter('admin_only');
+                              } else {
+                                setActiveTab(item.id);
+                              }
+                              setIsMobileDrawerOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold transition-all cursor-pointer rounded-xl ${
+                              isActive
+                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-l-4 border-emerald-500 pl-2.5 font-bold'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200'
+                            }`}
+                          >
+                            <item.icon className="w-4 h-4 shrink-0" />
+                            <span>{item.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                <button
+                  onClick={() => {
+                    setIsMobileDrawerOpen(false);
+                    handleReturnHome();
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <ArrowLeft className="w-4 h-4 text-slate-400" />
+                  <span>Main Hub</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsMobileDrawerOpen(false);
+                    handleSignOut();
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50/60 cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4 text-rose-500" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
     </div>
   );
