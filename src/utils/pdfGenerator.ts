@@ -402,6 +402,6 @@ export function generateResearchPDF(paper: ResearchPaper) {
   }
 
   // Save/Download the file with safe filename
-  const safeTitle = paper.title.toLowerCase().replace(/[^a-z0-9]+/g, '_').substring(0, 40);
+  const safeTitle = (paper.title || 'paper').toLowerCase().replace(/[^a-z0-9]+/g, '_').substring(0, 40);
   doc.save(`aurenix_research_${safeTitle}.pdf`);
 }

@@ -205,11 +205,11 @@ service cloud.firestore {
       allow write: if isSignedIn();
     }
 
-    // Collection: notifications (Collaboration)
+    // Collection: notifications
     match /notifications/{notificationId} {
       allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
     }
 
     // Collection: innovation_projects
@@ -297,6 +297,66 @@ service cloud.firestore {
     match /admin_roles/{roleId} {
       allow read: if true;
       allow write: if isSignedIn() && isPlatformAdmin();
+    }
+
+    // Collection: conversations
+    match /conversations/{conversationId} {
+      allow read: if isSignedIn() && (resource == null || request.auth.uid in resource.data.participants);
+      allow create: if isSignedIn() && (request.auth.uid in incoming().participants);
+      allow update: if isSignedIn() && (request.auth.uid in existing().participants);
+      allow delete: if isSignedIn() && (request.auth.uid in existing().participants || isPlatformAdmin());
+
+      // Subcollection: messages within conversation
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && (
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants
+        );
+        allow create: if isSignedIn() && (
+          incoming().senderId == request.auth.uid &&
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants
+        );
+        allow update: if isSignedIn() && (
+          (existing() != null && existing().senderId == request.auth.uid) ||
+          (
+            request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants &&
+            incoming().diff(existing()).affectedKeys().hasAny(['status', 'readBy', 'deliveredAt', 'readAt', 'deletedFor', 'isDeletedForEveryone', 'text'])
+          ) ||
+          isPlatformAdmin()
+        );
+        allow delete: if isSignedIn() && (
+          (existing() != null && existing().senderId == request.auth.uid) ||
+          isPlatformAdmin()
+        );
+      }
+    }
+
+    // Collection: reports
+    match /reports/{reportId} {
+      allow read: if isSignedIn() && isPlatformAdmin();
+      allow create: if isSignedIn() && incoming().reporterId == request.auth.uid;
+      allow update, delete: if isSignedIn() && isPlatformAdmin();
+    }
+
+    // Collection: blocks
+    match /blocks/{blockId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.blockerId == request.auth.uid || resource.data.blockedUserId == request.auth.uid);
+      allow create: if isSignedIn() && incoming().blockerId == request.auth.uid;
+      allow delete: if isSignedIn() && existing().blockerId == request.auth.uid;
+    }
+
+    // Top-level Collection: messages (optional direct collection fallback)
+    match /messages/{messageId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.senderId == request.auth.uid || ('recipientId' in resource.data && resource.data.recipientId == request.auth.uid));
+      allow create: if isSignedIn() && incoming().senderId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        existing().senderId == request.auth.uid ||
+        (
+          'recipientId' in existing() && existing().recipientId == request.auth.uid &&
+          incoming().diff(existing()).affectedKeys().hasAny(['status', 'readBy', 'deliveredAt', 'readAt']) &&
+          (incoming().status == 'delivered' || incoming().status == 'read')
+        )
+      );
+      allow delete: if isSignedIn() && existing().senderId == request.auth.uid;
     }
   }
 }

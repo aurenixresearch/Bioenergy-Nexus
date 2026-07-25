@@ -22,9 +22,11 @@ import {
   Home,
   Mail,
   Bookmark,
-  Activity
+  Activity,
+  MessageSquare
 } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
+import { subscribeToUnreadCount } from '../services/messagingDb';
 
 interface FloatingAsideProps {
   user: FirebaseUser | null;
@@ -49,19 +51,29 @@ export default function FloatingAside({
   theme,
   onToggleTheme
 }: FloatingAsideProps) {
-  // If no user is logged in, do not render the floating aside
-  if (!user) return null;
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   React.useEffect(() => {
     console.log(`[REAL-TIME ROLE AUDIT] Sidebar role used for rendering: "${userProfile?.role}"`);
   }, [userProfile]);
 
-  // Mobile drawer open state
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  // Real-time listener for unread messages badge
+  React.useEffect(() => {
+    if (!user?.uid) return;
+    const unsub = subscribeToUnreadCount(user.uid, (total) => {
+      setUnreadMessages(total);
+    });
+    return () => unsub();
+  }, [user?.uid]);
+
+  // If no user is logged in, do not render the floating aside
+  if (!user) return null;
 
   // Flat list of navigation items
   const navItems = [
     { label: 'User Dashboard', id: 'dashboard' as const, icon: LayoutDashboard, desc: 'Manage your submissions' },
+    { label: 'Messages', id: 'messages' as const, icon: MessageSquare, desc: 'Private scholar communications' },
     { label: 'My Public Profile', id: 'profile' as const, icon: User, desc: 'View and edit your portfolio' },
     { label: 'System Settings', id: 'settings' as const, icon: Settings, desc: 'Preferences and privacy' },
     { label: 'Explore Researchers', id: 'researchers' as const, icon: Users, desc: 'Discover experts across Africa' },
@@ -147,16 +159,14 @@ export default function FloatingAside({
             </AnimatePresence>
 
             {!isCollapsed && onToggleTheme && (
-              <motion.button
+              <button
                 onClick={onToggleTheme}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className={`p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-50 cursor-pointer ${theme === 'dark' ? 'text-emerald-400 hover:text-emerald-500' : ''}`}
+                className={`p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer ${theme === 'dark' ? 'text-emerald-400 hover:text-emerald-500' : ''}`}
                 title="Toggle visual style mode"
                 id="aside_theme_toggle"
               >
                 {theme === 'dark' ? <Sun className="w-4 h-4 text-emerald-400" /> : <Moon className="w-4 h-4" />}
-              </motion.button>
+              </button>
             )}
           </div>
 
@@ -225,16 +235,14 @@ export default function FloatingAside({
           {/* Flat Navigation List (No sections/headers) */}
           <div className="space-y-1 flex-grow">
             {navItems.map((item) => {
-              if (item.id === 'settings') return null;
+              if (item.id === 'settings' || item.id === 'profile') return null;
               const Icon = item.icon;
               const isActive = currentView === item.id;
 
               return (
                 <div key={item.id} className="relative group/nav-item">
-                  <motion.button
+                  <button
                     onClick={() => handleNav(item.id)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer relative ${
                       isActive 
                         ? 'text-emerald-700 bg-emerald-50/80 font-bold shadow-xs' 
@@ -245,23 +253,25 @@ export default function FloatingAside({
                     <Icon className={`w-4.5 h-4.5 shrink-0 transition-colors ${isActive ? 'text-emerald-600' : 'text-slate-400 group-hover/nav-item:text-slate-700'}`} />
                     
                     {!isCollapsed && (
-                      <motion.span 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="truncate"
-                      >
-                        {item.label}
-                      </motion.span>
+                      <span className="truncate flex-1 text-left flex items-center justify-between">
+                        <span>{item.label}</span>
+                        {item.id === 'messages' && unreadMessages > 0 && (
+                          <span className="px-1.5 py-0.5 bg-emerald-600 text-white font-mono font-bold text-[9px] rounded-full shrink-0 shadow-xs ml-1">
+                            {unreadMessages}
+                          </span>
+                        )}
+                      </span>
+                    )}
+
+                    {isCollapsed && item.id === 'messages' && unreadMessages > 0 && (
+                      <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-emerald-600 rounded-full ring-2 ring-white dark:ring-slate-900" />
                     )}
 
                     {/* Active Blue/Emerald line overlay */}
                     {isActive && (
-                      <motion.div 
-                        layoutId="active_aside_pill"
-                        className="absolute left-0 top-2 bottom-2 w-1 bg-emerald-600 rounded-r-full" 
-                      />
+                      <div className="absolute left-0 top-2 bottom-2 w-1 bg-emerald-600 rounded-r-full origin-center" />
                     )}
-                  </motion.button>
+                  </button>
 
                   {/* Collapsed Tooltip on Hover */}
                   {isCollapsed && (
@@ -307,8 +317,9 @@ export default function FloatingAside({
 
                   {currentView === 'admin' && (
                     <motion.div 
-                      layoutId="active_aside_pill"
-                      className="absolute left-0 top-2 bottom-2 w-1 bg-emerald-600 rounded-r-full" 
+                      initial={{ opacity: 0, scaleY: 0.5 }}
+                      animate={{ opacity: 1, scaleY: 1 }}
+                      className="absolute left-0 top-2 bottom-2 w-1 bg-emerald-600 rounded-r-full origin-center" 
                     />
                   )}
                 </motion.button>
@@ -512,8 +523,15 @@ export default function FloatingAside({
                         id={`mobile_aside_btn_${item.id}`}
                       >
                         <Icon className={`w-5 h-5 ${isActive ? 'text-emerald-700' : 'text-slate-400'}`} />
-                        <div>
-                          <span className="block">{item.label}</span>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="block">{item.label}</span>
+                            {item.id === 'messages' && unreadMessages > 0 && (
+                              <span className="px-2 py-0.5 bg-emerald-600 text-white font-mono font-bold text-xs rounded-full shrink-0 shadow-xs ml-2">
+                                {unreadMessages}
+                              </span>
+                            )}
+                          </div>
                           <span className="block text-[10px] text-slate-400 font-normal mt-0.5">
                             {item.desc}
                           </span>

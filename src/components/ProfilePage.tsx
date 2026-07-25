@@ -368,6 +368,315 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
   const completionPercent = calculateCompletion();
   const completionChecklist = getCompletionChecklist();
 
+  if (isEditModalOpen && editForm) {
+    return (
+      <div className="bg-slate-50 dark:bg-slate-950 min-h-screen py-10 px-4 sm:px-6 lg:px-8 text-left" id="edit_profile_full_workspace">
+        <div className="max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="p-6 border-b dark:border-slate-800 flex items-center justify-between bg-slate-50/60 dark:bg-slate-900/40">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white font-display">
+                Edit Public Portfolio
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Configure your details to maximize researcher match index.
+              </p>
+            </div>
+            <button 
+              onClick={() => setIsEditModalOpen(false)}
+              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer bg-transparent border-0"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Form fields */}
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSaveProfile(editForm);
+            }}
+            className="p-6 space-y-6"
+          >
+            
+            {/* Basic section */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
+                Basic Credentials
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Full Name</label>
+                  <input 
+                    type="text"
+                    required
+                    value={editForm.fullName || ''}
+                    onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                    className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Professional Title</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="e.g. Lead Process Analyst"
+                    value={editForm.professionalTitle || ''}
+                    onChange={(e) => setEditForm({ ...editForm, professionalTitle: e.target.value })}
+                    className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Scholar Role</label>
+                  <select 
+                    value={editForm.role || 'Researcher'}
+                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                    className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                  >
+                    {USER_ROLES.map((role) => (
+                      <option key={role} value={role}>{role}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Country</label>
+                  <input 
+                    type="text"
+                    required
+                    value={editForm.country || ''}
+                    onChange={(e) => setEditForm({ ...editForm, country: e.target.value })}
+                    className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Institution</label>
+                  <input 
+                    type="text"
+                    required
+                    value={editForm.institution || ''}
+                    onChange={(e) => setEditForm({ ...editForm, institution: e.target.value })}
+                    className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Department</label>
+                  <input 
+                    type="text"
+                    required
+                    value={editForm.department || ''}
+                    onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
+                    className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Avatar Image URL</label>
+                  <input 
+                    type="text"
+                    value={editForm.profilePicture || ''}
+                    onChange={(e) => setEditForm({ ...editForm, profilePicture: e.target.value })}
+                    className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Cover Banner Image URL</label>
+                  <input 
+                    type="text"
+                    value={editForm.coverBanner || ''}
+                    onChange={(e) => setEditForm({ ...editForm, coverBanner: e.target.value })}
+                    className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* About Section in form */}
+            <div className="space-y-4 pt-4 border-t dark:border-slate-800">
+              <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
+                About & Objectives
+              </h4>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Professional Bio</label>
+                <textarea 
+                  rows={3}
+                  required
+                  value={editForm.bio || ''}
+                  onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                  className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors resize-none"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Career Objectives & Vision</label>
+                <textarea 
+                  rows={2}
+                  value={editForm.careerObjectives || ''}
+                  onChange={(e) => setEditForm({ ...editForm, careerObjectives: e.target.value })}
+                  className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Research Fields (Multi select) */}
+            <div className="space-y-4 pt-4 border-t dark:border-slate-800">
+              <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
+                Selected Research Fields
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {ALL_INTERESTS_OPTIONS.map((interest) => {
+                  const isSelected = (editForm.researchInterests || []).includes(interest);
+                  return (
+                    <button
+                      type="button"
+                      key={interest}
+                      onClick={() => toggleInterestInForm(interest)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border transition-all ${
+                        isSelected 
+                          ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs' 
+                          : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      {interest}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Skills Editor */}
+            <div className="space-y-4 pt-4 border-t dark:border-slate-800">
+              <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
+                Technical Skills (Tags)
+              </h4>
+              <div className="flex flex-wrap gap-2 border dark:border-slate-800 p-3 rounded-2xl bg-slate-50/50 dark:bg-slate-950">
+                {editForm.skills?.map((skill: string, index: number) => (
+                  <span 
+                    key={index}
+                    className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 border dark:border-emerald-500/10 rounded-lg text-xs font-semibold flex items-center gap-1"
+                  >
+                    {skill}
+                    <button 
+                      type="button" 
+                      onClick={() => removeSkillInForm(skill)}
+                      className="hover:text-rose-600 ml-1 font-extrabold"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                
+                <input 
+                  type="text"
+                  placeholder="Type skill & press Enter"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addSkillInForm(e.currentTarget.value);
+                      e.currentTarget.value = '';
+                    }
+                  }}
+                  className="bg-transparent border-none text-xs text-slate-800 dark:text-white outline-none min-w-[150px] px-2"
+                />
+              </div>
+              <span className="text-[10px] text-slate-400 font-mono">Type a technical skill and press Enter to append.</span>
+            </div>
+
+            {/* Portfolios URL list */}
+            <div className="space-y-4 pt-4 border-t dark:border-slate-800">
+              <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
+                Portfolio Links
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">ORCID ID</label>
+                  <input 
+                    type="text"
+                    placeholder="0000-0002-1825-0097"
+                    value={editForm.portfolioLinks?.orcid || ''}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      portfolioLinks: { ...editForm.portfolioLinks, orcid: e.target.value }
+                    })}
+                    className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Personal Website</label>
+                  <input 
+                    type="text"
+                    placeholder="https://aurenix-research.org"
+                    value={editForm.portfolioLinks?.website || ''}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      portfolioLinks: { ...editForm.portfolioLinks, website: e.target.value }
+                    })}
+                    className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Google Scholar Profile URL</label>
+                  <input 
+                    type="text"
+                    placeholder="https://scholar.google.com..."
+                    value={editForm.portfolioLinks?.googleScholar || ''}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      portfolioLinks: { ...editForm.portfolioLinks, googleScholar: e.target.value }
+                    })}
+                    className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">GitHub Profile URL</label>
+                  <input 
+                    type="text"
+                    placeholder="https://github.com..."
+                    value={editForm.portfolioLinks?.github || ''}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      portfolioLinks: { ...editForm.portfolioLinks, github: e.target.value }
+                    })}
+                    className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Actions footer */}
+            <div className="pt-6 border-t dark:border-slate-800 flex items-center justify-end gap-3">
+              <button 
+                type="button"
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl cursor-pointer border-0"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit"
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-900/10 border-0"
+              >
+                Save Changes
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-slate-50 dark:bg-slate-50 text-slate-800 dark:text-slate-800 min-h-screen text-left" id="public_profile_view">
       
@@ -1140,334 +1449,6 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
         </div>
 
       </div>
-
-      {/* -------------------- EDIT PROFILE MODAL -------------------- */}
-      <AnimatePresence>
-        {isEditModalOpen && editForm && (
-          <div className="fixed inset-0 z-50 overflow-y-auto" id="edit_profile_modal">
-            {/* Backdrop */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsEditModalOpen(false)}
-              className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs"
-            />
-
-            {/* Modal Box */}
-            <div className="flex min-h-full items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="relative w-full max-w-3xl bg-white dark:bg-[#040706] rounded-3xl shadow-2xl border dark:border-slate-800 overflow-hidden text-left"
-              >
-                {/* Header */}
-                <div className="p-6 border-b dark:border-slate-800 flex items-center justify-between bg-slate-50/60 dark:bg-slate-900/40">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white font-display">
-                      Edit Public Portfolio
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Configure your details to maximize researcher match index.
-                    </p>
-                  </div>
-                  <button 
-                    onClick={() => setIsEditModalOpen(false)}
-                    className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* Form fields (Scrollable area) */}
-                <form 
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSaveProfile(editForm);
-                  }}
-                  className="p-6 max-h-[70vh] overflow-y-auto space-y-6 custom-scrollbar"
-                >
-                  
-                  {/* Basic section */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
-                      Basic Credentials
-                    </h4>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Full Name</label>
-                        <input 
-                          type="text"
-                          required
-                          value={editForm.fullName || ''}
-                          onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
-                          className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Professional Title</label>
-                        <input 
-                          type="text"
-                          required
-                          placeholder="e.g. Lead Process Analyst"
-                          value={editForm.professionalTitle || ''}
-                          onChange={(e) => setEditForm({ ...editForm, professionalTitle: e.target.value })}
-                          className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Scholar Role</label>
-                        <select 
-                          value={editForm.role || 'Researcher'}
-                          onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                          className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
-                        >
-                          {USER_ROLES.map((role) => (
-                            <option key={role} value={role}>{role}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Country</label>
-                        <input 
-                          type="text"
-                          required
-                          value={editForm.country || ''}
-                          onChange={(e) => setEditForm({ ...editForm, country: e.target.value })}
-                          className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Institution</label>
-                        <input 
-                          type="text"
-                          required
-                          value={editForm.institution || ''}
-                          onChange={(e) => setEditForm({ ...editForm, institution: e.target.value })}
-                          className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Department</label>
-                        <input 
-                          type="text"
-                          required
-                          value={editForm.department || ''}
-                          onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
-                          className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5 sm:col-span-2">
-                        <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Avatar Image URL</label>
-                        <input 
-                          type="text"
-                          value={editForm.profilePicture || ''}
-                          onChange={(e) => setEditForm({ ...editForm, profilePicture: e.target.value })}
-                          className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5 sm:col-span-2">
-                        <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Cover Banner Image URL</label>
-                        <input 
-                          type="text"
-                          value={editForm.coverBanner || ''}
-                          onChange={(e) => setEditForm({ ...editForm, coverBanner: e.target.value })}
-                          className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* About Section in form */}
-                  <div className="space-y-4 pt-4 border-t dark:border-slate-800">
-                    <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
-                      About & Objectives
-                    </h4>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Professional Bio</label>
-                      <textarea 
-                        rows={3}
-                        required
-                        value={editForm.bio || ''}
-                        onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                        className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors resize-none"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Career Objectives & Vision</label>
-                      <textarea 
-                        rows={2}
-                        value={editForm.careerObjectives || ''}
-                        onChange={(e) => setEditForm({ ...editForm, careerObjectives: e.target.value })}
-                        className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors resize-none"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Research Fields (Multi select) */}
-                  <div className="space-y-4 pt-4 border-t dark:border-slate-800">
-                    <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
-                      Selected Research Fields
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {ALL_INTERESTS_OPTIONS.map((interest) => {
-                        const isSelected = (editForm.researchInterests || []).includes(interest);
-                        return (
-                          <button
-                            type="button"
-                            key={interest}
-                            onClick={() => toggleInterestInForm(interest)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border transition-all ${
-                              isSelected 
-                                ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs' 
-                                : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
-                            }`}
-                          >
-                            {interest}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Skills Editor */}
-                  <div className="space-y-4 pt-4 border-t dark:border-slate-800">
-                    <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
-                      Technical Skills (Tags)
-                    </h4>
-                    <div className="flex flex-wrap gap-2 border dark:border-slate-800 p-3 rounded-2xl bg-slate-50/50 dark:bg-slate-950">
-                      {editForm.skills?.map((skill: string, index: number) => (
-                        <span 
-                          key={index}
-                          className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 border dark:border-emerald-500/10 rounded-lg text-xs font-semibold flex items-center gap-1"
-                        >
-                          {skill}
-                          <button 
-                            type="button" 
-                            onClick={() => removeSkillInForm(skill)}
-                            className="hover:text-rose-600 ml-1 font-extrabold"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                      
-                      <input 
-                        type="text"
-                        placeholder="Type skill & press Enter"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            addSkillInForm(e.currentTarget.value);
-                            e.currentTarget.value = '';
-                          }
-                        }}
-                        className="bg-transparent border-none text-xs text-slate-800 dark:text-white outline-none min-w-[150px] px-2"
-                      />
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-mono">Type a technical skill and press Enter to append.</span>
-                  </div>
-
-                  {/* Portfolios URL list */}
-                  <div className="space-y-4 pt-4 border-t dark:border-slate-800">
-                    <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
-                      Portfolio Links
-                    </h4>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">ORCID ID</label>
-                        <input 
-                          type="text"
-                          placeholder="0000-0002-1825-0097"
-                          value={editForm.portfolioLinks?.orcid || ''}
-                          onChange={(e) => setEditForm({
-                            ...editForm,
-                            portfolioLinks: { ...editForm.portfolioLinks, orcid: e.target.value }
-                          })}
-                          className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Personal Website</label>
-                        <input 
-                          type="text"
-                          placeholder="https://aurenix-research.org"
-                          value={editForm.portfolioLinks?.website || ''}
-                          onChange={(e) => setEditForm({
-                            ...editForm,
-                            portfolioLinks: { ...editForm.portfolioLinks, website: e.target.value }
-                          })}
-                          className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Google Scholar Profile URL</label>
-                        <input 
-                          type="text"
-                          placeholder="https://scholar.google.com..."
-                          value={editForm.portfolioLinks?.googleScholar || ''}
-                          onChange={(e) => setEditForm({
-                            ...editForm,
-                            portfolioLinks: { ...editForm.portfolioLinks, googleScholar: e.target.value }
-                          })}
-                          className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">GitHub Profile URL</label>
-                        <input 
-                          type="text"
-                          placeholder="https://github.com..."
-                          value={editForm.portfolioLinks?.github || ''}
-                          onChange={(e) => setEditForm({
-                            ...editForm,
-                            portfolioLinks: { ...editForm.portfolioLinks, github: e.target.value }
-                          })}
-                          className="w-full px-3.5 py-2 border dark:border-slate-800 rounded-xl text-xs dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-600 transition-colors"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions footer */}
-                  <div className="pt-6 border-t dark:border-slate-800 flex items-center justify-end gap-3 bg-slate-50/20 dark:bg-slate-900/10">
-                    <button 
-                      type="button"
-                      onClick={() => setIsEditModalOpen(false)}
-                      className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      type="submit"
-                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-900/10"
-                    >
-                      Save Changes
-                    </button>
-                  </div>
-
-                </form>
-              </motion.div>
-            </div>
-
-          </div>
-        )}
-      </AnimatePresence>
 
     </div>
   );

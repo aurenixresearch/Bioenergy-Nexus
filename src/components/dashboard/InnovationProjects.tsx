@@ -233,21 +233,30 @@ export default function InnovationProjects({
               {/* Action row */}
               <div className="flex flex-wrap items-center justify-end gap-1.5 pt-4 border-t border-slate-100 dark:border-slate-800 mt-4">
                 <button
-                  onClick={() => setActiveProjectView(proj)}
+                  onClick={() => {
+                    window.history.pushState(null, '', `/projects/${proj.id}`);
+                    window.dispatchEvent(new Event('popstate'));
+                  }}
                   className="px-2.5 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
                 >
                   View Details
                 </button>
                 {proj.status === 'Draft' ? (
                   <button
-                    onClick={() => handleStartEdit(proj)}
+                    onClick={() => {
+                      window.history.pushState(null, '', `/projects/${proj.id}`);
+                      window.dispatchEvent(new Event('popstate'));
+                    }}
                     className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
                   >
                     Continue Draft
                   </button>
                 ) : (
                   <button
-                    onClick={() => handleStartEdit(proj)}
+                    onClick={() => {
+                      window.history.pushState(null, '', `/projects/${proj.id}`);
+                      window.dispatchEvent(new Event('popstate'));
+                    }}
                     className="px-2.5 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
                   >
                     Edit

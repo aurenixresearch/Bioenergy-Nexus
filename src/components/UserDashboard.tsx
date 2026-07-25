@@ -24,7 +24,8 @@ import {
   Sparkles,
   CheckCircle2,
   X,
-  Pencil
+  Pencil,
+  User
 } from 'lucide-react';
 import { ConsultationInquiry, PartnershipSubmission, ResearchPaper } from '../types';
 import { RESEARCH_PAPERS } from '../data';
@@ -645,8 +646,104 @@ export default function UserDashboard({
     });
   });
 
+  if (editingPartnership) {
+    return (
+      <div className="bg-[#FAFDFB] dark:bg-slate-950 min-h-screen py-10 px-4 sm:px-6 lg:px-8 text-left" id="edit_partnership_full_workspace">
+        <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 rounded-3xl border border-slate-150 dark:border-slate-800 shadow-xl overflow-hidden p-6 sm:p-8">
+          <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
+            <div>
+              <span className="text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Alliance Portal</span>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white font-display">Edit Alliance Application</h3>
+            </div>
+            <button 
+              onClick={() => setEditingPartnership(null)}
+              className="p-1.5 hover:bg-slate-200/60 dark:hover:bg-slate-800 text-slate-400 rounded-full transition-colors cursor-pointer bg-transparent border-0"
+            >
+              <X className="w-4.5 h-4.5" />
+            </button>
+          </div>
+
+          <form onSubmit={handleUpdatePartnershipSubmit} className="space-y-4 text-xs font-sans">
+            {/* Partner Name */}
+            <div className="space-y-1 text-left">
+              <label className="font-bold text-slate-700 dark:text-slate-300 block">Partner / Organization Name</label>
+              <input
+                type="text"
+                value={editPartnerName}
+                onChange={(e) => setEditPartnerName(e.target.value)}
+                placeholder="e.g. University of Lagos, Clean Energy Corp"
+                className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded-xl focus:border-emerald-600 outline-none transition font-medium"
+                required
+              />
+            </div>
+
+            {/* Stakeholder Type */}
+            <div className="space-y-1 text-left">
+              <label className="font-bold text-slate-700 dark:text-slate-300 block">Stakeholder Group</label>
+              <select
+                value={editStakeholderType}
+                onChange={(e) => setEditStakeholderType(e.target.value as any)}
+                className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded-xl focus:border-emerald-600 outline-none transition font-medium"
+                required
+              >
+                <option value="University & Research Institute">University & Research Institute</option>
+                <option value="Energy Companies & Industry">Energy Companies & Industry</option>
+                <option value="Funding & Government Bodies">Funding & Government Bodies</option>
+                <option value="NGO & Civil Society">NGO & Civil Society</option>
+              </select>
+            </div>
+
+            {/* Collaboration Area */}
+            <div className="space-y-1 text-left">
+              <label className="font-bold text-slate-700 dark:text-slate-300 block">Collaboration Area</label>
+              <input
+                type="text"
+                value={editCollaborationArea}
+                onChange={(e) => setEditCollaborationArea(e.target.value)}
+                placeholder="e.g. Solar Energy Storage, Bio-waste Conversion"
+                className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded-xl focus:border-emerald-600 outline-none transition font-medium"
+                required
+              />
+            </div>
+
+            {/* Message / Interest Details */}
+            <div className="space-y-1 text-left">
+              <label className="font-bold text-slate-700 dark:text-slate-300 block">Application Details / Message</label>
+              <textarea
+                rows={4}
+                value={editMessage}
+                onChange={(e) => setEditMessage(e.target.value)}
+                placeholder="State the focus of your proposed collaboration, goals, and key objectives..."
+                className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded-xl focus:border-emerald-600 outline-none transition resize-none font-medium leading-relaxed"
+                required
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setEditingPartnership(null)}
+                className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold cursor-pointer transition text-center border-0"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isUpdatingPartnership}
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold cursor-pointer transition flex items-center justify-center gap-1.5 border-0"
+              >
+                {isUpdatingPartnership ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-[#FAFDFB] min-h-screen py-10" id="user_dashboard">
+    <div className="bg-[#FAFDFB] dark:bg-slate-950 min-h-screen py-10" id="user_dashboard">
       <div className="w-full px-4 sm:px-6 lg:px-8 space-y-8 font-bold">
         
         {/* Navigation Bar Refresh button */}
@@ -727,20 +824,21 @@ export default function UserDashboard({
 
               {/* High-fidelity Profile & Settings quick links */}
               <div className="flex flex-wrap items-center gap-2.5 pt-4">
-                {onNavigateToProfile && (
-                  <button
-                    onClick={onNavigateToProfile}
-                    className="px-4 py-2 bg-emerald-50 hover:bg-emerald-100/70 border border-emerald-200/50 rounded-xl text-xs font-bold text-emerald-800 flex items-center gap-2 cursor-pointer transition-all shadow-xs"
-                  >
-                    View Public Portfolio
-                  </button>
-                )}
+                <button
+                  onClick={onNavigateToProfile || (() => safeOnNavigate('profile'))}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-500/10 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shadow-xs"
+                  id="dashboard_btn_public_profile"
+                >
+                  <User className="w-4 h-4 text-white" />
+                  <span>View Public Profile</span>
+                </button>
                 {onNavigateToSettings && (
                   <button
                     onClick={onNavigateToSettings}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-500/10 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shadow-xs"
+                    className="px-4 py-2 bg-emerald-50 hover:bg-emerald-100/70 border border-emerald-200/50 text-emerald-800 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shadow-xs"
                   >
-                    Configure Preferences
+                    <Pencil className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Configure Preferences</span>
                   </button>
                 )}
               </div>
@@ -779,6 +877,7 @@ export default function UserDashboard({
             onCreateConsulting={() => safeOnNavigate('services')}
             onOpenMessages={() => safeOnNavigate('contact')}
             onNavigateToSettings={onNavigateToSettings || (() => {})}
+            onNavigateToProfile={onNavigateToProfile || (() => safeOnNavigate('profile'))}
           />
         </div>
 
@@ -870,7 +969,7 @@ export default function UserDashboard({
             </div>
 
             {/* 4. Scholar Verification & Badge Card (PRESERVED UNTOUCHED) */}
-            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-100 shadow-md space-y-6 text-left" id="scholar_verification_section">
+            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-100 space-y-6 text-left" id="scholar_verification_section">
               <div className="flex items-center justify-between border-b border-emerald-100 pb-4">
                 <div className="flex items-center gap-2">
                   <Award className="w-5 h-5 text-emerald-600" />
@@ -902,8 +1001,8 @@ export default function UserDashboard({
               {userProfile?.verificationStatus === 'verified' && (
                 <div className="space-y-6 text-left font-sans">
                   <div className="bg-emerald-50 border border-emerald-200 p-5 rounded-2xl flex items-start gap-4">
-                    <div className="p-3 bg-emerald-600 text-white rounded-xl shadow-md shrink-0">
-                      <Award className="w-6 h-6 animate-pulse" />
+                    <div className="p-3 bg-emerald-600 text-white rounded-xl shrink-0">
+                      <Award className="w-6 h-6" />
                     </div>
                     <div className="space-y-1.5">
                       <h4 className="text-sm font-bold text-emerald-950 flex items-center gap-1.5">
@@ -965,7 +1064,7 @@ export default function UserDashboard({
                 <div className="space-y-6 text-left font-sans">
                   <div className="bg-amber-50 border border-amber-200 p-5 rounded-2xl flex items-start gap-4">
                     <div className="p-3 bg-amber-500 text-white rounded-xl shrink-0">
-                      <Clock className="w-6 h-6 animate-spin" style={{ animationDuration: '3s' }} />
+                      <Clock className="w-6 h-6" />
                     </div>
                     <div className="space-y-1.5">
                       <h4 className="text-sm font-bold text-slate-900">Application Under Active Audit</h4>
@@ -993,16 +1092,14 @@ export default function UserDashboard({
                     <p className="text-xs text-emerald-800 leading-relaxed font-medium">
                       You are in sandbox/preview mode. You can instantly bypass the review delay and approve this application to see the "Verified" badge live!
                     </p>
-                    <motion.button
+                    <button
                       onClick={handleSimulateApproval}
                       disabled={isSubmittingApp}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer border-0 shadow-sm"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer border-0"
                     >
                       <Check className="w-3.5 h-3.5" />
                       {isSubmittingApp ? 'Approving...' : 'Approve Application Now'}
-                    </motion.button>
+                    </button>
                   </div>
                 </div>
               )}
@@ -1086,21 +1183,19 @@ export default function UserDashboard({
                       </div>
 
                       <div className="p-4 bg-amber-50/60 border border-amber-200 rounded-xl text-xs text-slate-600 leading-relaxed flex items-start gap-2.5">
-                        <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 animate-pulse" />
+                        <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                         <p>
                           Please upload at least <strong>{3 - myUploadedPapers.length} more study</strong> to fulfill the publishing criteria. Use the "Aurenix Repository" page to contribute a new document.
                         </p>
                       </div>
 
-                      <motion.button
+                      <button
                         onClick={onBackToLanding}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        className="inline-flex items-center gap-2 px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer border border-slate-200 shadow-xs text-left"
+                        className="inline-flex items-center gap-2 px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer border border-slate-200 text-left"
                       >
                         <ArrowLeft className="w-3.5 h-3.5" />
                         Return to Research Hub to Upload
-                      </motion.button>
+                      </button>
                     </div>
                   ) : (
                     <div className="space-y-4 pt-2">
@@ -1112,15 +1207,13 @@ export default function UserDashboard({
                       </div>
 
                       {!showAppForm ? (
-                        <motion.button
+                        <button
                           onClick={() => setShowAppForm(true)}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer border-0"
+                          className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer border-0"
                         >
                           <Unlock className="w-3.5 h-3.5" />
                           Apply for Scholar Verification Badge
-                        </motion.button>
+                        </button>
                       ) : (
                         <motion.form 
                           onSubmit={handleApplyVerification}
@@ -1257,15 +1350,7 @@ export default function UserDashboard({
           {/* RIGHT COLUMN: SECONDARY MODULES (4/12 widths) */}
           <div className="lg:col-span-4 space-y-8">
             
-            {/* 1. Notifications Panel */}
-            <NotificationsPanel
-              notifications={notifications}
-              onMarkAsRead={handleMarkNotifAsRead}
-              onDeleteNotification={handleDeleteNotif}
-              onClearAll={handleClearAllNotifs}
-            />
-
-            {/* 2. Upcoming Deadlines */}
+            {/* 1. Upcoming Deadlines */}
             <UpcomingDeadlines
               deadlines={deadlines}
               onAddDeadline={handleAddDeadline}
@@ -1366,106 +1451,7 @@ export default function UserDashboard({
 
       </div>
 
-      {/* Edit Alliance Application Modal */}
-      {editingPartnership && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto text-left" id="edit_alliance_modal">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full border border-slate-100 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] font-sans"
-          >
-            {/* Header */}
-            <div className="bg-slate-50 dark:bg-slate-850 border-b border-slate-100 dark:border-slate-800 p-5 flex justify-between items-center shrink-0">
-              <div>
-                <span className="text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Alliance Portal</span>
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-white font-display">Edit Alliance Application</h3>
-              </div>
-              <button 
-                onClick={() => setEditingPartnership(null)}
-                className="p-1.5 hover:bg-slate-200/60 dark:hover:bg-slate-800 text-slate-400 rounded-full transition-colors cursor-pointer bg-transparent border-0"
-              >
-                <X className="w-4.5 h-4.5" />
-              </button>
-            </div>
 
-            {/* Form Content */}
-            <form onSubmit={handleUpdatePartnershipSubmit} className="p-6 overflow-y-auto space-y-4 flex-grow text-xs">
-              {/* Partner Name */}
-              <div className="space-y-1 text-left">
-                <label className="font-bold text-slate-700 dark:text-slate-300 block">Partner / Organization Name</label>
-                <input
-                  type="text"
-                  value={editPartnerName}
-                  onChange={(e) => setEditPartnerName(e.target.value)}
-                  placeholder="e.g. University of Lagos, Clean Energy Corp"
-                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded-xl focus:border-emerald-600 outline-none transition font-medium"
-                  required
-                />
-              </div>
-
-              {/* Stakeholder Type */}
-              <div className="space-y-1 text-left">
-                <label className="font-bold text-slate-700 dark:text-slate-300 block">Stakeholder Group</label>
-                <select
-                  value={editStakeholderType}
-                  onChange={(e) => setEditStakeholderType(e.target.value as any)}
-                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded-xl focus:border-emerald-600 outline-none transition font-medium"
-                  required
-                >
-                  <option value="University & Research Institute">University & Research Institute</option>
-                  <option value="Energy Companies & Industry">Energy Companies & Industry</option>
-                  <option value="Funding & Government Bodies">Funding & Government Bodies</option>
-                  <option value="NGO & Civil Society">NGO & Civil Society</option>
-                </select>
-              </div>
-
-              {/* Collaboration Area */}
-              <div className="space-y-1 text-left">
-                <label className="font-bold text-slate-700 dark:text-slate-300 block">Collaboration Area</label>
-                <input
-                  type="text"
-                  value={editCollaborationArea}
-                  onChange={(e) => setEditCollaborationArea(e.target.value)}
-                  placeholder="e.g. Solar Energy Storage, Bio-waste Conversion"
-                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded-xl focus:border-emerald-600 outline-none transition font-medium"
-                  required
-                />
-              </div>
-
-              {/* Message / Interest Details */}
-              <div className="space-y-1 text-left">
-                <label className="font-bold text-slate-700 dark:text-slate-300 block">Application Details / Message</label>
-                <textarea
-                  rows={4}
-                  value={editMessage}
-                  onChange={(e) => setEditMessage(e.target.value)}
-                  placeholder="State the focus of your proposed collaboration, goals, and key objectives..."
-                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded-xl focus:border-emerald-600 outline-none transition resize-none font-medium leading-relaxed"
-                  required
-                />
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setEditingPartnership(null)}
-                  className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold cursor-pointer transition text-center border-0"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isUpdatingPartnership}
-                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold cursor-pointer transition flex items-center justify-center gap-1.5 border-0"
-                >
-                  {isUpdatingPartnership ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }

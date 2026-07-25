@@ -366,7 +366,10 @@ export default function Marketplace({ user, onSignIn, onSuccess }: MarketplacePr
                 </div>
                 
                 <button
-                  onClick={() => handleApplyClick(alliance)}
+                  onClick={() => {
+                    window.history.pushState(null, '', `/alliances/${alliance.id}`);
+                    window.dispatchEvent(new Event('popstate'));
+                  }}
                   className="w-full py-2.5 bg-slate-900 hover:bg-emerald-600 text-white hover:text-white rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   Apply and Upload Research Proposal

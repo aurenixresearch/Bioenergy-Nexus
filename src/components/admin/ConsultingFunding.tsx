@@ -166,13 +166,13 @@ export default function ConsultingFunding({
 
   // Filters
   const filteredConsulting = consulting.filter(c => {
-    const q = searchQuery.toLowerCase().trim();
-    return !q || c.researcher.toLowerCase().includes(q) || c.subject.toLowerCase().includes(q);
+    const q = (searchQuery || '').toLowerCase().trim();
+    return !q || (c.researcher || '').toLowerCase().includes(q) || (c.subject || '').toLowerCase().includes(q);
   });
 
   const filteredFunding = funding.filter(f => {
-    const q = searchQuery.toLowerCase().trim();
-    return !q || f.sponsor.toLowerCase().includes(q) || f.type.toLowerCase().includes(q);
+    const q = (searchQuery || '').toLowerCase().trim();
+    return !q || (f.sponsor || '').toLowerCase().includes(q) || (f.type || '').toLowerCase().includes(q);
   });
 
   return (

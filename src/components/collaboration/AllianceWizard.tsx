@@ -145,13 +145,13 @@ export default function AllianceWizard({ onClose, onSave }: AllianceWizardProps)
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto text-left" id="alliance_wizard_modal">
+    <div className="w-full text-left" id="alliance_wizard_container">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ type: 'spring', stiffness: 280, damping: 26 }}
-        className="bg-white rounded-3xl max-w-3xl w-full border border-slate-200 shadow-2xl overflow-hidden flex flex-col my-8 max-h-[90vh]"
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -15 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="bg-white dark:bg-slate-900 rounded-3xl w-full border border-slate-200/60 dark:border-slate-800 shadow-md overflow-hidden flex flex-col"
       >
         {/* Header */}
         <div className="bg-slate-50 border-b border-slate-100 p-6 flex justify-between items-center shrink-0">

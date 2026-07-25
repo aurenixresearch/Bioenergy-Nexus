@@ -120,9 +120,8 @@ export default function ContactSection() {
             <div className="space-y-4" id="contact_details_cards">
               
               {/* HQ Address Card */}
-              <motion.div 
-                whileHover={{ y: -2 }}
-                className="bg-white p-5 rounded-2xl border border-slate-200/50 shadow-xs flex gap-4"
+              <div 
+                className="bg-white p-5 rounded-2xl border border-slate-200/50 shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 flex gap-4"
               >
                 <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600 h-fit shrink-0">
                   <MapPin className="w-5 h-5" />
@@ -134,12 +133,11 @@ export default function ContactSection() {
                   </p>
                   <span className="inline-block text-[10px] text-slate-400 font-medium">Lagos State, Nigeria</span>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Email Card */}
-              <motion.div 
-                whileHover={{ y: -2 }}
-                className="bg-white p-5 rounded-2xl border border-slate-200/50 shadow-xs flex gap-4"
+              <div 
+                className="bg-white p-5 rounded-2xl border border-slate-200/50 shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 flex gap-4"
               >
                 <div className="p-3 bg-teal-50 rounded-xl text-teal-600 h-fit shrink-0">
                   <Mail className="w-5 h-5" />
@@ -154,12 +152,11 @@ export default function ContactSection() {
                   </a>
                   <span className="inline-block text-[10px] text-slate-400 font-medium">Inquiries and research submissions</span>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Phone Card */}
-              <motion.div 
-                whileHover={{ y: -2 }}
-                className="bg-white p-5 rounded-2xl border border-slate-200/50 shadow-xs flex gap-4"
+              <div 
+                className="bg-white p-5 rounded-2xl border border-slate-200/50 shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 flex gap-4"
               >
                 <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600 h-fit shrink-0">
                   <Phone className="w-5 h-5" />
@@ -174,12 +171,11 @@ export default function ContactSection() {
                   </a>
                   <span className="inline-block text-[10px] text-slate-400 font-medium">Monday – Friday, 8am – 6pm (WAT)</span>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Hours Card */}
-              <motion.div 
-                whileHover={{ y: -2 }}
-                className="bg-white p-5 rounded-2xl border border-slate-200/50 shadow-xs flex gap-4"
+              <div 
+                className="bg-white p-5 rounded-2xl border border-slate-200/50 shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 flex gap-4"
               >
                 <div className="p-3 bg-slate-100 rounded-xl text-slate-600 h-fit shrink-0">
                   <Clock className="w-5 h-5" />
@@ -191,7 +187,7 @@ export default function ContactSection() {
                   </p>
                   <span className="inline-block text-[10px] text-slate-400 font-medium">West Africa Time Zone</span>
                 </div>
-              </motion.div>
+              </div>
 
             </div>
 
@@ -362,16 +358,14 @@ export default function ContactSection() {
                     </div>
 
                     {/* Submit Button */}
-                    <motion.button
+                    <button
                       type="submit"
                       disabled={loading}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 cursor-pointer border-0"
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-bold shadow-xs hover:shadow-sm active:scale-[0.99] transition-all duration-200 disabled:opacity-50 cursor-pointer border-0"
                     >
                       <Send className="w-4 h-4" />
                       {loading ? 'Sending Message...' : 'Send Message'}
-                    </motion.button>
+                    </button>
 
                   </motion.form>
                 ) : (

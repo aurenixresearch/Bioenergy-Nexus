@@ -196,6 +196,132 @@
         }
       },
       "required": ["fullName", "email", "role", "country", "termsAccepted"]
+    },
+    "conversation": {
+      "title": "Conversation Thread",
+      "description": "Represents a direct 1-on-1 private messaging conversation between connected users.",
+      "type": "object",
+      "properties": {
+        "participants": {
+          "type": "array",
+          "description": "Array of participant user IDs (exactly 2 users)."
+        },
+        "lastMessage": {
+          "type": "string",
+          "description": "Text preview of the latest message."
+        },
+        "lastMessageTimestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of the latest message."
+        },
+        "lastMessageSenderId": {
+          "type": "string",
+          "description": "User ID of the last sender."
+        },
+        "connectionType": {
+          "type": "string",
+          "description": "Type of connection permitting messaging ('mutual_follow' or 'collaboration')."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when conversation was started."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when conversation was last updated."
+        }
+      },
+      "required": ["participants", "createdAt", "updatedAt"]
+    },
+    "message": {
+      "title": "Chat Message",
+      "description": "Individual message within a conversation thread.",
+      "type": "object",
+      "properties": {
+        "conversationId": {
+          "type": "string",
+          "description": "The unique ID of the parent conversation."
+        },
+        "senderId": {
+          "type": "string",
+          "description": "The unique ID of the sender user."
+        },
+        "senderName": {
+          "type": "string",
+          "description": "Display name of the sender."
+        },
+        "text": {
+          "type": "string",
+          "description": "Body text of the message."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the message was sent."
+        },
+        "readBy": {
+          "type": "array",
+          "description": "List of user IDs who have read this message."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["sent", "delivered", "read"],
+          "description": "Delivery and read status of the message."
+        },
+        "deliveredAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when message was delivered to recipient."
+        },
+        "readAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when message was read by recipient."
+        },
+        "deletedFor": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "User IDs for whom this message is hidden."
+        },
+        "isDeletedForEveryone": {
+          "type": "boolean",
+          "description": "Whether the message has been deleted for all participants."
+        },
+        "replyTo": {
+          "type": "object",
+          "description": "Quoted parent message details when replying."
+        }
+      },
+      "required": ["conversationId", "senderId", "text", "createdAt"]
+    },
+    "report": {
+      "title": "User Report",
+      "description": "Reports filed against users for moderation.",
+      "type": "object",
+      "properties": {
+        "reporterId": { "type": "string" },
+        "reportedUserId": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "reason": { "type": "string" },
+        "comments": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string" }
+      },
+      "required": ["reporterId", "reportedUserId", "reason", "createdAt"]
+    },
+    "block": {
+      "title": "Blocked User",
+      "description": "User block relationships.",
+      "type": "object",
+      "properties": {
+        "blockerId": { "type": "string" },
+        "blockedUserId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["blockerId", "blockedUserId", "createdAt"]
     }
   },
   "firestore": {
@@ -215,9 +341,25 @@
       "schema": "custom_paper",
       "description": "Member contributed research papers."
     },
+    "reports": {
+      "schema": "report",
+      "description": "Moderation reports submitted by users."
+    },
+    "blocks": {
+      "schema": "block",
+      "description": "Blocked user entries."
+    },
     "users": {
       "schema": "user_profile",
       "description": "Registered scholar profile details."
+    },
+    "conversations": {
+      "schema": "conversation",
+      "description": "Private messaging conversations."
+    },
+    "messages": {
+      "schema": "message",
+      "description": "Individual messages in private conversations."
     }
   }
 }

@@ -127,7 +127,7 @@ export default function AIRecommendations({
   };
 
   return (
-    <div className="space-y-6" id="ai_recommendations_section">
+    <div className="w-full space-y-6" id="ai_recommendations_section">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
         <div>
           <h3 className="text-lg font-display font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
@@ -141,21 +141,20 @@ export default function AIRecommendations({
       </div>
 
       {items.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <AnimatePresence mode="popLayout">
             {items.map((item) => (
               <motion.div
                 key={item.id}
-                layout
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 whileHover={{ y: -3 }}
-                className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between text-left relative overflow-hidden"
+                className="w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between text-left relative overflow-hidden"
               >
                 {/* Score Indicator Ring */}
                 <div className="absolute top-4 right-4 flex items-center gap-1">
-                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
                     <Sparkles className="w-2.5 h-2.5" />
                     {item.compatibility}% Match
                   </span>
@@ -192,7 +191,7 @@ export default function AIRecommendations({
                 <div className="flex items-center gap-1.5 pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
                   <button
                     onClick={() => onApplyAction(item)}
-                    className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold transition-all cursor-pointer border-0 shadow-sm"
+                    className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold transition-all cursor-pointer border-0 shadow-sm whitespace-nowrap"
                   >
                     {item.actionLabel}
                   </button>

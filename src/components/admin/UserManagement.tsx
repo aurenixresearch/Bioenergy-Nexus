@@ -98,12 +98,12 @@ export default function UserManagement({
   };
 
   const filteredUsers = users.filter(u => {
-    const query = searchQuery.toLowerCase().trim();
+    const query = (searchQuery || '').toLowerCase().trim();
     const matchesSearch = !query || 
-      u.fullName.toLowerCase().includes(query) ||
-      u.email.toLowerCase().includes(query) ||
-      u.institution.toLowerCase().includes(query) ||
-      u.uid.toLowerCase().includes(query);
+      (u.fullName || '').toLowerCase().includes(query) ||
+      (u.email || '').toLowerCase().includes(query) ||
+      (u.institution || '').toLowerCase().includes(query) ||
+      (u.uid || '').toLowerCase().includes(query);
 
     const matchesRole = !filterRole || 
       (filterRole === 'admin' ? (u.role === 'admin' || u.role === 'super_admin') : u.role === filterRole);
@@ -240,6 +240,83 @@ export default function UserManagement({
   // Unique lists for filtering dropdowns
   const countries = Array.from(new Set(users.map(u => u.country))).filter(Boolean);
   const institutions = Array.from(new Set(users.map(u => u.institution))).filter(Boolean);
+
+  if (viewingUser) {
+    return (
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 text-left" id="user_blueprint_details_view">
+        <div className="flex justify-between items-start border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center border border-slate-100 dark:border-slate-800 overflow-hidden shrink-0 select-none">
+              {viewingUser.avatar ? (
+                <img src={viewingUser.avatar} alt={viewingUser.fullName} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{viewingUser.fullName.charAt(0)}</span>
+              )}
+            </div>
+            <div>
+              <span className="block font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-1.5">
+                {viewingUser.fullName}
+                {viewingUser.verified && (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 fill-emerald-50 dark:text-emerald-400 dark:fill-emerald-950/10" />
+                )}
+              </span>
+              <span className="block text-xs text-slate-400 font-mono mt-0.5">{viewingUser.email}</span>
+              <span className="inline-block mt-2 px-2.5 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 text-[10px] font-bold rounded-full font-mono uppercase">
+                {viewingUser.role}
+              </span>
+            </div>
+          </div>
+          <button onClick={() => setViewingUser(null)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer transition border-0">
+            &larr; Back to list
+          </button>
+        </div>
+
+        <div className="pt-4 divide-y divide-slate-100 dark:divide-slate-800/80 text-xs" id="user_blueprint_details">
+          <div className="py-2.5 flex justify-between">
+            <span className="text-slate-400 font-mono">UID</span>
+            <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{viewingUser.uid}</span>
+          </div>
+          <div className="py-2.5 flex justify-between">
+            <span className="text-slate-400 font-mono">Country Location</span>
+            <span className="text-slate-700 dark:text-slate-300 font-bold">{viewingUser.country}</span>
+          </div>
+          <div className="py-2.5 flex justify-between">
+            <span className="text-slate-400 font-mono">Affiliation</span>
+            <span className="text-slate-700 dark:text-slate-300 font-bold">{viewingUser.institution || 'Individual Stakeholder'}</span>
+          </div>
+          <div className="py-2.5 flex justify-between">
+            <span className="text-slate-400 font-mono">Research Publications</span>
+            <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{viewingUser.researchCount} uploaded</span>
+          </div>
+          <div className="py-2.5 flex justify-between">
+            <span className="text-slate-400 font-mono">Collaborative Projects</span>
+            <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{viewingUser.projects} active</span>
+          </div>
+          <div className="py-2.5 flex justify-between">
+            <span className="text-slate-400 font-mono">Ecosystem Followers</span>
+            <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{viewingUser.followers} users</span>
+          </div>
+          <div className="py-2.5 flex justify-between">
+            <span className="text-slate-400 font-mono">Covenant Registration</span>
+            <span className="font-mono text-slate-700 dark:text-slate-300">{new Date(viewingUser.joinedDate).toLocaleDateString()}</span>
+          </div>
+          <div className="py-2.5 flex justify-between">
+            <span className="text-slate-400 font-mono">Account Integrity</span>
+            <span className={`font-mono font-bold uppercase ${viewingUser.status === 'active' ? 'text-emerald-600' : 'text-red-500'}`}>{viewingUser.status}</span>
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+          <button
+            onClick={() => setViewingUser(null)}
+            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer border-0"
+          >
+            Close Profile
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6" id="user_management_section">
@@ -705,95 +782,7 @@ export default function UserManagement({
             </form>
           </motion.div>
         </div>
-      )}
-
-      {/* User Details Viewing Modal */}
-      {viewingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4"
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 font-display">
-                Platform Profile Blueprint
-              </h3>
-              <button onClick={() => setViewingUser(null)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center border border-slate-100 dark:border-slate-800 overflow-hidden shrink-0 select-none">
-                {viewingUser.avatar ? (
-                  <img src={viewingUser.avatar} alt={viewingUser.fullName} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{viewingUser.fullName.charAt(0)}</span>
-                )}
-              </div>
-              <div>
-                <span className="block font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-1.5">
-                  {viewingUser.fullName}
-                  {viewingUser.verified && (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 fill-emerald-50 dark:text-emerald-400 dark:fill-emerald-950/10" />
-                  )}
-                </span>
-                <span className="block text-xs text-slate-400 font-mono mt-0.5">{viewingUser.email}</span>
-                <span className="inline-block mt-2 px-2.5 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 text-[10px] font-bold rounded-full font-mono uppercase">
-                  {viewingUser.role}
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-4 divide-y divide-slate-100 dark:divide-slate-800/80 text-xs" id="user_blueprint_details">
-              <div className="py-2.5 flex justify-between">
-                <span className="text-slate-400 font-mono">UID</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{viewingUser.uid}</span>
-              </div>
-              <div className="py-2.5 flex justify-between">
-                <span className="text-slate-400 font-mono">Country Location</span>
-                <span className="text-slate-700 dark:text-slate-300 font-bold">{viewingUser.country}</span>
-              </div>
-              <div className="py-2.5 flex justify-between">
-                <span className="text-slate-400 font-mono">Affiliation</span>
-                <span className="text-slate-700 dark:text-slate-300 font-bold">{viewingUser.institution || 'Individual Stakeholder'}</span>
-              </div>
-              <div className="py-2.5 flex justify-between">
-                <span className="text-slate-400 font-mono">Research Publications</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{viewingUser.researchCount} uploaded</span>
-              </div>
-              <div className="py-2.5 flex justify-between">
-                <span className="text-slate-400 font-mono">Collaborative Projects</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{viewingUser.projects} active</span>
-              </div>
-              <div className="py-2.5 flex justify-between">
-                <span className="text-slate-400 font-mono">Ecosystem Followers</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{viewingUser.followers} users</span>
-              </div>
-              <div className="py-2.5 flex justify-between">
-                <span className="text-slate-400 font-mono">Covenant Registration</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300">{new Date(viewingUser.joinedDate).toLocaleDateString()}</span>
-              </div>
-              <div className="py-2.5 flex justify-between">
-                <span className="text-slate-400 font-mono">Account Integrity</span>
-                <span className={`font-mono font-bold uppercase ${viewingUser.status === 'active' ? 'text-emerald-600' : 'text-red-500'}`}>{viewingUser.status}</span>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-              <button
-                onClick={() => setViewingUser(null)}
-                className="px-5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer"
-              >
-                Close Profile
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* 4. CHOOSE ADMIN ROLE MODAL FOR COMPREHENSIVE COMPLIANCE & VERIFICATION */}
+      )}      {/* 4. CHOOSE ADMIN ROLE MODAL FOR COMPREHENSIVE COMPLIANCE & VERIFICATION */}
       {promotingUserId && (() => {
         const userToPromote = users.find(u => u.uid === promotingUserId);
         if (!userToPromote) return null;

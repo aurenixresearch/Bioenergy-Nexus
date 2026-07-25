@@ -31,7 +31,9 @@ import {
   Map,
   BadgeAlert,
   SlidersHorizontal,
-  ChevronRight
+  ChevronRight,
+  MessageSquare,
+  AlertCircle
 } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { Researcher, Publication } from '../types';
@@ -42,13 +44,23 @@ import {
   incrementResearcherMetric, 
   incrementPublicationMetric 
 } from '../services/db';
+import { checkMessagingEligibility } from '../services/messagingDb';
 
 interface ExploreResearchersProps {
   user: FirebaseUser | null;
   onSignIn: () => void;
+  selectedResearcherId?: string | null;
+  onSelectResearcherId?: (id: string | null) => void;
+  onNavigateToMessages?: (targetUserId: string) => void;
 }
 
-export default function ExploreResearchers({ user, onSignIn }: ExploreResearchersProps) {
+export default function ExploreResearchers({ 
+  user, 
+  onSignIn,
+  selectedResearcherId: propSelectedResearcherId,
+  onSelectResearcherId,
+  onNavigateToMessages
+}: ExploreResearchersProps) {
   // Data State
   const [researchers, setResearchers] = useState<Researcher[]>([]);
   const [publications, setPublications] = useState<Publication[]>([]);
@@ -63,8 +75,16 @@ export default function ExploreResearchers({ user, onSignIn }: ExploreResearcher
   const [sortBy, setSortBy] = useState<'joined' | 'published' | 'citations' | 'views'>('joined');
   const [onlyVerified, setOnlyVerified] = useState(false);
 
-  // Active View State: list or profile ID
-  const [selectedResearcherId, setSelectedResearcherId] = useState<string | null>(null);
+  // Active View State: list or profile ID (synced with props or falls back to local state)
+  const [localSelectedResearcherId, setLocalSelectedResearcherId] = useState<string | null>(null);
+  const selectedResearcherId = propSelectedResearcherId !== undefined ? propSelectedResearcherId : localSelectedResearcherId;
+  const setSelectedResearcherId = (id: string | null) => {
+    if (onSelectResearcherId) {
+      onSelectResearcherId(id);
+    } else {
+      setLocalSelectedResearcherId(id);
+    }
+  };
 
   // Active Region Filter for "Around Africa" tab
   const [activeRegion, setActiveRegion] = useState<'All' | 'West' | 'East' | 'North' | 'Southern' | 'Central'>('All');
@@ -126,13 +146,41 @@ export default function ExploreResearchers({ user, onSignIn }: ExploreResearcher
   };
 
   // Role Badge Icon mapper
-  const getRoleIcon = (role: string) => {
-    const r = role.toLowerCase();
+  const getRoleIcon = (role?: string) => {
+    const r = (role || '').toLowerCase();
     if (r.includes('student')) return GraduationCap;
     if (r.includes('professor') || r.includes('lecturer')) return Award;
     if (r.includes('institution') || r.includes('university')) return Building2;
     if (r.includes('industry') || r.includes('professional')) return Briefcase;
     return BookOpen;
+  };
+
+  // Message Notice State
+  const [messageNotice, setMessageNotice] = useState<string | null>(null);
+
+  // Message Handler
+  const handleMessageResearcher = async (targetId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMessageNotice(null);
+
+    if (!user) {
+      onSignIn();
+      return;
+    }
+
+    if (user.uid === targetId) {
+      setMessageNotice("You cannot message yourself.");
+      return;
+    }
+
+    const eligibility = await checkMessagingEligibility(user.uid, targetId);
+    if (eligibility.eligible) {
+      if (onNavigateToMessages) {
+        onNavigateToMessages(targetId);
+      }
+    } else {
+      setMessageNotice(eligibility.reason || "Private messaging requires a mutual follow connection or an approved collaboration application.");
+    }
   };
 
   // Follow Researcher Handler
@@ -182,21 +230,22 @@ export default function ExploreResearchers({ user, onSignIn }: ExploreResearcher
   const filteredResearchers = useMemo(() => {
     return researchers.filter(r => {
       // Search Box matching
-      const query = searchQuery.toLowerCase().trim();
+      const query = (searchQuery || '').toLowerCase().trim();
       const matchesSearch = !query || 
-        r.fullName.toLowerCase().includes(query) ||
-        r.institution.toLowerCase().includes(query) ||
-        r.country.toLowerCase().includes(query) ||
-        r.researchInterests.some(i => i.toLowerCase().includes(query));
+        (r.fullName || '').toLowerCase().includes(query) ||
+        (r.institution || '').toLowerCase().includes(query) ||
+        (r.country || '').toLowerCase().includes(query) ||
+        (r.researchInterests || []).some(i => (i || '').toLowerCase().includes(query));
 
       // Role Filter
+      const userRoleLower = (r.role || '').toLowerCase();
       const matchesRole = selectedRole === 'All' || 
-        (selectedRole === 'Students' && r.role.toLowerCase().includes('student')) ||
-        (selectedRole === 'Researchers' && r.role.toLowerCase() === 'researcher') ||
-        (selectedRole === 'Lecturers' && (r.role.toLowerCase().includes('lecturer') || r.role.toLowerCase().includes('professor'))) ||
-        (selectedRole === 'Institutions' && r.role.toLowerCase().includes('institution')) ||
-        (selectedRole === 'Industry Professionals' && r.role.toLowerCase().includes('industry')) ||
-        (selectedRole === 'NGOs' && r.role.toLowerCase().includes('ngo'));
+        (selectedRole === 'Students' && userRoleLower.includes('student')) ||
+        (selectedRole === 'Researchers' && userRoleLower === 'researcher') ||
+        (selectedRole === 'Lecturers' && (userRoleLower.includes('lecturer') || userRoleLower.includes('professor'))) ||
+        (selectedRole === 'Institutions' && userRoleLower.includes('institution')) ||
+        (selectedRole === 'Industry Professionals' && userRoleLower.includes('industry')) ||
+        (selectedRole === 'NGOs' && userRoleLower.includes('ngo'));
 
       // Country Filter
       const matchesCountry = selectedCountry === 'All' || r.country === selectedCountry;
@@ -306,7 +355,7 @@ export default function ExploreResearchers({ user, onSignIn }: ExploreResearcher
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="w-full px-3 sm:px-6 lg:px-8 py-6 sm:py-10">
         
         {/* Render Single Researcher Profile View if Selected */}
         <AnimatePresence mode="wait">
@@ -379,28 +428,47 @@ export default function ExploreResearchers({ user, onSignIn }: ExploreResearcher
                   </div>
                 </div>
 
-                {/* Right Side: Follow / Connect actions */}
+                {/* Right Side: Follow / Connect / Message actions */}
                 <div className="w-full md:w-auto flex flex-col gap-2 shrink-0 border-t md:border-t-0 pt-4 md:pt-0 border-slate-100">
-                  <button
-                    onClick={(e) => handleFollowToggle(selectedResearcher.id, e)}
-                    className={`w-full md:w-52 flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
-                      user && selectedResearcher.followers.includes(user.uid)
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80 hover:bg-emerald-100'
-                        : 'bg-emerald-700 text-white hover:bg-emerald-800'
-                    }`}
-                  >
-                    {user && selectedResearcher.followers.includes(user.uid) ? (
-                      <>
-                        <UserCheck className="w-4 h-4 shrink-0" />
-                        Following Scientist
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="w-4 h-4 shrink-0" />
-                        Follow Scientist
-                      </>
-                    )}
-                  </button>
+                  <div className="flex flex-col sm:flex-row md:flex-col gap-2">
+                    <button
+                      onClick={(e) => handleFollowToggle(selectedResearcher.id, e)}
+                      className={`w-full md:w-52 flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
+                        user && selectedResearcher.followers.includes(user.uid)
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80 hover:bg-emerald-100'
+                          : 'bg-emerald-700 text-white hover:bg-emerald-800'
+                      }`}
+                    >
+                      {user && selectedResearcher.followers.includes(user.uid) ? (
+                        <>
+                          <UserCheck className="w-4 h-4 shrink-0" />
+                          Following Scientist
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4 shrink-0" />
+                          Follow Scientist
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={(e) => handleMessageResearcher(selectedResearcher.id, e)}
+                      className="w-full md:w-52 flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-all shadow-sm cursor-pointer"
+                      title="Send Private Message"
+                    >
+                      <MessageSquare className="w-4 h-4 shrink-0 text-emerald-400" />
+                      Message Scholar
+                    </button>
+                  </div>
+
+                  {/* Messaging Restriction Alert Notice */}
+                  {messageNotice && (
+                    <div className="p-2.5 bg-amber-50 border border-amber-200/80 rounded-xl flex items-start gap-2 text-[10px] text-amber-900 leading-snug max-w-xs mt-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600 mt-0.5" />
+                      <span>{messageNotice}</span>
+                    </div>
+                  )}
 
                   <div className="text-center text-[10px] font-mono text-slate-400 mt-1">
                     {selectedResearcher.followers.length} Followers • Joined {new Date(selectedResearcher.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short' })}
@@ -1043,7 +1111,6 @@ export default function ExploreResearchers({ user, onSignIn }: ExploreResearcher
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredResearchers.map((res) => (
                           <motion.div 
-                            layout
                             whileHover={{ y: -6, boxShadow: '0 10px 30px -10px rgba(0,0,0,0.06)' }}
                             key={res.id}
                             className="bg-white border border-slate-100/80 hover:border-emerald-500/30 rounded-3xl p-6 text-left transition-all relative overflow-hidden flex flex-col justify-between group cursor-pointer"

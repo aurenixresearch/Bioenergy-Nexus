@@ -190,6 +190,25 @@ export default function ResearchSection({
     );
   }
 
+  if (isModalOpen) {
+    return (
+      <div className="py-10 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-900 dark:text-slate-100 text-left relative" id="publish_wizard_full_workspace">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <button
+            onClick={() => setIsModalOpen(false)}
+            className="px-4 py-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold hover:bg-slate-50 transition cursor-pointer flex items-center gap-1.5"
+          >
+            &larr; Back to Research
+          </button>
+          <PublishWizard
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={handlePublishWizardSubmit}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <section className="py-20 bg-slate-50" id="research">
       <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -221,16 +240,14 @@ export default function ResearchSection({
             </p>
           </div>
 
-          <motion.button
+          <button
             onClick={() => user ? setIsModalOpen(true) : onSignIn()}
-            whileHover={{ scale: 1.03, y: -1 }}
-            whileTap={{ scale: 0.97 }}
-            className="flex items-center justify-center gap-2 px-5 py-3 bg-emerald-700 text-white hover:bg-emerald-800 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-150 shrink-0 cursor-pointer text-sm"
+            className="flex items-center justify-center gap-2 px-5 py-3 bg-emerald-700 text-white hover:bg-emerald-800 rounded-xl font-semibold shadow-xs hover:shadow-sm active:scale-[0.99] transition-all duration-200 shrink-0 cursor-pointer text-sm"
             id="contribute_research_btn"
           >
             <Plus className="w-4 h-4" />
             Publish a Research
-          </motion.button>
+          </button>
         </div>
 
         {/* Search and Filters panel */}
@@ -250,20 +267,18 @@ export default function ResearchSection({
           {/* Category Pills */}
           <div className="flex flex-wrap gap-2 pt-2">
             {categories.map((cat) => (
-              <motion.button
+              <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer border-0 ${
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-colors duration-200 cursor-pointer border-0 ${
                   selectedCategory === cat
-                    ? 'bg-emerald-700 text-white shadow-sm'
+                    ? 'bg-emerald-700 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
                 id={`category_filter_${cat.toLowerCase().replace(/\s+/g, '_')}`}
               >
                 {cat}
-              </motion.button>
+              </button>
             ))}
           </div>
         </div>
@@ -275,10 +290,9 @@ export default function ResearchSection({
               const isSaved = savedPaperIds.includes(paper.id);
               const isAnimating = animatingPaperIds.includes(paper.id);
               return (
-                <motion.div 
+                <div 
                   key={paper.id}
-                  whileHover={{ y: -6, scale: 1.01 }}
-                  className="bg-white rounded-2xl p-6 sm:p-8 flex flex-col justify-between hover:shadow-xl transition-shadow relative overflow-hidden group"
+                  className="bg-white rounded-2xl p-6 sm:p-8 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-250 relative overflow-hidden group border border-slate-100"
                   id={`paper_card_${paper.id}`}
                 >
                   {/* Category Accent Indicator */}
@@ -286,8 +300,8 @@ export default function ResearchSection({
 
                   <div 
                     onClick={() => {
-                      window.location.hash = `#/research/${paper.id}`;
-                      setSelectedPaper(paper);
+                      window.history.pushState(null, '', `/research/${paper.id}`);
+                      window.dispatchEvent(new Event('popstate'));
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                     className="space-y-4 text-left cursor-pointer group/details flex-grow"
@@ -330,23 +344,20 @@ export default function ResearchSection({
 
                   {/* Actions Bar */}
                   <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-4">
-                    <motion.button
+                    <button
                       onClick={() => handleDownload(paper)}
-                      whileHover={{ scale: 1.05 }}
                       className="inline-flex items-center gap-2 text-xs font-bold text-emerald-800 hover:text-emerald-950 transition-colors focus:outline-none cursor-pointer"
                       id={`download_btn_${paper.id}`}
                     >
                       <Download className="w-4 h-4 text-emerald-600" />
                       Download PDF
-                    </motion.button>
+                    </button>
 
-                    <motion.button
+                    <button
                       onClick={() => handleSaveToggle(paper.id)}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      className={`inline-flex items-center justify-center min-w-[105px] h-8.5 gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 cursor-pointer border-0 ${
+                      className={`inline-flex items-center justify-center min-w-[105px] h-8.5 gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer border-0 active:scale-[0.98] ${
                         isAnimating
-                          ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200/50'
+                          ? 'bg-emerald-600 text-white shadow-xs'
                           : isSaved
                             ? 'bg-red-50 text-red-600 hover:bg-red-100'
                             : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
@@ -381,9 +392,9 @@ export default function ResearchSection({
                           </motion.span>
                         )}
                       </AnimatePresence>
-                    </motion.button>
+                    </button>
                   </div>
-                </motion.div>
+                </div>
               );
             })
           ) : (
@@ -401,17 +412,7 @@ export default function ResearchSection({
           )}
         </div>
 
-        {/* Modal: PublishWizard Multi-step publish form */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" id="contribute_modal">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
-              <PublishWizard
-                onClose={() => setIsModalOpen(false)}
-                onSubmit={handlePublishWizardSubmit}
-              />
-            </div>
-          </div>
-        )}
+
 
       </div>
     </section>

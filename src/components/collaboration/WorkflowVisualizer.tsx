@@ -253,7 +253,7 @@ export default function WorkflowVisualizer({ onNavigateToConsole }: WorkflowVisu
               if (el) el.scrollIntoView({ behavior: 'smooth' });
             }
           }}
-          className="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-emerald-700 hover:shadow transition-all duration-200 cursor-pointer whitespace-nowrap"
+          className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-emerald-600 text-white rounded-xl text-[11px] sm:text-xs font-bold shadow-sm hover:bg-emerald-700 hover:shadow transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0"
         >
           Explore Alliances Now
         </button>

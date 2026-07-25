@@ -106,10 +106,9 @@ export default function ConsultationSection({
         {/* Services Bento-like Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch mb-20" id="services_grid">
           {CONSULTANCY_SERVICES.map((service, index) => (
-            <motion.div 
+            <div 
               key={service.id}
-              whileHover={{ y: -6, scale: 1.01 }}
-              className="bg-slate-50 p-8 rounded-3xl flex flex-col justify-between hover:shadow-lg transition-all duration-300 group relative"
+              className="bg-slate-50 p-8 rounded-3xl flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-250 group relative border border-slate-100"
               id={`service_card_${service.id}`}
             >
               <div className="space-y-6">
@@ -136,7 +135,7 @@ export default function ConsultationSection({
                   ))}
                 </ul>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
@@ -200,15 +199,13 @@ export default function ConsultationSection({
                       <p className="text-xs text-emerald-200 leading-relaxed">
                         <strong>Sign-In Required:</strong> To submit a consulting request and monitor its real-time review status, you must sign in with your Google account first.
                       </p>
-                      <motion.button
+                      <button
                         type="button"
                         onClick={onSignIn}
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        className="mt-3 flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow transition-colors cursor-pointer"
+                        className="mt-3 flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
                       >
                         Sign In with Google
-                      </motion.button>
+                      </button>
                     </div>
                   )}
 
@@ -256,12 +253,10 @@ export default function ConsultationSection({
                   </div>
 
                   {user && (
-                    <motion.button
+                    <button
                       type="submit"
                       disabled={loading}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-800/50 text-white rounded-xl font-bold transition-all shadow cursor-pointer text-sm border-0"
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-800/50 text-white rounded-xl font-bold transition-all shadow-xs active:scale-[0.99] cursor-pointer text-sm border-0"
                       id="submit_consult_btn"
                     >
                       {loading ? (
@@ -275,7 +270,7 @@ export default function ConsultationSection({
                           Submit Feasibility Inquiry
                         </>
                       )}
-                    </motion.button>
+                    </button>
                   )}
                 </form>
               )}
@@ -302,10 +297,9 @@ export default function ConsultationSection({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {activeInquiries.map((inq) => (
-                <motion.div 
+                <div 
                   key={inq.id} 
-                  whileHover={{ y: -4, scale: 1.01 }}
-                  className="p-5 bg-slate-50 rounded-2xl flex flex-col justify-between space-y-4 shadow-sm hover:shadow-md transition-shadow duration-300"
+                  className="p-5 bg-slate-50 rounded-2xl flex flex-col justify-between space-y-4 shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 border border-slate-100"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-2">
@@ -324,7 +318,7 @@ export default function ConsultationSection({
                     <span className="block text-xs font-semibold text-slate-700 font-mono">Org: {inq.organization}</span>
                     <p className="text-xs text-slate-600 line-clamp-2">{inq.message}</p>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>

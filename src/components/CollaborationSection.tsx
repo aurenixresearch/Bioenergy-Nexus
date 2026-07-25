@@ -10,7 +10,7 @@ interface CollaborationSectionProps {
 
 export default function CollaborationSection({ user, onSignIn, onNavigateToConsole }: CollaborationSectionProps) {
   return (
-    <div id="collaboration_wrapper">
+    <div id="collaboration_wrapper" className="w-full">
       <CollaborationHome user={user} onSignIn={onSignIn} onNavigateToConsole={onNavigateToConsole} />
     </div>
   );

@@ -196,10 +196,10 @@ export default function SavedStudiesPage({
             {filteredPapers.map((paper) => (
               <motion.div
                 key={paper.id}
-                layout
                 whileHover={{ y: -4 }}
                 onClick={() => {
-                  setSelectedPaper(paper);
+                  window.history.pushState(null, '', `/research/${paper.id}`);
+                  window.dispatchEvent(new Event('popstate'));
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-xs flex flex-col justify-between hover:shadow-md hover:border-emerald-100 transition-all duration-300 cursor-pointer text-left relative"

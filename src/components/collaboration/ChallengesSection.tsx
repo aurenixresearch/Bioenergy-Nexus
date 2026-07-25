@@ -100,10 +100,9 @@ export default function ChallengesSection({ user, onSignIn, onSuccess }: Challen
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {challenges.map((challenge) => (
-          <motion.div
+          <div
             key={challenge.id}
-            whileHover={{ y: -4 }}
-            className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/60 shadow-xs flex flex-col justify-between relative overflow-hidden group"
+            className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/60 shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between relative overflow-hidden group"
           >
             <div className="space-y-6">
               {/* Org Details & Badge */}
@@ -189,7 +188,7 @@ export default function ChallengesSection({ user, onSignIn, onSuccess }: Challen
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 

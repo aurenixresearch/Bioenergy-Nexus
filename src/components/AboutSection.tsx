@@ -136,7 +136,7 @@ export default function AboutSection() {
     <section className="bg-white" id="about_main_section">
       
       {/* 1. Core Corporate Identity & Mission */}
-      <div className="py-20 w-full px-4 sm:px-6 lg:px-8 border-b border-slate-100">
+      <div className="py-20 w-full max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 border-b border-slate-100">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
@@ -232,7 +232,7 @@ export default function AboutSection() {
 
       {/* 2. Interactive Focus Pillars of Excellence */}
       <div className="py-20 bg-slate-50/45 border-b border-slate-100" id="pillars_of_excellence_section">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">
@@ -359,122 +359,11 @@ export default function AboutSection() {
         </div>
       </div>
 
-      {/* 3. Meet the Founder: Specialized Credentials, Quote & Professional Bio */}
-      <div className="py-24 w-full px-4 sm:px-6 lg:px-8 border-b border-slate-100" id="founder_biography">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 sm:gap-16 items-start">
-          
-          {/* Founder Photo Panel & Quick Credentials */}
-          <div className="lg:col-span-5 flex flex-col items-center">
-            <div className="relative group w-full max-w-[320px]">
-              {/* Decorative background grid panel effect */}
-              <div className="absolute -inset-2 rounded-3xl bg-gradient-to-tr from-emerald-600 to-teal-600 opacity-20 blur-sm group-hover:opacity-30 transition duration-300"></div>
-              
-              {/* Image Border frame */}
-              <div className="relative bg-white p-4 rounded-[2.5rem] shadow-xl border border-slate-100 text-left">
-                <div className="aspect-[3/4] rounded-2xl overflow-hidden relative bg-slate-100 shadow-inner">
-                  <img 
-                    src="https://lh3.googleusercontent.com/d/1OJ7HkIbAG_YVcDeFM-F2mrzk13M4Cqp2" 
-                    alt="Filani Olalekan T." 
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover transform hover:scale-102 transition duration-500"
-                  />
-                  <div className="absolute top-4 right-4 bg-emerald-950/75 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-mono tracking-widest uppercase text-white font-semibold">
-                    Lagos, NG
-                  </div>
-                </div>
 
-                {/* Subtitle credentials underneath */}
-                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-3">
-                  <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl shrink-0">
-                    <UserCheck className="w-5 h-5" />
-                  </div>
-                  <div className="text-left leading-tight">
-                    <span className="block font-bold text-slate-800 text-sm font-display">Filani Olalekan T.</span>
-                    <span className="block text-xs text-slate-400 font-medium mt-1">Research & Operations Specialist</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick badges under portrait */}
-            <div className="mt-8 grid grid-cols-2 gap-3 w-full max-w-[320px]">
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-2xl text-center">
-                <span className="block text-lg font-mono font-extrabold text-emerald-700 leading-none">B.Sc.</span>
-                <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1.5">Industrial Chemistry</span>
-              </div>
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-2xl text-center">
-                <span className="block text-lg font-mono font-extrabold text-emerald-700 leading-none">10+</span>
-                <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1.5">Joint Field Audits</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Biography & Scientific Intent */}
-          <div className="lg:col-span-7 space-y-6 text-left">
-            <div className="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-bold uppercase tracking-wider font-mono">
-              <Award className="w-4 h-4 text-emerald-600" />
-              Lead Architect & Founder
-            </div>
-            
-            <h3 className="text-3xl sm:text-4xl font-display font-extrabold text-slate-900 leading-tight">
-              {FOUNDER_INFO.name}
-            </h3>
-            
-            <p className="text-[11px] font-mono uppercase tracking-widest text-emerald-600 font-bold -mt-3">
-              {FOUNDER_INFO.title}
-            </p>
-
-            {/* Curated bio layout */}
-            <div className="space-y-4 text-slate-600 text-sm sm:text-base leading-relaxed font-sans">
-              <p>
-                {FOUNDER_INFO.bio}
-              </p>
-              <p className="text-xs sm:text-sm text-slate-500 italic border-l-2 border-emerald-500/65 pl-4 py-1 bg-slate-50/50 rounded-r-lg">
-                "Whether conducting detailed gas composition analysis or designing safety relief valves for municipal digesters, our primary focus is on ensuring waste-to-energy technologies are safe, financially sound, and custom-tailored specifically to local environmental conditions."
-              </p>
-            </div>
-
-            {/* Accomplishments list */}
-            <div className="pt-6 border-t border-slate-100 space-y-4">
-              <span className="block text-xs font-bold uppercase tracking-widest text-slate-400 font-display">
-                Key Professional Milestones
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-                <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-700">
-                  <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
-                    ✓
-                  </div>
-                  <span className="font-medium">MMA Airport Biodigester Design</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-700">
-                  <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
-                    ✓
-                  </div>
-                  <span className="font-medium">National NSCDC Renewables Advisor</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-700">
-                  <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
-                    ✓
-                  </div>
-                  <span className="font-medium">Industrial Chemistry Process Specialist</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-700">
-                  <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
-                    ✓
-                  </div>
-                  <span className="font-medium">10+ Regional Environmental Reviews</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </div>
 
       {/* 4. Professional Milestone Timeline & Journey */}
       <div className="py-24 bg-slate-50/50" id="experience_timeline">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">

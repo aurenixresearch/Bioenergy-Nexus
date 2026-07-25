@@ -10,7 +10,7 @@ interface FooterProps {
 export default function Footer({ onNavClick }: FooterProps) {
   return (
     <footer className="bg-slate-950 text-slate-200 pt-16 pb-8 text-left" id="footer">
-      <div className="w-full px-4 sm:px-6 lg:px-8 space-y-12">
+      <div className="w-full max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Top footer row */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 pb-12">
@@ -52,8 +52,10 @@ export default function Footer({ onNavClick }: FooterProps) {
               {[
                 { label: 'Home', id: 'home' },
                 { label: 'About Us', id: 'about' },
-                { label: 'Services & Advisory', id: 'services' },
+                { label: 'Research Areas', id: 'research-areas' },
+                { label: 'Insights Hub', id: 'insights' },
                 { label: 'Research Repository', id: 'research' },
+                { label: 'Services & Advisory', id: 'services' },
                 { label: 'Collaboration Network', id: 'collaboration' },
                 { label: 'Contact Us', id: 'contact' }
               ].map((link) => (
@@ -107,39 +109,33 @@ export default function Footer({ onNavClick }: FooterProps) {
           </p>
 
           <div className="flex items-center gap-4">
-            <motion.a 
+            <a 
               href={CONTACT_INFO.socials.linkedin} 
               target="_blank" 
               rel="noopener noreferrer" 
-              whileHover={{ y: -3, scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 bg-slate-900 text-slate-400 hover:text-white rounded-lg transition-colors border-0"
+              className="p-2 bg-slate-900 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-all duration-200 border-0"
               title="LinkedIn"
             >
               <Linkedin className="w-4 h-4" />
-            </motion.a>
-            <motion.a 
+            </a>
+            <a 
               href={CONTACT_INFO.socials.twitter} 
               target="_blank" 
               rel="noopener noreferrer" 
-              whileHover={{ y: -3, scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 bg-slate-900 text-slate-400 hover:text-white rounded-lg transition-colors border-0"
+              className="p-2 bg-slate-900 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-all duration-200 border-0"
               title="Twitter"
             >
               <Twitter className="w-4 h-4" />
-            </motion.a>
-            <motion.a 
+            </a>
+            <a 
               href={CONTACT_INFO.socials.github} 
               target="_blank" 
               rel="noopener noreferrer" 
-              whileHover={{ y: -3, scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 bg-slate-900 text-slate-400 hover:text-white rounded-lg transition-colors border-0"
+              className="p-2 bg-slate-900 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-all duration-200 border-0"
               title="GitHub"
             >
               <Github className="w-4 h-4" />
-            </motion.a>
+            </a>
           </div>
         </div>
 

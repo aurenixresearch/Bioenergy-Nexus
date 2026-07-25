@@ -847,7 +847,7 @@ export default function AdminPortal({
       return true;
     }
 
-    const roleConfig = adminRoles.find(r => r.roleName.toLowerCase() === activeRoleName.toLowerCase());
+    const roleConfig = adminRoles.find(r => (r.roleName || '').toLowerCase() === (activeRoleName || '').toLowerCase());
     if (!roleConfig) {
       return true; // Default fallback for dev/testing robustness
     }
@@ -896,37 +896,37 @@ export default function AdminPortal({
 
   // Global search engine across categories
   const handleGlobalSearch = () => {
-    const q = globalQuery.toLowerCase().trim();
+    const q = (globalQuery || '').toLowerCase().trim();
     if (!q) return [];
 
     const matches: { title: string; category: string; tab: AdminTab }[] = [];
 
     adminUsers.forEach(u => {
-      if (u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)) {
-        matches.push({ title: `User: ${u.fullName} (${u.email})`, category: 'User Management', tab: 'users' });
+      if ((u.fullName || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)) {
+        matches.push({ title: `User: ${u.fullName || 'User'} (${u.email || ''})`, category: 'User Management', tab: 'users' });
       }
     });
 
     adminResearch.forEach(r => {
-      if (r.title.toLowerCase().includes(q) || r.author.toLowerCase().includes(q)) {
+      if ((r.title || '').toLowerCase().includes(q) || (r.author || '').toLowerCase().includes(q)) {
         matches.push({ title: `Research: ${r.title}`, category: 'Research Repository', tab: 'research' });
       }
     });
 
     adminProjects.forEach(p => {
-      if (p.title.toLowerCase().includes(q) || p.researcher.toLowerCase().includes(q)) {
+      if ((p.title || '').toLowerCase().includes(q) || (p.researcher || '').toLowerCase().includes(q)) {
         matches.push({ title: `Project: ${p.title}`, category: 'Innovation Projects', tab: 'projects' });
       }
     });
 
     adminOrgs.forEach(o => {
-      if (o.name.toLowerCase().includes(q)) {
+      if ((o.name || '').toLowerCase().includes(q)) {
         matches.push({ title: `Organization: ${o.name}`, category: 'Organizations', tab: 'organizations' });
       }
     });
 
     adminFunding.forEach(f => {
-      if (f.sponsor.toLowerCase().includes(q)) {
+      if ((f.sponsor || '').toLowerCase().includes(q)) {
         matches.push({ title: `Funding: ${f.sponsor} (${f.amount})`, category: 'Funding & Grants', tab: 'funding' });
       }
     });

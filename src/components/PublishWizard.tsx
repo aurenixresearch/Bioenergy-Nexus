@@ -264,8 +264,8 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full h-[90vh] md:h-[80vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+    <div className="w-full text-left" id="publish_wizard_container">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl w-full flex flex-col overflow-hidden border border-slate-200/60 dark:border-slate-800">
         
         {/* Header bar */}
         <div className="px-6 py-4.5 bg-slate-950 text-white flex items-center justify-between shrink-0">

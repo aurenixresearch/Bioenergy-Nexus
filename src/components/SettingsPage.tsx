@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getUserProfile, createUserProfile } from '../services/db';
+import { openCookiePreferences } from './CookieConsent';
 
 interface SettingsPageProps {
   user: FirebaseUser;
@@ -196,7 +197,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
   ];
 
   return (
-    <div className="bg-[#FAFDFB] text-slate-800 min-h-screen text-left" id="settings_system_view">
+    <div className="w-full bg-[#FAFDFB] text-slate-800 min-h-screen text-left" id="settings_system_view">
       
       {/* Alert Notification */}
       <AnimatePresence>
@@ -222,7 +223,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
       </AnimatePresence>
 
       {/* Main Layout Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-transparent">
+      <div className="w-full px-3 sm:px-6 lg:px-8 py-6 sm:py-10 bg-transparent">
         
         {/* Top Header Row */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
@@ -579,6 +580,21 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                           </button>
                         </div>
                       ))}
+                    </div>
+
+                    {/* Cookie & Consent Preferences Block */}
+                    <div className="pt-5 border-t border-emerald-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="space-y-0.5 text-left">
+                        <h4 className="font-extrabold text-emerald-900">Privacy & Cookie Preferences</h4>
+                        <p className="text-[11px] text-slate-500">Manage essential, analytics, and preference cookies saved on your device.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={openCookiePreferences}
+                        className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0"
+                      >
+                        Manage Cookie Preferences
+                      </button>
                     </div>
                   </div>
                 </div>

@@ -28,8 +28,37 @@ export default function OperationalConsole({ user, onSignIn }: OperationalConsol
     }, 5000);
   };
 
+  if (activeWorkspace) {
+    return (
+      <div className="bg-slate-50 min-h-screen text-slate-900 pb-20 relative text-left" id="operational_workspace_full">
+        <AnimatePresence>
+          {notificationMsg && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="fixed top-24 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-6 py-3.5 rounded-full z-50 flex items-center gap-3 shadow-2xl border border-emerald-500/50 text-xs sm:text-sm font-bold"
+            >
+              <CheckCircle2 className="w-5 h-5 animate-pulse text-white shrink-0" />
+              <span>{notificationMsg}</span>
+              <button onClick={() => setNotificationMsg('')} className="p-1 hover:bg-emerald-700/60 rounded-full cursor-pointer bg-transparent border-0">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <WorkspaceView 
+          workspace={activeWorkspace}
+          user={user}
+          onBack={() => setActiveWorkspace(null)}
+          onSuccess={triggerSuccessAlert}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-900 pb-20 relative text-left" id="operational_console_container">
+    <div className="w-full bg-slate-50 min-h-screen text-slate-900 pb-20 relative text-left" id="operational_console_container">
       
       {/* Banner / Notification Alert */}
       <AnimatePresence>
@@ -42,38 +71,19 @@ export default function OperationalConsole({ user, onSignIn }: OperationalConsol
           >
             <CheckCircle2 className="w-5 h-5 animate-pulse text-white shrink-0" />
             <span>{notificationMsg}</span>
-            <button onClick={() => setNotificationMsg('')} className="p-1 hover:bg-emerald-700/60 rounded-full cursor-pointer">
+            <button onClick={() => setNotificationMsg('')} className="p-1 hover:bg-emerald-700/60 rounded-full cursor-pointer bg-transparent border-0">
               <X className="w-3.5 h-3.5" />
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* RENDER ACTIVE COLLABORATION WORKSPACE OVERLAY */}
-      <AnimatePresence>
-        {activeWorkspace && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-50 z-40 overflow-y-auto"
-          >
-            <WorkspaceView 
-              workspace={activeWorkspace}
-              user={user}
-              onBack={() => setActiveWorkspace(null)}
-              onSuccess={triggerSuccessAlert}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Header Info */}
-      <section className="bg-white text-slate-900 border-b border-slate-100 relative overflow-hidden py-16" id="console_hero">
+      <section className="bg-white text-slate-900 border-b border-slate-100 relative overflow-hidden py-10 sm:py-16" id="console_hero">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-60"></div>
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-100/40 rounded-full blur-3xl"></div>
         
-        <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10 space-y-4 max-w-7xl mx-auto">
+        <div className="w-full px-3 sm:px-6 lg:px-8 relative z-10 space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200/60 rounded-full text-xs font-semibold uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
             Aurenix Management Console
@@ -81,14 +91,14 @@ export default function OperationalConsole({ user, onSignIn }: OperationalConsol
           <h1 className="text-3xl sm:text-4xl font-display font-extrabold tracking-tight text-slate-900 leading-tight">
             Operational Console
           </h1>
-          <p className="text-sm text-slate-600 max-w-3xl leading-relaxed">
+          <p className="text-sm text-slate-600 max-w-4xl leading-relaxed">
             Manage your project workspaces, research matches, challenges, and view active grant funding options. Toggle your role persona below to access specialized workflows.
           </p>
         </div>
       </section>
 
       {/* DASHBOARD PERSONA AREA AND SWITCHER */}
-      <section className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-6 sm:py-8 w-full px-3 sm:px-6 lg:px-8">
         
         {/* Switcher Header */}
         <div className="bg-white border border-slate-200/60 p-5 rounded-3xl shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">

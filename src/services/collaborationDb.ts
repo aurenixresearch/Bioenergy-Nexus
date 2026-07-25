@@ -232,9 +232,9 @@ export async function getApplications(userId?: string, isStakeholder?: boolean):
 
   try {
     const collRef = collection(db, 'applications');
-    const q = isStakeholder 
-      ? collRef // Stakeholder gets all submitted apps (in real scenarios filtered by organization opportunity ownership)
-      : query(collRef, where('applicantId', '==', userId));
+    const q = (userId && !isStakeholder)
+      ? query(collRef, where('applicantId', '==', userId))
+      : collRef;
     const snap = await getDocs(q);
     const list: Application[] = [];
     snap.forEach(docSnap => {

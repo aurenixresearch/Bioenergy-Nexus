@@ -1378,7 +1378,7 @@ export default function SignInPage({
       </div>
 
       {/* RIGHT PORTION: Beautiful information portal view */}
-      <div className="hidden md:flex w-[55%] bg-[url('https://lh3.googleusercontent.com/d/10ZBdCHZ037o-3k7c2VnRZGT8XXbKdzdy')] bg-cover bg-center bg-no-repeat border-l border-slate-200/60 p-10 flex-col items-center justify-center relative overflow-hidden select-none" id="signin_info_side">
+      <div className="hidden md:flex w-[55%] bg-[url('https://lh3.googleusercontent.com/d/10ZBdCHZ037o-3k7c2VnRZGT8XXbKdzdy')] bg-cover bg-center bg-no-repeat border-l border-slate-200/60 p-10 pt-[30px] flex-col items-center justify-start relative overflow-hidden select-none" id="signin_info_side">
         
         {/* Soft blur overlay over the background image */}
         <div className="absolute inset-0 bg-white/10 backdrop-blur-[3px] z-0 pointer-events-none" id="signin_right_blur_overlay"></div>
@@ -1391,7 +1391,7 @@ export default function SignInPage({
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-200/25 rounded-full filter blur-3xl pointer-events-none z-0"></div>
 
         {/* Content container */}
-        <div className="max-w-lg w-full text-center space-y-10 z-10" id="signin_portal_info">
+        <div className="max-w-lg w-full text-center space-y-8 lg:space-y-10 z-10 pt-[30px] mt-0" id="signin_portal_info">
           
           {/* Top Pill Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100/80 border border-emerald-200/60 rounded-full text-[10px] font-bold text-emerald-800 uppercase tracking-widest shadow-xs" id="signin_portal_badge">

@@ -8,8 +8,8 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider, db } from './firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { getSavedPaperIds, getUserInquiries, getUserPartnerships, getUserProfile, isDemoModeActive } from './services/db';
-import { ConsultationInquiry, PartnershipSubmission } from './types';
+import { getSavedPaperIds, getUserInquiries, getUserPartnerships, getUserProfile, isDemoModeActive, getCustomPapers, getInnovationProjects, updateInnovationProject, savePaper, unsavePaper } from './services/db';
+import { ConsultationInquiry, PartnershipSubmission, ResearchPaper } from './types';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, ShieldAlert, Sparkles, X, UserCheck, KeyRound, HelpCircle, BookOpen, Users, HeartHandshake, Leaf, Award, Quote, Building, CheckCircle2, FlaskConical } from 'lucide-react';
 
@@ -21,6 +21,9 @@ import FloatingAside from './components/FloatingAside';
 import Hero from './components/Hero';
 import AboutSection from './components/AboutSection';
 import ResearchSection from './components/ResearchSection';
+import ResearchDetail from './components/ResearchDetail';
+import ProjectDetailsPage from './components/ProjectDetailsPage';
+import AllianceDetailsPage from './components/AllianceDetailsPage';
 import SavedStudiesPage from './components/SavedStudiesPage';
 import ConsultationSection from './components/ConsultationSection';
 import CollaborationSection from './components/CollaborationSection';
@@ -33,20 +36,189 @@ import OperationalConsole from './components/collaboration/OperationalConsole';
 import ProfilePage from './components/ProfilePage';
 import SettingsPage from './components/SettingsPage';
 import AdminPortal from './components/admin/AdminPortal';
+import CookieConsent from './components/CookieConsent';
+import MessagesPage from './components/MessagesPage';
+import NotificationsPage from './components/NotificationsPage';
+import SeoManager from './components/seo/SeoManager';
+import InsightsHub from './components/InsightsHub';
+import ResearchAreasPage from './components/ResearchAreasPage';
+import NotFoundPage from './components/NotFoundPage';
+import { RESEARCH_PAPERS } from './data';
+import { generateResearchPDF } from './utils/pdfGenerator';
 
-export default function App() {
-  // Sync sessionStorage for loading animation on fresh load or reload
-  if (typeof window !== 'undefined') {
-    sessionStorage.removeItem('nexus_system_initialized');
+function parseUrl() {
+  if (typeof window === 'undefined') {
+    return { view: 'initializing' as const, researcherId: null as string | null, paperId: null as string | null, projectId: null as string | null, allianceId: null as string | null, insightSlug: null as string | null, areaSlug: null as string | null };
+  }
+  
+  const isInitialized = sessionStorage.getItem('nexus_system_initialized') === 'true';
+  if (!isInitialized) {
+    return { view: 'initializing' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+  }
+  
+  const path = window.location.pathname;
+  
+  // 1. /researchers/:researcherId
+  let match = path.match(/^\/researchers\/([^/]+)$/);
+  if (match) {
+    return { view: 'researchers' as const, researcherId: match[1], paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+  }
+  
+  // 2. /researchers
+  if (path === '/researchers') {
+    return { view: 'researchers' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+  }
+  
+  // 3. /research/:paperId
+  match = path.match(/^\/research\/([^/]+)$/);
+  if (match) {
+    return { view: 'research' as const, researcherId: null, paperId: match[1], projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+  }
+  
+  // 4. /research
+  if (path === '/research') {
+    return { view: 'research' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
   }
 
+  // 5. /projects/:projectId
+  match = path.match(/^\/projects\/([^/]+)$/);
+  if (match) {
+    return { view: 'dashboard' as const, researcherId: null, paperId: null, projectId: match[1], allianceId: null, insightSlug: null, areaSlug: null };
+  }
+
+  // 6. /alliances/:allianceId
+  match = path.match(/^\/alliances\/([^/]+)$/);
+  if (match) {
+    return { view: 'collaboration' as const, researcherId: null, paperId: null, projectId: null, allianceId: match[1], insightSlug: null, areaSlug: null };
+  }
+
+  // 7. /messages/:targetUserId
+  match = path.match(/^\/messages\/([^/]+)$/);
+  if (match) {
+    return { view: 'messages' as const, researcherId: match[1], paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+  }
+
+  // 8. /insights/:slug
+  match = path.match(/^\/insights\/([^/]+)$/);
+  if (match) {
+    return { view: 'insights' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: match[1], areaSlug: null };
+  }
+  if (path === '/insights') {
+    return { view: 'insights' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+  }
+
+  // 9. /research-areas/:areaSlug
+  match = path.match(/^\/research-areas\/([^/]+)$/);
+  if (match) {
+    return { view: 'research-areas' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: match[1] };
+  }
+  if (path === '/research-areas') {
+    return { view: 'research-areas' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+  }
+
+  // Root homepage
+  if (path === '/' || path === '') {
+    return { view: 'home' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+  }
+
+  // Standard views
+  const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'initializing', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas'];
+  const viewName = path.substring(1);
+  if (views.includes(viewName)) {
+    return { view: viewName as any, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+  }
+  
+  return { view: 'notfound' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+}
+
+export default function App() {
   // Auth state
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Layout View: 'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers' | 'console' | 'profile' | 'settings' | 'onboarding' | 'admin'
-  const [currentView, setView] = useState<'home' | 'about' | 'services' | 'research' | 'collaboration' | 'dashboard' | 'contact' | 'saved' | 'signin' | 'initializing' | 'researchers' | 'console' | 'profile' | 'settings' | 'onboarding' | 'admin'>('initializing');
+  // Routing State Manager
+  const [routeState, setRouteState] = useState(() => parseUrl());
+  const currentView = routeState.view;
+  const selectedResearcherId = routeState.researcherId;
+  const selectedPaperId = routeState.paperId;
+  const selectedProjectId = routeState.projectId;
+  const selectedAllianceId = routeState.allianceId;
+  const selectedInsightSlug = routeState.insightSlug;
+  const selectedAreaSlug = routeState.areaSlug;
+
+  const [allPapers, setAllPapers] = useState<ResearchPaper[]>([]);
+  const [dbProjects, setDbProjects] = useState<any[]>([]);
+
+  const navigateTo = (path: string) => {
+    window.history.pushState(null, '', path);
+    setRouteState(parseUrl());
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const setView = (view: string) => {
+    let effectiveView = view;
+    if (effectiveView === 'home' && user) {
+      effectiveView = 'dashboard';
+    }
+
+    if (effectiveView === 'initializing') {
+      setRouteState({ view: 'initializing', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null });
+      return;
+    }
+    const pathMap: Record<string, string> = {
+      home: '/',
+      about: '/about',
+      services: '/services',
+      research: '/research',
+      collaboration: '/collaboration',
+      dashboard: '/dashboard',
+      contact: '/contact',
+      saved: '/saved',
+      signin: '/signin',
+      researchers: '/researchers',
+      console: '/console',
+      profile: '/profile',
+      settings: '/settings',
+      onboarding: '/onboarding',
+      admin: '/admin',
+      messages: '/messages',
+      notifications: '/notifications',
+      insights: '/insights',
+      'research-areas': '/research-areas'
+    };
+
+    const currentPath = window.location.pathname;
+    const isCurrentSubpathOfView = (effectiveView === 'research' && currentPath.startsWith('/research/')) ||
+                                   (effectiveView === 'researchers' && currentPath.startsWith('/researchers/')) ||
+                                   (effectiveView === 'dashboard' && currentPath.startsWith('/projects/')) ||
+                                   (effectiveView === 'collaboration' && currentPath.startsWith('/alliances/')) ||
+                                   (effectiveView === 'insights' && currentPath.startsWith('/insights/')) ||
+                                   (effectiveView === 'research-areas' && currentPath.startsWith('/research-areas/'));
+
+    if (isCurrentSubpathOfView) {
+      navigateTo(currentPath);
+    } else {
+      navigateTo(pathMap[effectiveView] || '/');
+    }
+  };
+
+  // Ensure logged-in users visiting root '/' or 'home' are directed to the user dashboard
+  useEffect(() => {
+    if (user && routeState.view === 'home' && !authLoading) {
+      window.history.replaceState(null, '', '/dashboard');
+      setRouteState(parseUrl());
+    }
+  }, [user, routeState.view, authLoading]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setRouteState(parseUrl());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const [userProfile, setUserProfileState] = useState<any | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
@@ -79,11 +251,41 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Load custom papers & user projects on load / auth state changes
   useEffect(() => {
-    if (window.location.pathname === '/admin') {
-      setView('admin');
+    async function loadAllPapersAndProjects() {
+      try {
+        const custom = await getCustomPapers();
+        setAllPapers([...RESEARCH_PAPERS, ...custom]);
+      } catch (err) {
+        console.error('Error loading papers:', err);
+        setAllPapers(RESEARCH_PAPERS);
+      }
+      
+      if (user) {
+        try {
+          const projs = await getInnovationProjects(user.uid);
+          setDbProjects(projs);
+        } catch (err) {
+          console.error('Error loading projects:', err);
+        }
+      } else {
+        setDbProjects([]);
+      }
     }
-  }, []);
+    loadAllPapersAndProjects();
+  }, [user]);
+
+  const handleUpdateProjectInApp = async (id: string, fields: Partial<any>) => {
+    if (!user) return;
+    await updateInnovationProject(user.uid, id, fields);
+    try {
+      const projs = await getInnovationProjects(user.uid);
+      setDbProjects(projs);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // Firestore Saved State & Submissions
   const [savedPaperIds, setSavedPaperIds] = useState<string[]>([]);
@@ -144,7 +346,8 @@ export default function App() {
         setActivePartnerships([]);
         setUserProfileState(null);
         // Keep the view intact unless we're on dashboard (which requires login)
-        setView(prev => prev === 'dashboard' || prev === 'onboarding' ? 'home' : prev);
+        const prevView = routeState.view;
+        setView(prevView === 'dashboard' || prevView === 'onboarding' ? 'home' : prevView);
       };
 
       handleAuthChange();
@@ -282,7 +485,8 @@ export default function App() {
       } else {
         setNeedsOnboarding(false);
         // Do not force route to dashboard if current view is already 'admin'
-        setView(prev => (prev === 'admin') ? 'admin' : ((prev === 'onboarding' || prev === 'signin' || prev === 'home' || prev === 'initializing') ? 'dashboard' : prev));
+        const prevView = routeState.view;
+        setView(prevView === 'admin' ? 'admin' : ((prevView === 'onboarding' || prevView === 'signin' || prevView === 'home' || prevView === 'initializing') ? 'dashboard' : prevView));
       }
     } catch (err) {
       console.error('Error synchronizing Firestore user data:', err);
@@ -372,7 +576,7 @@ export default function App() {
         id="app_layout_wrapper"
       >
         {/* Dynamic Navigation */}
-        {!user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'admin' && (
+        {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && (
           <Navbar 
             user={user}
             onSignIn={() => setView('signin')}
@@ -388,6 +592,28 @@ export default function App() {
         <main className="flex-grow">
           {/* Bypassing AnimatePresence prevents the fatal React 19 "Expected static flag was missing" reconciler assertion crash while preserving mounting fade-ins */}
           {currentView === 'home' && (
+            user ? (
+              <motion.div
+                key="dashboard-home-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <SeoManager noIndex={true} />
+                <UserDashboard 
+                  user={user}
+                  onBackToLanding={() => setView('home')}
+                  activeInquiries={activeInquiries}
+                  activePartnerships={activePartnerships}
+                  onRefreshAll={handleRefreshAll}
+                  onNavigateToProfile={() => setView('profile')}
+                  onNavigateToSettings={() => setView('settings')}
+                  onNavigateToView={setView}
+                  setSavedPaperIds={setSavedPaperIds}
+                />
+              </motion.div>
+            ) : (
               <motion.div
                 key="home-page"
                 initial={{ opacity: 0, y: 15 }}
@@ -395,6 +621,12 @@ export default function App() {
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
+                <SeoManager
+                  title="Aurenix — Connecting Energy and Climate Research, Innovation, and Global Collaboration"
+                  description="Aurenix connects African researchers, universities, students, climate tech leaders, and funding bodies to accelerate renewable energy research, bioenergy, energy storage, and clean technology."
+                  keywords={['Energy research', 'Renewable energy', 'Clean energy innovation', 'Climate technology', 'African research', 'Global research collaboration']}
+                  canonicalUrl="https://aurenix-research.org/"
+                />
                 <Hero 
                   onExploreResearch={() => setView('research')}
                   onRequestConsulting={() => setView('services')}
@@ -404,7 +636,7 @@ export default function App() {
                 
                 {/* Dedicated Hub Ecosystem section on the Home page */}
                 <section className="py-20 bg-white border-t border-slate-100" id="ecosystem_overview">
-                  <div className="w-full px-4 sm:px-6 lg:px-8">
+                  <div className="w-full max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
                       <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">
                         <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
@@ -512,7 +744,7 @@ export default function App() {
 
                 {/* Real-World Pilot Projects (Social Proof of Deployments) */}
                 <section className="py-20 bg-slate-50 border-t border-slate-100 text-left" id="featured_pilots">
-                  <div className="w-full px-4 sm:px-6 lg:px-8">
+                  <div className="w-full max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
                       <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">
                         <Award className="w-3.5 h-3.5 text-emerald-600" />
@@ -618,7 +850,7 @@ export default function App() {
 
                 {/* Scientific & Stakeholder Endorsements (Social Proof Quotes) */}
                 <section className="py-20 bg-white border-t border-slate-100 text-left" id="endorsements">
-                  <div className="w-full px-4 sm:px-6 lg:px-8">
+                  <div className="w-full max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
                       <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">
                         <Quote className="w-3.5 h-3.5 text-emerald-600" />
@@ -699,7 +931,8 @@ export default function App() {
                   </div>
                 </section>
               </motion.div>
-            )}
+            )
+          )}
 
             {currentView === 'about' && (
               <motion.div
@@ -709,6 +942,11 @@ export default function App() {
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
+                <SeoManager
+                  title="About Us — Energy Research & Climate Innovation Hub | Aurenix"
+                  description="Learn about Aurenix's mission to bridge clean energy technology research, academic rigor, and industrial deployment across Sub-Saharan Africa and global markets."
+                  canonicalUrl="https://aurenix-research.org/about"
+                />
                 {/* Dedicated About Header Banner */}
                 <div className="bg-white text-slate-900 border-b border-slate-100 relative overflow-hidden py-24 text-left">
                   {/* Glowing graphic elements */}
@@ -716,7 +954,7 @@ export default function App() {
                   <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-100/40 rounded-full blur-3xl"></div>
                   <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-teal-100/30 rounded-full blur-3xl"></div>
 
-                  <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
+                  <div className="w-full max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200/60 rounded-full text-xs font-semibold uppercase tracking-wider">
                       <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
                       Dedicated Research Hub
@@ -742,6 +980,11 @@ export default function App() {
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
+                <SeoManager
+                  title="Technical Advisory & Feasibility Services | Aurenix"
+                  description="Custom technical consulting, biomass audits, and bioenergy feasibility analysis for commercial facilities, universities, and utility providers."
+                  canonicalUrl="https://aurenix-research.org/services"
+                />
                 <ConsultationSection 
                   user={user}
                   onSignIn={() => setView('signin')}
@@ -751,7 +994,80 @@ export default function App() {
               </motion.div>
             )}
 
-            {currentView === 'research' && (
+            {currentView === 'research' && selectedPaperId && (
+              <motion.div
+                key="research-detail-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                {allPapers.find(p => p.id === selectedPaperId) ? (
+                  <>
+                    <SeoManager
+                      title={`${allPapers.find(p => p.id === selectedPaperId)!.title} | Aurenix Research`}
+                      description={allPapers.find(p => p.id === selectedPaperId)!.abstract}
+                      keywords={allPapers.find(p => p.id === selectedPaperId)!.keywords || ['Energy research paper', 'Renewable energy study']}
+                      canonicalUrl={`https://aurenix-research.org/research/${selectedPaperId}`}
+                      ogType="article"
+                      author={allPapers.find(p => p.id === selectedPaperId)!.author}
+                      jsonLd={{
+                        '@context': 'https://schema.org',
+                        '@type': 'ScholarlyArticle',
+                        headline: allPapers.find(p => p.id === selectedPaperId)!.title,
+                        description: allPapers.find(p => p.id === selectedPaperId)!.abstract,
+                        author: { '@type': 'Person', name: allPapers.find(p => p.id === selectedPaperId)!.author },
+                        datePublished: allPapers.find(p => p.id === selectedPaperId)!.publishedYear
+                      }}
+                    />
+                    <ResearchDetail 
+                      paper={allPapers.find(p => p.id === selectedPaperId)!}
+                      onBack={() => {
+                        window.history.pushState(null, '', '/research');
+                        window.dispatchEvent(new Event('popstate'));
+                      }}
+                      isSaved={savedPaperIds.includes(selectedPaperId)}
+                      onSaveToggle={async () => {
+                        if (!user) {
+                          setView('signin');
+                          return;
+                        }
+                        const isAlreadySaved = savedPaperIds.includes(selectedPaperId);
+                        if (isAlreadySaved) {
+                          setSavedPaperIds(prev => prev.filter(id => id !== selectedPaperId));
+                          try { await unsavePaper(user.uid, selectedPaperId); } catch (err) { setSavedPaperIds(prev => [...prev, selectedPaperId]); }
+                        } else {
+                          setSavedPaperIds(prev => [...prev, selectedPaperId]);
+                          try { await savePaper(user.uid, selectedPaperId); } catch (err) { setSavedPaperIds(prev => prev.filter(id => id !== selectedPaperId)); }
+                        }
+                      }}
+                      onDownload={(paper) => {
+                        try { generateResearchPDF(paper); } catch (err) { console.error('Error generating PDF:', err); }
+                      }}
+                      user={user}
+                      onSignIn={() => setView('signin')}
+                    />
+                  </>
+                ) : (
+                  <div className="py-20 text-center space-y-4 max-w-lg mx-auto">
+                    <HelpCircle className="w-12 h-12 text-slate-300 mx-auto animate-bounce" />
+                    <h3 className="text-lg font-bold text-slate-800">Research Paper Not Found</h3>
+                    <p className="text-xs text-slate-500">The requested document may have been archived or deleted.</p>
+                    <button
+                      onClick={() => {
+                        window.history.pushState(null, '', '/research');
+                        window.dispatchEvent(new Event('popstate'));
+                      }}
+                      className="px-4 py-2 bg-slate-950 text-white text-xs font-bold rounded-xl"
+                    >
+                      Back to Research
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {currentView === 'research' && !selectedPaperId && (
               <motion.div
                 key="research-page"
                 initial={{ opacity: 0, y: 15 }}
@@ -759,6 +1075,11 @@ export default function App() {
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
+                <SeoManager
+                  title="Research Repository — Peer-Reviewed Energy & Climate Publications | Aurenix"
+                  description="Explore open-access peer-reviewed research papers, technical reports, and datasets on bioenergy, waste-to-energy, solar photovoltaics, battery storage, and climate policy."
+                  canonicalUrl="https://aurenix-research.org/research"
+                />
                 <ResearchSection 
                   user={user}
                   onSignIn={() => setView('signin')}
@@ -776,14 +1097,57 @@ export default function App() {
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
+                <SeoManager
+                  title="Explore Researchers & Energy Scientists | Aurenix Network"
+                  description="Connect with leading academic researchers, energy engineers, and climate scientists across African universities and international research centers."
+                  canonicalUrl="https://aurenix-research.org/researchers"
+                />
                 <ExploreResearchers 
                   user={user}
                   onSignIn={() => setView('signin')}
+                  selectedResearcherId={selectedResearcherId}
+                  onSelectResearcherId={(id) => {
+                    if (id) {
+                      window.history.pushState(null, '', `/researchers/${id}`);
+                    } else {
+                      window.history.pushState(null, '', '/researchers');
+                    }
+                    window.dispatchEvent(new Event('popstate'));
+                  }}
+                  onNavigateToMessages={(targetUid) => {
+                    navigateTo(`/messages/${targetUid}`);
+                  }}
                 />
               </motion.div>
             )}
 
-            {currentView === 'collaboration' && (
+            {currentView === 'collaboration' && selectedAllianceId && (
+              <motion.div
+                key="alliance-details-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <SeoManager
+                  title="Research Alliance Details | Aurenix Network"
+                  description="View collaborative research opportunity details, participating institutions, eligibility, and grant guidelines."
+                  canonicalUrl={`https://aurenix-research.org/alliances/${selectedAllianceId}`}
+                />
+                <AllianceDetailsPage 
+                  allianceId={selectedAllianceId}
+                  user={user}
+                  onBack={() => {
+                    window.history.pushState(null, '', '/collaboration');
+                    window.dispatchEvent(new Event('popstate'));
+                  }}
+                  onSignIn={() => setView('signin')}
+                  onSuccess={() => {}}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'collaboration' && !selectedAllianceId && (
               <motion.div
                 key="collaboration-page"
                 initial={{ opacity: 0, y: 15 }}
@@ -791,6 +1155,11 @@ export default function App() {
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
+                <SeoManager
+                  title="Collaboration Network & Research Alliances | Aurenix"
+                  description="Discover collaborative research alliances, joint university-industry projects, funding calls, and innovation challenges in renewable energy."
+                  canonicalUrl="https://aurenix-research.org/collaboration"
+                />
                 <CollaborationSection 
                   user={user}
                   onSignIn={() => setView('signin')}
@@ -807,6 +1176,7 @@ export default function App() {
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
+                <SeoManager noIndex={true} />
                 <OperationalConsole 
                   user={user}
                   onSignIn={() => setView('signin')}
@@ -822,8 +1192,13 @@ export default function App() {
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
+                <SeoManager
+                  title="Contact Aurenix Research — Connect with Lead Analysts"
+                  description="Get in touch with Aurenix lead energy analysts, research program coordinators, and technical advisory teams."
+                  canonicalUrl="https://aurenix-research.org/contact"
+                />
                 {/* Dedicated Contact Header Banner */}
-                <div className="bg-white text-slate-900 border-b border-slate-100 relative overflow-hidden py-24 text-left">
+                <div className="bg-white text-slate-900 border-b border-slate-100 relative overflow-hidden py-24 text-left font-sans">
                   {/* Glowing graphic elements */}
                   <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-40"></div>
                   <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-100/40 rounded-full blur-3xl"></div>
@@ -834,7 +1209,7 @@ export default function App() {
                       <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
                       Connect with Us
                     </div>
-                    <h1 className="text-4xl sm:text-5xl font-display font-extrabold tracking-tight text-slate-900 font-bold">
+                    <h1 className="text-4xl sm:text-5xl font-display font-extrabold tracking-tight text-slate-900">
                       Contact <span className="text-emerald-600">Aurenix Research</span>
                     </h1>
                     <p className="text-base sm:text-lg text-slate-600 max-w-3xl leading-relaxed">
@@ -847,7 +1222,28 @@ export default function App() {
               </motion.div>
             )}
 
-            {currentView === 'dashboard' && user && (
+            {currentView === 'dashboard' && user && selectedProjectId && (
+              <motion.div
+                key="project-details-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <ProjectDetailsPage 
+                  projectId={selectedProjectId}
+                  user={user}
+                  onBack={() => {
+                    window.history.pushState(null, '', '/dashboard');
+                    window.dispatchEvent(new Event('popstate'));
+                  }}
+                  projects={dbProjects}
+                  onUpdateProject={handleUpdateProjectInApp}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'dashboard' && user && !selectedProjectId && (
               <motion.div
                 key="dashboard-page"
                 initial={{ opacity: 0, y: 15 }}
@@ -898,6 +1294,43 @@ export default function App() {
                   onNavigateToView={setView}
                   theme={theme}
                   onToggleTheme={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'messages' && user && (
+              <motion.div
+                key="messages-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <MessagesPage 
+                  user={user}
+                  userProfile={userProfile}
+                  theme={theme}
+                  initialTargetUserId={selectedResearcherId}
+                  onNavigateToProfile={(uid) => {
+                    navigateTo(`/researchers/${uid}`);
+                  }}
+                  onNavigateToView={setView}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'notifications' && (
+              <motion.div
+                key="notifications-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <NotificationsPage 
+                  user={user}
+                  onNavigateToView={setView}
+                  theme={theme}
                 />
               </motion.div>
             )}
@@ -1022,6 +1455,66 @@ export default function App() {
               </motion.div>
             )}
 
+            {currentView === 'insights' && (
+              <motion.div
+                key="insights-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <InsightsHub 
+                  selectedSlug={selectedInsightSlug}
+                  onNavigateToArticle={(slug) => {
+                    if (slug) {
+                      navigateTo(`/insights/${slug}`);
+                    } else {
+                      navigateTo('/insights');
+                    }
+                  }}
+                  onNavigateToResearchArea={(areaSlug) => navigateTo(`/research-areas/${areaSlug}`)}
+                  onNavigateToPaper={(paperId) => navigateTo(`/research/${paperId}`)}
+                  onNavigateHome={() => setView('home')}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'research-areas' && (
+              <motion.div
+                key="research-areas-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <ResearchAreasPage 
+                  selectedSlug={selectedAreaSlug}
+                  onNavigateToArea={(slug) => {
+                    if (slug) {
+                      navigateTo(`/research-areas/${slug}`);
+                    } else {
+                      navigateTo('/research-areas');
+                    }
+                  }}
+                  onNavigateToPaper={(paperId) => navigateTo(`/research/${paperId}`)}
+                  onNavigateToArticle={(slug) => navigateTo(`/insights/${slug}`)}
+                  onNavigateHome={() => setView('home')}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'notfound' && (
+              <motion.div
+                key="notfound-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <NotFoundPage onNavigate={setView} />
+              </motion.div>
+            )}
+
             {currentView === 'admin' && (
               <motion.div
                 key="admin-page"
@@ -1030,6 +1523,7 @@ export default function App() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.25 }}
               >
+                <SeoManager noIndex={true} />
                 <AdminPortal 
                   user={user}
                   userProfile={userProfile}
@@ -1042,8 +1536,11 @@ export default function App() {
         </main>
 
         {/* Footer */}
-        {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && <Footer onNavClick={handlePageSelect} />}
+        {!user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && <Footer onNavClick={handlePageSelect} />}
       </motion.div>
+
+      {/* Global Cookie Consent System */}
+      <CookieConsent />
 
     </div>
   );

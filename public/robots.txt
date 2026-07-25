@@ -1,0 +1,28 @@
+User-agent: *
+Allow: /
+Allow: /research
+Allow: /research/
+Allow: /researchers
+Allow: /researchers/
+Allow: /research-areas
+Allow: /research-areas/
+Allow: /insights
+Allow: /insights/
+Allow: /alliances
+Allow: /alliances/
+Allow: /projects
+Allow: /projects/
+Allow: /about
+Allow: /services
+Allow: /collaboration
+Allow: /contact
+
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /messages
+Disallow: /settings
+Disallow: /onboarding
+Disallow: /console
+Disallow: /publish
+
+Sitemap: https://aurenix-research.org/sitemap.xml
