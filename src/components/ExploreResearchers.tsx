@@ -751,23 +751,23 @@ export default function ExploreResearchers({
             >
               
               {/* Top Row: Search & Filters Bar */}
-              <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4 text-left" id="search_and_filters_box">
+              <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-6 shadow-xs sm:shadow-sm space-y-3.5 sm:space-y-4 text-left" id="search_and_filters_box">
                 
                 {/* Search Bar Row */}
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-row gap-2 sm:gap-3 items-center">
                   <div className="relative flex-grow">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                    <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input 
                       type="text"
-                      placeholder="Search researchers by name, institution, country, or research interest..."
+                      placeholder="Search researchers by name, institution, country, or interest..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 focus:bg-white border border-slate-200/60 focus:border-emerald-500 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-1 focus:ring-emerald-500/20 transition-all focus:outline-none placeholder:text-slate-400"
+                      className="w-full pl-9 sm:pl-12 pr-8 sm:pr-12 py-2.5 sm:py-3.5 bg-slate-50 focus:bg-white border border-slate-200/80 focus:border-emerald-500 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-semibold focus:ring-1 focus:ring-emerald-500/20 transition-all focus:outline-none placeholder:text-slate-400"
                     />
                     {searchQuery && (
                       <button 
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold font-mono px-1.5 py-0.5 rounded hover:bg-slate-200 transition-colors cursor-pointer"
+                        className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[10px] sm:text-xs font-bold font-mono px-1.5 py-0.5 rounded hover:bg-slate-200 transition-colors cursor-pointer"
                       >
                         CLEAR
                       </button>
@@ -778,40 +778,40 @@ export default function ExploreResearchers({
                   <button
                     onClick={handleRefresh}
                     disabled={refreshing}
-                    className="sm:w-auto flex items-center justify-center gap-2 px-4 py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-2xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-60"
-                    title="Refresh data"
+                    className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 sm:py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80 rounded-xl sm:rounded-2xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-60 shrink-0"
+                    title="Refresh database"
                   >
-                    <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                    <span className="sm:hidden">Refresh Database</span>
+                    <RefreshCw className={`w-4 h-4 text-slate-500 ${refreshing ? 'animate-spin' : ''}`} />
+                    <span className="hidden sm:inline">Refresh</span>
                   </button>
                 </div>
 
-                {/* Filter Grid - Horizontal Scrolling chips */}
-                <div className="space-y-3.5 pt-2 border-t border-slate-100">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
+                {/* Filter Grid */}
+                <div className="space-y-3 pt-2 border-t border-slate-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <h3 className="text-[10px] font-mono font-black uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                      <SlidersHorizontal className="w-3.5 h-3.5" />
+                      <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
                       Filter Specialists by Category / Role
                     </h3>
                     
-                    <label className="flex items-center gap-2 text-xs font-bold text-slate-600 select-none cursor-pointer">
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-700 select-none cursor-pointer bg-slate-50/80 sm:bg-transparent px-2.5 py-1.5 sm:p-0 rounded-xl border sm:border-0 border-slate-200/60 w-fit">
                       <input 
                         type="checkbox" 
                         checked={onlyVerified}
                         onChange={(e) => setOnlyVerified(e.target.checked)}
-                        className="w-4 h-4 text-emerald-600 bg-slate-50 border-slate-200 rounded-md focus:ring-emerald-500/20 cursor-pointer"
+                        className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 bg-slate-50 border-slate-300 rounded focus:ring-emerald-500/20 cursor-pointer"
                       />
-                      <span>Show Verified Experts Only</span>
+                      <span>Verified Experts Only</span>
                     </label>
                   </div>
 
-                  {/* Role Selection Chips */}
-                  <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto py-1">
+                  {/* Role Selection Chips - Touch scrollable on mobile */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none sm:flex-wrap">
                     {['All', 'Students', 'Researchers', 'Lecturers', 'Institutions', 'Industry Professionals', 'NGOs'].map((role) => (
                       <button
                         key={role}
                         onClick={() => setSelectedRole(role)}
-                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                        className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                           selectedRole === role
                             ? 'bg-emerald-700 text-white shadow-xs'
                             : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60'
@@ -823,14 +823,14 @@ export default function ExploreResearchers({
                   </div>
 
                   {/* Multi Dropdowns (Country & Interest & Sorting) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                     {/* Country Filter */}
                     <div className="space-y-1 text-left">
-                      <span className="text-[9px] font-mono font-bold text-slate-400 uppercase">Country Origin</span>
+                      <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-wider">Country Origin</span>
                       <select
                         value={selectedCountry}
                         onChange={(e) => setSelectedCountry(e.target.value)}
-                        className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:border-emerald-500 focus:outline-none"
+                        className="w-full py-2 px-3 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none transition-colors"
                       >
                         <option value="All">All African Countries</option>
                         {uniqueCountries.filter(c => c !== 'All').map(c => (
@@ -841,11 +841,11 @@ export default function ExploreResearchers({
 
                     {/* Research Interest Filter */}
                     <div className="space-y-1 text-left">
-                      <span className="text-[9px] font-mono font-bold text-slate-400 uppercase">Primary Interest</span>
+                      <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-wider">Primary Interest</span>
                       <select
                         value={selectedInterest}
                         onChange={(e) => setSelectedInterest(e.target.value)}
-                        className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:border-emerald-500 focus:outline-none"
+                        className="w-full py-2 px-3 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none transition-colors"
                       >
                         <option value="All">All Research Interests</option>
                         {uniqueInterests.filter(i => i !== 'All').map(i => (
@@ -856,11 +856,11 @@ export default function ExploreResearchers({
 
                     {/* Sort Order */}
                     <div className="space-y-1 text-left">
-                      <span className="text-[9px] font-mono font-bold text-slate-400 uppercase">Sorting Metrics</span>
+                      <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-wider">Sorting Metrics</span>
                       <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as any)}
-                        className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:border-emerald-500 focus:outline-none"
+                        className="w-full py-2 px-3 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none transition-colors"
                       >
                         <option value="joined">Recently Joined Scientists</option>
                         <option value="published">Most Published Research</option>
@@ -902,37 +902,37 @@ export default function ExploreResearchers({
                     <div className="space-y-10" id="personalized_sections">
                       
                       {/* Section 1: Recently Joined Scientists */}
-                      <div className="space-y-4 text-left">
+                      <div className="space-y-3.5 sm:space-y-4 text-left">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-display font-extrabold text-slate-950 flex items-center gap-2">
-                            <TrendingUp className="text-emerald-600 w-5 h-5" />
+                          <h3 className="text-base sm:text-lg font-display font-extrabold text-slate-950 flex items-center gap-2">
+                            <TrendingUp className="text-emerald-600 w-4.5 h-4.5 sm:w-5 sm:h-5" />
                             Recently Joined Scientists
                           </h3>
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
                           {recentlyJoined.map((res) => (
                             <motion.div 
                               whileHover={{ y: -4 }}
                               onClick={() => handleViewProfile(res.id)}
                               key={res.id}
-                              className="bg-white border border-slate-100 hover:border-emerald-500/20 shadow-xs hover:shadow-sm rounded-3xl p-5 text-center flex flex-col justify-between cursor-pointer transition-all relative overflow-hidden"
+                              className="bg-white border border-slate-100 hover:border-emerald-500/20 shadow-xs hover:shadow-sm rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 text-center flex flex-col justify-between cursor-pointer transition-all relative overflow-hidden"
                             >
-                              <div className="space-y-3">
+                              <div className="space-y-2 sm:space-y-3">
                                 {/* Profile image */}
-                                <div className="w-16 h-16 mx-auto">
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto">
                                   <img 
                                     src={res.profilePhoto} 
                                     alt={res.fullName} 
-                                    className="w-16 h-16 rounded-2xl object-cover border border-slate-200 shadow-xs"
+                                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover border border-slate-200 shadow-xs"
                                   />
                                 </div>
 
                                 <div className="space-y-0.5">
-                                  <h4 className="text-xs font-black text-slate-900 flex items-center justify-center gap-1 px-2">
+                                  <h4 className="text-xs font-black text-slate-900 flex items-center justify-center gap-1 px-1 sm:px-2">
                                     <span className="truncate">{res.fullName}</span>
                                     {res.verified && (
-                                      <BadgeCheck className="w-4 h-4 text-white fill-emerald-600 shrink-0" title="Verified Expert" />
+                                      <BadgeCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white fill-emerald-600 shrink-0" title="Verified Expert" />
                                     )}
                                   </h4>
                                   <p className="text-[10px] text-emerald-700 font-mono font-bold truncate">{res.role}</p>
@@ -942,15 +942,15 @@ export default function ExploreResearchers({
                                   </p>
                                 </div>
 
-                                <p className="text-[11px] text-slate-500 line-clamp-2 leading-normal h-8">
+                                <p className="text-[10px] sm:text-[11px] text-slate-500 line-clamp-2 leading-normal h-7 sm:h-8 hidden xs:block">
                                   {res.bio}
                                 </p>
                               </div>
 
-                              <div className="pt-3.5 mt-3.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-slate-400">
+                              <div className="pt-2.5 sm:pt-3.5 mt-2.5 sm:mt-3.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-slate-400">
                                 <span>{res.publicationCount} Papers</span>
-                                <span className="text-emerald-700 hover:underline flex items-center gap-0.5">
-                                  Profile <ChevronRight className="w-3.5 h-3.5" />
+                                <span className="text-emerald-700 hover:underline flex items-center gap-0.5 font-bold">
+                                  Profile <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                                 </span>
                               </div>
                             </motion.div>
@@ -959,45 +959,45 @@ export default function ExploreResearchers({
                       </div>
 
                       {/* Section 2: Top Citations & Publications (Scholarly Leaders) */}
-                      <div className="space-y-4 text-left">
-                        <h3 className="text-lg font-display font-extrabold text-slate-950 flex items-center gap-2">
-                          <Award className="text-emerald-600 w-5 h-5" />
+                      <div className="space-y-3.5 sm:space-y-4 text-left">
+                        <h3 className="text-base sm:text-lg font-display font-extrabold text-slate-950 flex items-center gap-2">
+                          <Award className="text-emerald-600 w-4.5 h-4.5 sm:w-5 sm:h-5" />
                           Featured Scholarly Leaders
                         </h3>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                           {topAuthors.map((res) => (
                             <div 
                               key={res.id}
                               onClick={() => handleViewProfile(res.id)}
-                              className="bg-white border border-slate-150 rounded-3xl p-6 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between text-left group relative overflow-hidden"
+                              className="bg-white border border-slate-150 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between text-left group relative overflow-hidden"
                             >
-                              <div className="space-y-4">
-                                <div className="flex gap-4 items-center">
+                              <div className="space-y-3 sm:space-y-4">
+                                <div className="flex gap-3 sm:gap-4 items-center">
                                   <img 
                                     src={res.profilePhoto} 
                                     alt={res.fullName} 
-                                    className="w-14 h-14 rounded-2xl object-cover border border-slate-200"
+                                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover border border-slate-200 shrink-0"
                                   />
                                   <div className="min-w-0 flex-grow">
-                                    <h4 className="text-sm font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors flex items-center gap-1">
+                                    <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors flex items-center gap-1">
                                       <span className="truncate">{res.fullName}</span>
                                       {res.verified && (
-                                        <BadgeCheck className="w-4 h-4 text-white fill-emerald-600 shrink-0" title="Verified Expert" />
+                                        <BadgeCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white fill-emerald-600 shrink-0" title="Verified Expert" />
                                       )}
                                     </h4>
                                     <p className="text-[10px] text-slate-400 truncate font-semibold">{res.institution}</p>
-                                    <span className="inline-block mt-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 text-[9px] font-bold uppercase rounded">
+                                    <span className="inline-block mt-0.5 sm:mt-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 text-[8px] font-bold uppercase rounded">
                                       {res.role}
                                     </span>
                                   </div>
                                 </div>
 
-                                <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed">
+                                <p className="text-xs text-slate-500 line-clamp-2 sm:line-clamp-3 leading-relaxed">
                                   {res.bio}
                                 </p>
 
-                                <div className="grid grid-cols-3 gap-2 py-2 border-y border-slate-50 text-center">
+                                <div className="grid grid-cols-3 gap-1.5 sm:gap-2 py-2 border-y border-slate-50 text-center">
                                   <div>
                                     <span className="block text-xs font-bold font-mono text-slate-900">{res.publicationCount}</span>
                                     <span className="text-[8px] uppercase tracking-wider text-slate-400 font-bold">Papers</span>
@@ -1014,7 +1014,7 @@ export default function ExploreResearchers({
                               </div>
 
                               <button 
-                                className="mt-4 flex items-center gap-1 text-[11px] font-black text-emerald-700 group-hover:gap-2 transition-all"
+                                className="mt-3 sm:mt-4 flex items-center gap-1 text-[11px] font-black text-emerald-700 group-hover:gap-2 transition-all"
                               >
                                 Review Publications & Bio &rarr;
                               </button>
@@ -1024,20 +1024,20 @@ export default function ExploreResearchers({
                       </div>
 
                       {/* Section 3: Around Africa Regional Sorting Hub */}
-                      <div className="space-y-4 text-left" id="around_africa_section">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-3">
-                          <h3 className="text-lg font-display font-extrabold text-slate-950 flex items-center gap-2">
-                            <Map className="text-emerald-600 w-5 h-5" />
+                      <div className="space-y-3 sm:space-y-4 text-left" id="around_africa_section">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 border-b border-slate-200 pb-3">
+                          <h3 className="text-base sm:text-lg font-display font-extrabold text-slate-950 flex items-center gap-2">
+                            <Map className="text-emerald-600 w-4.5 h-4.5 sm:w-5 sm:h-5" />
                             Around Africa: Regional Explorer
                           </h3>
                           
-                          {/* Region Tabs */}
-                          <div className="flex flex-wrap gap-1 bg-slate-200/50 p-1 rounded-xl w-fit">
+                          {/* Region Tabs - Touch Scrollable on Mobile */}
+                          <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none sm:flex-wrap max-w-full bg-slate-200/50 p-1 rounded-xl w-full sm:w-fit">
                             {(['All', 'West', 'East', 'North', 'Southern', 'Central'] as const).map((reg) => (
                               <button
                                 key={reg}
                                 onClick={() => setActiveRegion(reg)}
-                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                                className={`shrink-0 px-3 py-1.5 rounded-lg text-xs sm:text-[10px] font-bold sm:font-black uppercase tracking-wider transition-all cursor-pointer ${
                                   activeRegion === reg
                                     ? 'bg-white text-emerald-800 shadow-xs'
                                     : 'text-slate-500 hover:text-slate-950'

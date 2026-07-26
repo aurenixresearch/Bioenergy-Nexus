@@ -70,6 +70,9 @@ export default function Navbar({
                   src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
                   alt="Aurenix Research Logo" 
                   referrerPolicy="no-referrer"
+                  width="24"
+                  height="24"
+                  fetchPriority="high"
                   className="w-5 h-5 xl:w-6 xl:h-6 object-contain"
                 />
               </div>

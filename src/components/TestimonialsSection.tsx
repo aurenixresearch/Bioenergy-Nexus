@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Quote,
   Star,
@@ -145,6 +145,7 @@ export default function TestimonialsSection() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [mobileIndex, setMobileIndex] = useState<number>(0);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
 
   const filteredTestimonials = useMemo(() => {
     return TESTIMONIAL_FAQS.filter((item) => {
@@ -168,6 +169,17 @@ export default function TestimonialsSection() {
     if (filteredTestimonials.length === 0) return 0;
     return Math.min(mobileIndex, Math.max(0, filteredTestimonials.length - 1));
   }, [mobileIndex, filteredTestimonials]);
+
+  // Auto-advance cards every 2s
+  useEffect(() => {
+    if (filteredTestimonials.length <= 1 || isPaused) return;
+
+    const timer = setInterval(() => {
+      setMobileIndex((prev) => (prev + 1) % filteredTestimonials.length);
+    }, 2000);
+
+    return () => clearInterval(timer);
+  }, [filteredTestimonials.length, isPaused]);
 
   const handleNextMobile = () => {
     if (filteredTestimonials.length === 0) return;
@@ -278,11 +290,6 @@ export default function TestimonialsSection() {
                       transition={{ duration: 0.25 }}
                       className="bg-white dark:bg-white rounded-[28px] p-6 sm:p-7 border border-slate-200/80 dark:border-slate-200 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between space-y-6 relative overflow-hidden"
                     >
-                      {/* Top Lanyard Badge Clip */}
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-12 h-4 bg-gradient-to-b from-slate-200 via-slate-300 to-slate-200 border border-slate-300 rounded-md shadow-xs flex items-center justify-center z-20 pointer-events-none">
-                        <div className="w-5 h-1 bg-slate-400 rounded-full" />
-                      </div>
-
                       <div className="space-y-5 pt-1">
                         {/* Top Row: Category Pill Badge & 5-Star Score */}
                         <div className="flex items-center justify-between gap-2">
@@ -382,174 +389,185 @@ export default function TestimonialsSection() {
             </div>
 
             {/* Mobile Stacked Card Deck Swiper */}
-            <div className="block md:hidden space-y-6 pt-2 pb-4">
-              <div className="relative min-h-[520px] w-full flex items-center justify-center">
-                {filteredTestimonials.map((item, idx) => {
-                  const total = filteredTestimonials.length;
-                  let offset = (idx - activeMobileIndex + total) % total;
-                  
-                  // Only render top 3 cards in the stack
-                  if (offset > 2 && offset < total - 1) return null;
+            <div 
+              className="block md:hidden space-y-6 pt-2 pb-4"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+              onTouchStart={() => setIsPaused(true)}
+              onTouchEnd={() => setIsPaused(false)}
+            >
+              <div className="relative min-h-[500px] w-full flex items-center justify-center overflow-visible">
+                <AnimatePresence mode="popLayout">
+                  {filteredTestimonials.map((item, idx) => {
+                    const total = filteredTestimonials.length;
+                    let offset = (idx - activeMobileIndex + total) % total;
+                    
+                    // Render top 3 cards + 1 card leaving
+                    if (offset > 2 && offset < total - 1) return null;
 
-                  const isTop = offset === 0;
-                  const isBehind1 = offset === 1;
-                  const isBehind2 = offset === 2;
+                    const isTop = offset === 0;
+                    const isBehind1 = offset === 1;
+                    const isBehind2 = offset === 2;
+                    const isBehind3 = offset === total - 1;
 
-                  const CategoryIcon = item.categoryIcon;
+                    // Calculate rotation and horizontal offset to produce the fanned deck look in the video
+                    let rotate = 0;
+                    let x = 0;
+                    let y = 0;
+                    let scale = 1;
+                    let opacity = 1;
 
-                  return (
-                    <motion.div
-                      key={item.id}
-                      layout
-                      drag={isTop ? "x" : false}
-                      dragConstraints={{ left: 0, right: 0 }}
-                      dragElastic={0.2}
-                      onDragEnd={(_, { offset: dragOffset, velocity }) => {
-                        if (!isTop) return;
-                        if (dragOffset.x < -60 || velocity.x < -200) {
-                          handleNextMobile();
-                        } else if (dragOffset.x > 60 || velocity.x > 200) {
-                          handlePrevMobile();
-                        }
-                      }}
-                      initial={false}
-                      animate={{
-                        scale: isTop ? 1 : isBehind1 ? 0.94 : isBehind2 ? 0.88 : 0.82,
-                        y: isTop ? 0 : isBehind1 ? 14 : isBehind2 ? 28 : 42,
-                        zIndex: total - offset,
-                        opacity: isTop ? 1 : isBehind1 ? 0.85 : isBehind2 ? 0.5 : 0,
-                      }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 260,
-                        damping: 24
-                      }}
-                      className={`absolute inset-x-0 mx-auto max-w-[340px] bg-white dark:bg-white rounded-[28px] p-6 border border-slate-200/90 dark:border-slate-200 shadow-xl flex flex-col justify-between space-y-5 cursor-grab active:cursor-grabbing select-none ${
-                        !isTop ? 'pointer-events-none' : ''
-                      }`}
-                    >
-                      {/* Top Lanyard Badge Clip */}
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-12 h-4 bg-gradient-to-b from-slate-200 via-slate-300 to-slate-200 border border-slate-300 rounded-md shadow-xs flex items-center justify-center z-30 pointer-events-none">
-                        <div className="w-5 h-1 bg-slate-400 rounded-full" />
-                      </div>
+                    if (isTop) {
+                      rotate = 0;
+                      x = 0;
+                      y = 0;
+                      scale = 1;
+                      opacity = 1;
+                    } else if (isBehind1) {
+                      rotate = -6;
+                      x = -18;
+                      y = 10;
+                      scale = 0.95;
+                      opacity = 0.92;
+                    } else if (isBehind2) {
+                      rotate = 6;
+                      x = 18;
+                      y = 20;
+                      scale = 0.90;
+                      opacity = 0.65;
+                    } else if (isBehind3) {
+                      rotate = -12;
+                      x = -30;
+                      y = 30;
+                      scale = 0.82;
+                      opacity = 0;
+                    }
 
-                      <div className="space-y-4 pt-1">
-                        {/* Top Row: Category Pill Badge & 5-Star Score */}
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-white text-[#046c4e] dark:text-[#046c4e] border border-emerald-200 rounded-xl text-[10px] font-extrabold uppercase tracking-wider">
-                            <CategoryIcon className="w-3 h-3 text-[#046c4e] dark:text-[#046c4e] shrink-0" />
-                            <span className="truncate max-w-[140px]">{item.categoryLabel}</span>
-                          </div>
-                          <div className="flex flex-col items-end shrink-0">
-                            <div className="flex items-center gap-0.5">
-                              {[...Array(item.rating)].map((_, i) => (
-                                <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                              ))}
-                            </div>
-                            <span className="text-[10px] font-extrabold text-[#046c4e] dark:text-[#046c4e] mt-0.5">5.0/5</span>
-                          </div>
-                        </div>
+                    const CategoryIcon = item.categoryIcon;
 
-                        {/* FAQ Box */}
-                        <div className="bg-white dark:bg-white border border-emerald-200/80 dark:border-emerald-200/80 rounded-2xl p-3.5 space-y-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-5 h-5 rounded-full bg-[#134e38] text-white flex items-center justify-center font-black text-[10px] shrink-0 shadow-xs">
-                              ?
-                            </div>
-                            <span className="text-[10px] font-mono font-extrabold text-[#134e38] dark:text-[#134e38] uppercase tracking-wider">
-                              FAQ ADDRESSED:
-                            </span>
-                          </div>
-                          <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-900 leading-snug">
-                            {item.faqQuestion}
-                          </h3>
-                        </div>
-
-                        {/* Authentic Quote Box */}
-                        <div className="flex items-start gap-2.5 pt-0.5">
-                          <div className="w-1 bg-[#059669] rounded-full shrink-0 self-stretch min-h-[50px]" />
-                          <div className="space-y-0.5">
-                            <span className="text-emerald-300 font-serif text-3xl leading-none select-none block -mb-2">“</span>
-                            <p className="text-xs text-slate-800 dark:text-slate-800 italic leading-relaxed font-sans line-clamp-4">
-                              "{item.quote}"
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3 pt-1">
-                        {/* Verified Metric Bar */}
-                        <div className="bg-white dark:bg-white border border-emerald-200/80 dark:border-emerald-200/80 rounded-xl p-2.5 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-full bg-emerald-50 dark:bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
-                              <ShieldCheck className="w-3.5 h-3.5 text-[#046c4e] dark:text-[#046c4e]" />
-                            </div>
-                            <div className="text-[11px]">
-                              <span className="font-extrabold text-[#046c4e] dark:text-[#046c4e] mr-1">{item.verifiedMetricHighlight}</span>
-                              <span className="font-medium text-slate-800 dark:text-slate-800">{item.verifiedMetricLabel}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Author Details */}
-                        <div className="flex items-center gap-2.5 pt-1 border-t border-slate-100 dark:border-slate-200">
-                          <div className="w-9 h-9 rounded-full bg-[#0d4f37] text-white flex items-center justify-center font-extrabold text-xs shrink-0 shadow-xs">
-                            {item.initials}
-                          </div>
-                          <div className="min-w-0 space-y-0.5">
-                            <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-900 truncate">
-                              {item.authorName}
-                            </h4>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-500 font-medium truncate">
-                              {item.authorTitle}
-                            </p>
-                            <p className="text-[10px] font-bold text-[#046c4e] dark:text-[#046c4e] truncate">
-                              {item.institution} • {item.location}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-
-              {/* Mobile Navigation & Swipe Controls */}
-              <div className="flex items-center justify-between px-4 max-w-sm mx-auto pt-2">
-                <button
-                  onClick={handlePrevMobile}
-                  className="p-3 rounded-full bg-white dark:bg-white border border-slate-200/90 text-slate-700 shadow-xs active:scale-95 transition-transform cursor-pointer"
-                  aria-label="Previous testimonial"
-                >
-                  <ChevronLeft className="w-5 h-5 text-slate-700" />
-                </button>
-
-                <div className="flex flex-col items-center gap-1.5">
-                  <span className="text-xs font-extrabold text-slate-700 dark:text-slate-700">
-                    {activeMobileIndex + 1} of {filteredTestimonials.length}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    {filteredTestimonials.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setMobileIndex(i)}
-                        className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                          i === activeMobileIndex ? 'w-5 bg-emerald-800' : 'w-1.5 bg-slate-300'
+                    return (
+                      <motion.div
+                        key={item.id}
+                        layout
+                        drag={isTop ? "x" : false}
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.6}
+                        onDragEnd={(_, { offset: dragOffset, velocity }) => {
+                          if (!isTop) return;
+                          if (dragOffset.x < -50 || velocity.x < -150) {
+                            handleNextMobile();
+                          } else if (dragOffset.x > 50 || velocity.x > 150) {
+                            handlePrevMobile();
+                          }
+                        }}
+                        initial={false}
+                        animate={{
+                          scale,
+                          x,
+                          y,
+                          rotate,
+                          opacity,
+                          zIndex: total - offset,
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.8,
+                          x: -150,
+                          rotate: -20,
+                        }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 320,
+                          damping: 26,
+                        }}
+                        whileDrag={{ scale: 1.02 }}
+                        className={`absolute inset-x-0 mx-auto max-w-[340px] bg-white dark:bg-white rounded-[28px] p-6 border border-slate-200/90 dark:border-slate-200 shadow-xl flex flex-col justify-between space-y-5 cursor-grab active:cursor-grabbing select-none ${
+                          !isTop ? 'pointer-events-none' : ''
                         }`}
-                        aria-label={`Go to slide ${i + 1}`}
-                      />
-                    ))}
-                  </div>
-                </div>
+                      >
+                        <div className="space-y-4 pt-1">
+                          {/* Top Row: Category Pill Badge & 5-Star Score */}
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-white text-[#046c4e] dark:text-[#046c4e] border border-emerald-200 rounded-xl text-[10px] font-extrabold uppercase tracking-wider">
+                              <CategoryIcon className="w-3 h-3 text-[#046c4e] dark:text-[#046c4e] shrink-0" />
+                              <span className="truncate max-w-[140px]">{item.categoryLabel}</span>
+                            </div>
+                            <div className="flex flex-col items-end shrink-0">
+                              <div className="flex items-center gap-0.5">
+                                {[...Array(item.rating)].map((_, i) => (
+                                  <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                ))}
+                              </div>
+                              <span className="text-[10px] font-extrabold text-[#046c4e] dark:text-[#046c4e] mt-0.5">5.0/5</span>
+                            </div>
+                          </div>
 
-                <button
-                  onClick={handleNextMobile}
-                  className="p-3 rounded-full bg-white dark:bg-white border border-slate-200/90 text-slate-700 shadow-xs active:scale-95 transition-transform cursor-pointer"
-                  aria-label="Next testimonial"
-                >
-                  <ChevronRight className="w-5 h-5 text-slate-700" />
-                </button>
+                          {/* FAQ Box */}
+                          <div className="bg-white dark:bg-white border border-emerald-200/80 dark:border-emerald-200/80 rounded-2xl p-3.5 space-y-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-5 h-5 rounded-full bg-[#134e38] text-white flex items-center justify-center font-black text-[10px] shrink-0 shadow-xs">
+                                ?
+                              </div>
+                              <span className="text-[10px] font-mono font-extrabold text-[#134e38] dark:text-[#134e38] uppercase tracking-wider">
+                                FAQ ADDRESSED:
+                              </span>
+                            </div>
+                            <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-900 leading-snug">
+                              {item.faqQuestion}
+                            </h3>
+                          </div>
+
+                          {/* Authentic Quote Box */}
+                          <div className="flex items-start gap-2.5 pt-0.5">
+                            <div className="w-1 bg-[#059669] rounded-full shrink-0 self-stretch min-h-[50px]" />
+                            <div className="space-y-0.5">
+                              <span className="text-emerald-300 font-serif text-3xl leading-none select-none block -mb-2">“</span>
+                              <p className="text-xs text-slate-800 dark:text-slate-800 italic leading-relaxed font-sans line-clamp-4">
+                                "{item.quote}"
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 pt-1">
+                          {/* Verified Metric Bar */}
+                          <div className="bg-white dark:bg-white border border-emerald-200/80 dark:border-emerald-200/80 rounded-xl p-2.5 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 rounded-full bg-emerald-50 dark:bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
+                                <ShieldCheck className="w-3.5 h-3.5 text-[#046c4e] dark:text-[#046c4e]" />
+                              </div>
+                              <div className="text-[11px]">
+                                <span className="font-extrabold text-[#046c4e] dark:text-[#046c4e] mr-1">{item.verifiedMetricHighlight}</span>
+                                <span className="font-medium text-slate-800 dark:text-slate-800">{item.verifiedMetricLabel}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Author Details */}
+                          <div className="flex items-center gap-2.5 pt-1 border-t border-slate-100 dark:border-slate-200">
+                            <div className="w-9 h-9 rounded-full bg-[#0d4f37] text-white flex items-center justify-center font-extrabold text-xs shrink-0 shadow-xs">
+                              {item.initials}
+                            </div>
+                            <div className="min-w-0 space-y-0.5">
+                              <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-900 truncate">
+                                {item.authorName}
+                              </h4>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-500 font-medium truncate">
+                                {item.authorTitle}
+                              </p>
+                              <p className="text-[10px] font-bold text-[#046c4e] dark:text-[#046c4e] truncate">
+                                {item.institution} • {item.location}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
               </div>
+
+
             </div>
           </>
         )}

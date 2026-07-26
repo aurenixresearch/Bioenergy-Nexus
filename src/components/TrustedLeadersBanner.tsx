@@ -46,6 +46,9 @@ export const TrustedLeadersBanner: React.FC = () => {
                 <img 
                   src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80" 
                   alt="Leader" 
+                  width="300"
+                  height="375"
+                  loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
               </motion.div>

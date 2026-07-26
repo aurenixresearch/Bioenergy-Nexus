@@ -166,7 +166,7 @@ export default function AboutSection() {
               <h3 className="text-2xl font-display font-extrabold text-slate-900">
                 Our Foundational Mission
               </h3>
-              <p className="text-slate-600 leading-relaxed text-sm sm:text-base font-normal">
+              <p className="text-slate-600 leading-relaxed text-xs sm:text-sm md:text-base font-normal">
                 {FOUNDER_INFO.mission}
               </p>
             </div>
@@ -251,7 +251,7 @@ export default function AboutSection() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* Left Column: Navigation Buttons */}
-            <div className="lg:col-span-5 space-y-3 text-left">
+            <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-1 gap-2 sm:gap-3 lg:gap-0 lg:space-y-3 text-left">
               {pillars.map((pillar) => {
                 const IconComponent = pillar.icon;
                 const isSelected = activePillar === pillar.id;
@@ -260,30 +260,30 @@ export default function AboutSection() {
                   <button
                     key={pillar.id}
                     onClick={() => setActivePillar(pillar.id)}
-                    className={`w-full flex items-center justify-between p-5 rounded-2xl border transition-all duration-200 cursor-pointer text-left focus:outline-none ${
+                    className={`w-full flex items-center justify-between p-3 sm:p-3.5 lg:p-5 rounded-xl sm:rounded-2xl border transition-all duration-200 cursor-pointer text-left focus:outline-none ${
                       isSelected 
                         ? 'bg-white border-emerald-600/35 shadow-md ring-1 ring-emerald-500/10' 
                         : 'bg-transparent border-slate-200/60 hover:bg-white/70 hover:border-slate-300'
                     }`}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-xl transition-colors duration-200 ${
+                    <div className="flex items-center gap-2 sm:gap-2.5 lg:gap-4 min-w-0">
+                      <div className={`p-1.5 sm:p-2 lg:p-3 rounded-lg sm:rounded-xl transition-colors duration-200 shrink-0 ${
                         isSelected 
-                          ? 'bg-emerald-600 text-white shadow-sm' 
+                          ? 'bg-emerald-600 text-white shadow-xs' 
                           : 'bg-slate-100 text-slate-600'
                       }`}>
-                        <IconComponent className="w-5 h-5" />
+                        <IconComponent className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
                       </div>
-                      <div>
-                        <span className="block text-[11px] font-mono uppercase tracking-widest text-slate-400 leading-none mb-1">
+                      <div className="min-w-0 flex-1">
+                        <span className="hidden lg:block text-[11px] font-mono uppercase tracking-widest text-slate-400 leading-none mb-1">
                           {pillar.subtitle}
                         </span>
-                        <span className="block text-sm font-bold text-slate-800 font-display">
+                        <span className="block text-[10px] sm:text-xs lg:text-sm font-bold text-slate-800 font-display leading-tight truncate sm:whitespace-normal">
                           {pillar.title}
                         </span>
                       </div>
                     </div>
-                    <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${
+                    <ChevronRight className={`hidden lg:block w-4 h-4 transition-transform duration-200 ${
                       isSelected ? 'text-emerald-600 translate-x-1' : 'text-slate-300'
                     }`} />
                   </button>
@@ -300,26 +300,26 @@ export default function AboutSection() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm text-left flex flex-col justify-between min-h-[380px]"
+                  className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-xs sm:shadow-sm text-left flex flex-col justify-between min-h-0 sm:min-h-[300px] lg:min-h-[380px]"
                 >
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-5 lg:space-y-6">
                     {/* Header */}
-                    <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-100 pb-3 sm:pb-4 lg:pb-5">
                       <div>
-                        <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md uppercase tracking-wider font-mono">
+                        <span className="inline-block text-[10px] sm:text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md uppercase tracking-wider font-mono">
                           {selectedPillar.subtitle}
                         </span>
-                        <h4 className="text-xl font-extrabold text-slate-900 mt-2 font-display">
+                        <h4 className="text-base sm:text-lg lg:text-xl font-extrabold text-slate-900 mt-1 sm:mt-2 font-display leading-tight">
                           {selectedPillar.title}
                         </h4>
                       </div>
                       
                       {/* Metric Banner */}
-                      <div className="text-right shrink-0">
-                        <span className="block text-2xl font-mono font-extrabold text-emerald-600 leading-none">
+                      <div className="text-left sm:text-right shrink-0">
+                        <span className="block text-lg sm:text-xl lg:text-2xl font-mono font-extrabold text-emerald-600 leading-none">
                           {selectedPillar.metric.value}
                         </span>
-                        <span className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1">
+                        <span className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 sm:mt-1">
                           {selectedPillar.metric.label}
                         </span>
                       </div>
@@ -331,14 +331,14 @@ export default function AboutSection() {
                     </p>
 
                     {/* Bullet projects */}
-                    <div className="space-y-3">
-                      <span className="block text-xs font-bold uppercase tracking-wider text-slate-400 font-display">
+                    <div className="space-y-2 sm:space-y-3">
+                      <span className="block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 font-display">
                         Key Deliverables & Initiatives
                       </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                         {selectedPillar.keyProjects.map((proj, idx) => (
                           <div key={idx} className="flex items-start gap-2 text-xs text-slate-600">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                            <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 shrink-0 mt-0.5" />
                             <span className="leading-tight">{proj}</span>
                           </div>
                         ))}
@@ -346,7 +346,7 @@ export default function AboutSection() {
                     </div>
                   </div>
 
-                  <div className="border-t border-slate-100 mt-8 pt-5 text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
+                  <div className="border-t border-slate-100 mt-5 sm:mt-6 lg:mt-8 pt-3 sm:pt-4 lg:pt-5 text-[10px] sm:text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5" />
                     ACTIVELY UPDATED FOR NIGERIAN ECOLOGICAL POLICY COMPLIANCE
                   </div>

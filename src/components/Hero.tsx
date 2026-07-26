@@ -103,6 +103,9 @@ export default function Hero({ onExploreResearch, onRequestConsulting, onSignIn,
                       src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
                       alt="Aurenix Research Icon Logo" 
                       referrerPolicy="no-referrer"
+                      width="56"
+                      height="56"
+                      fetchPriority="high"
                       className="w-14 h-14 object-contain opacity-90"
                     />
                   </div>

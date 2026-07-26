@@ -174,7 +174,7 @@ export const FOUNDER_INFO = {
   name: 'Filani Olalekan Theophilus',
   title: 'Founder & Lead Renewable Energy Analyst',
   bio: 'Filani Olalekan Theophilus is a dedicated Renewable Energy and Environmental Feasibility/Impact Analyst with hands-on expertise in design, operation, and training of bioenergy systems. He holds a B.Sc. in Industrial Chemistry and has successfully applied his chemical and process foundations in several high-profile real-world implementations, such as configuring waste biodigesters at the Murtala Muhammed International Airport (MMA), Ikeja. Filani is passionate about scaling indigenous scientific capability across Africa and bridging the gap between university research and commercial, scalable clean energy projects.',
-  mission: "Aurenix Research was founded with a clear mission: to connect African research, innovation, and expertise with the global energy and climate technology ecosystem. We believe Africa's transition toward a sustainable future must be driven by strong local research, empowered researchers and innovators, practical solutions, and meaningful collaboration. Aurenix Research exists to bridge the gap between knowledge and real-world impact by creating a platform where researchers, students, institutions, industry, and global stakeholders can discover one another, share knowledge, build partnerships, and transform research into solutions that address Africa's most pressing energy and climate challenges."
+  mission: "Aurenix Research connects African research, innovation, and expertise with the global energy and climate ecosystem. We bridge the gap between academic research and real-world impact by empowering local innovators, fostering strategic partnerships, and deploying practical bioenergy solutions across Africa."
 };
 
 export const CONTACT_INFO = {
@@ -183,8 +183,8 @@ export const CONTACT_INFO = {
   phone: '(+234) 91-6936-5341',
   hours: 'Monday – Friday, 8:00 AM – 6:00 PM (WAT)',
   socials: {
-    linkedin: 'https://linkedin.com',
-    twitter: 'https://twitter.com',
-    github: 'https://github.com'
+    linkedin: 'https://www.linkedin.com/in/aurenix-research-hub-818836422?utm_source=share_via&utm_content=profile&utm_medium=member_ios',
+    instagram: 'https://instagram.com',
+    tiktok: 'https://tiktok.com'
   }
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Leaf, Mail, Phone, Clock, MapPin, Linkedin, Twitter, Github } from 'lucide-react';
+import { Leaf, Mail, Phone, Clock, MapPin, Linkedin, Instagram } from 'lucide-react';
 import { CONTACT_INFO } from '../data';
 import { motion } from 'motion/react';
 
@@ -26,6 +26,9 @@ export default function Footer({ onNavClick }: FooterProps) {
                   src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
                   alt="Aurenix Research Logo" 
                   referrerPolicy="no-referrer"
+                  width="20"
+                  height="20"
+                  loading="lazy"
                   className="w-5 h-5 object-contain"
                 />
               </div>
@@ -119,22 +122,24 @@ export default function Footer({ onNavClick }: FooterProps) {
               <Linkedin className="w-4 h-4" />
             </a>
             <a 
-              href={CONTACT_INFO.socials.twitter} 
+              href={CONTACT_INFO.socials.instagram} 
               target="_blank" 
               rel="noopener noreferrer" 
               className="p-2 bg-slate-900 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-all duration-200 border-0"
-              title="Twitter"
+              title="Instagram"
             >
-              <Twitter className="w-4 h-4" />
+              <Instagram className="w-4 h-4" />
             </a>
             <a 
-              href={CONTACT_INFO.socials.github} 
+              href={CONTACT_INFO.socials.tiktok} 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="p-2 bg-slate-900 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-all duration-200 border-0"
-              title="GitHub"
+              className="p-2 bg-slate-900 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-all duration-200 border-0 flex items-center justify-center"
+              title="TikTok"
             >
-              <Github className="w-4 h-4" />
+              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 1 1-2.89-2.89c.28 0 .54.04.79.1V9.41a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 1 0 6.34 6.34V9.25a8.16 8.16 0 0 0 4.77 1.52A8.13 8.13 0 0 0 21 10.66v-3.41a4.86 4.86 0 0 1-1.41-.56z"/>
+              </svg>
             </a>
           </div>
         </div>

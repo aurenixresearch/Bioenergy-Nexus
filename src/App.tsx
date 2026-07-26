@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { 
   onAuthStateChanged, 
   signInWithPopup, 
@@ -13,41 +13,54 @@ import { ConsultationInquiry, PartnershipSubmission, ResearchPaper } from './typ
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, ShieldAlert, Sparkles, X, UserCheck, KeyRound, HelpCircle, BookOpen, Users, HeartHandshake, Leaf, Award, Quote, Building, CheckCircle2, FlaskConical } from 'lucide-react';
 
-// Components
+// Core layout components
 import Navbar from './components/Navbar';
-import SignInPage from './components/SignInPage';
-import OnboardingPage from './components/OnboardingPage';
 import FloatingAside from './components/FloatingAside';
 import Hero from './components/Hero';
-import AboutSection from './components/AboutSection';
-import ResearchSection from './components/ResearchSection';
-import ResearchDetail from './components/ResearchDetail';
-import ProjectDetailsPage from './components/ProjectDetailsPage';
-import AllianceDetailsPage from './components/AllianceDetailsPage';
-import SavedStudiesPage from './components/SavedStudiesPage';
-import ConsultationSection from './components/ConsultationSection';
-import CollaborationSection from './components/CollaborationSection';
-import ContactSection from './components/ContactSection';
-import UserDashboard from './components/UserDashboard';
 import Footer from './components/Footer';
 import SystemBootLoader from './components/SystemBootLoader';
-import ExploreResearchers from './components/ExploreResearchers';
-import OperationalConsole from './components/collaboration/OperationalConsole';
-import ProfilePage from './components/ProfilePage';
-import SettingsPage from './components/SettingsPage';
-import AdminPortal from './components/admin/AdminPortal';
 import CookieConsent from './components/CookieConsent';
-import MessagesPage from './components/MessagesPage';
-import NotificationsPage from './components/NotificationsPage';
 import SeoManager from './components/seo/SeoManager';
-import InsightsHub from './components/InsightsHub';
-import ResearchAreasPage from './components/ResearchAreasPage';
 import FeaturedPilots from './components/FeaturedPilots';
 import { TrustedLeadersBanner } from './components/TrustedLeadersBanner';
 import TestimonialsSection from './components/TestimonialsSection';
-import NotFoundPage from './components/NotFoundPage';
 import { RESEARCH_PAPERS } from './data';
 import { generateResearchPDF } from './utils/pdfGenerator';
+
+// Route-based code splitting
+const SignInPage = lazy(() => import('./components/SignInPage'));
+const OnboardingPage = lazy(() => import('./components/OnboardingPage'));
+const AboutSection = lazy(() => import('./components/AboutSection'));
+const ResearchSection = lazy(() => import('./components/ResearchSection'));
+const ResearchDetail = lazy(() => import('./components/ResearchDetail'));
+const ProjectDetailsPage = lazy(() => import('./components/ProjectDetailsPage'));
+const AllianceDetailsPage = lazy(() => import('./components/AllianceDetailsPage'));
+const SavedStudiesPage = lazy(() => import('./components/SavedStudiesPage'));
+const ConsultationSection = lazy(() => import('./components/ConsultationSection'));
+const CollaborationSection = lazy(() => import('./components/CollaborationSection'));
+const ContactSection = lazy(() => import('./components/ContactSection'));
+const UserDashboard = lazy(() => import('./components/UserDashboard'));
+const ExploreResearchers = lazy(() => import('./components/ExploreResearchers'));
+const OperationalConsole = lazy(() => import('./components/collaboration/OperationalConsole'));
+const ProfilePage = lazy(() => import('./components/ProfilePage'));
+const SettingsPage = lazy(() => import('./components/SettingsPage'));
+const AdminPortal = lazy(() => import('./components/admin/AdminPortal'));
+const MessagesPage = lazy(() => import('./components/MessagesPage'));
+const NotificationsPage = lazy(() => import('./components/NotificationsPage'));
+const InsightsHub = lazy(() => import('./components/InsightsHub'));
+const ResearchAreasPage = lazy(() => import('./components/ResearchAreasPage'));
+const NotFoundPage = lazy(() => import('./components/NotFoundPage'));
+
+function ViewLoadingFallback() {
+  return (
+    <div className="w-full min-h-[400px] flex items-center justify-center p-8 text-slate-500">
+      <div className="flex items-center gap-3 px-5 py-2.5 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <span className="text-xs font-mono font-medium text-slate-600 dark:text-slate-300">Loading view...</span>
+      </div>
+    </div>
+  );
+}
 
 function parsePath(path: string) {
   // 1. /researchers/:researcherId
@@ -606,6 +619,7 @@ export default function App() {
 
         {/* Main Container */}
         <main className="flex-grow">
+          <Suspense fallback={<ViewLoadingFallback />}>
           {/* Bypassing AnimatePresence prevents the fatal React 19 "Expected static flag was missing" reconciler assertion crash while preserving mounting fade-ins */}
           {currentView === 'home' && (
             user ? (
@@ -1374,6 +1388,7 @@ export default function App() {
                 />
               </motion.div>
             )}
+          </Suspense>
         </main>
 
         {/* Footer */}

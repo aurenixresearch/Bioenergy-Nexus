@@ -99,5 +99,12 @@ async function testConnection() {
     setFirestoreOffline(true);
   }
 }
-testConnection();
+
+if (typeof window !== 'undefined') {
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(() => { testConnection(); });
+  } else {
+    setTimeout(testConnection, 2500);
+  }
+}
 

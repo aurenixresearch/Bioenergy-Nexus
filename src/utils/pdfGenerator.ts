@@ -1,4 +1,3 @@
-import { jsPDF } from 'jspdf';
 import { ResearchPaper } from '../types';
 import { DETAILED_RESEARCH_DATA } from '../researchDetailsData';
 
@@ -6,7 +5,8 @@ import { DETAILED_RESEARCH_DATA } from '../researchDetailsData';
  * Generates a polished, publication-quality academic PDF report of a research study
  * and downloads it directly to the user's device.
  */
-export function generateResearchPDF(paper: ResearchPaper) {
+export async function generateResearchPDF(paper: ResearchPaper) {
+  const { jsPDF } = await import('jspdf');
   // Initialize jsPDF with A4 size in points (595.28 x 841.89 pt)
   const doc = new jsPDF({
     orientation: 'portrait',
