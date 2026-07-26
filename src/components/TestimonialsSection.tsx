@@ -170,13 +170,13 @@ export default function TestimonialsSection() {
     return Math.min(mobileIndex, Math.max(0, filteredTestimonials.length - 1));
   }, [mobileIndex, filteredTestimonials]);
 
-  // Auto-advance cards every 2s
+  // Auto-advance cards gently every 6.5s
   useEffect(() => {
     if (filteredTestimonials.length <= 1 || isPaused) return;
 
     const timer = setInterval(() => {
       setMobileIndex((prev) => (prev + 1) % filteredTestimonials.length);
-    }, 2000);
+    }, 6500);
 
     return () => clearInterval(timer);
   }, [filteredTestimonials.length, isPaused]);
@@ -476,9 +476,8 @@ export default function TestimonialsSection() {
                           rotate: -20,
                         }}
                         transition={{
-                          type: "spring",
-                          stiffness: 320,
-                          damping: 26,
+                          duration: 1.5,
+                          ease: [0.22, 1, 0.36, 1],
                         }}
                         whileDrag={{ scale: 1.02 }}
                         className={`absolute inset-x-0 mx-auto max-w-[340px] bg-white dark:bg-white rounded-[28px] p-6 border border-slate-200/90 dark:border-slate-200 shadow-xl flex flex-col justify-between space-y-5 cursor-grab active:cursor-grabbing select-none ${
