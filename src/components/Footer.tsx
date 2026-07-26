@@ -39,7 +39,7 @@ export default function Footer({ onNavClick }: FooterProps) {
               </div>
             </button>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-sm">
-              Aurenix Research is Nigeria's specialized research and training hub dedicated to helping public utilities and private entities transition safely and profitably to biomass, biogas, and waste-to-energy technologies.
+              Aurenix Research is a research and innovation hub connecting African expertise, energy and climate solutions, and global collaboration to drive sustainable impact.
             </p>
           </div>
 

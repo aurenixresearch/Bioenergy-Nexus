@@ -119,45 +119,45 @@ export default function CookieConsent() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 50, opacity: 0 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100%-1.5rem)] sm:w-auto max-w-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xl dark:shadow-2xl/50 p-4 sm:p-5 text-left text-slate-800 dark:text-slate-100 pointer-events-auto"
+            className="fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100%-1.25rem)] sm:w-auto max-w-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl sm:rounded-2xl shadow-xl dark:shadow-2xl/50 p-3 sm:p-5 text-left text-slate-800 dark:text-slate-100 pointer-events-auto"
             id="aurenix_cookie_consent_banner"
           >
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2.5 sm:gap-4">
               {/* Header & Description */}
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-lg">
-                    <Cookie className="w-4 h-4" />
+              <div className="space-y-1 sm:space-y-1.5">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="p-1 sm:p-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                    <Cookie className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white font-display">
+                  <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white font-display">
                     We use cookies
                   </h3>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Aurenix uses essential cookies to keep the platform secure and functional. With your permission, we may also use optional analytics and preference cookies to improve your experience.
+                <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 leading-normal sm:leading-relaxed">
+                  Aurenix uses essential cookies to keep the platform secure. Optional cookies help us analyze usage and customize your experience.
                 </p>
               </div>
 
               {/* Action Buttons Row */}
-              <div className="flex flex-wrap items-center justify-end gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+              <div className="flex items-center justify-end gap-1.5 sm:gap-2 pt-1.5 sm:pt-2 border-t border-slate-100 dark:border-slate-800/80">
                 <button
                   type="button"
                   onClick={() => setShowPreferences(true)}
-                  className="px-3.5 py-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl whitespace-nowrap cursor-pointer transition-colors shrink-0"
+                  className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs font-bold rounded-lg sm:rounded-xl whitespace-nowrap cursor-pointer transition-colors shrink-0"
                 >
-                  Manage Preferences
+                  Preferences
                 </button>
                 <button
                   type="button"
                   onClick={handleRejectOptional}
-                  className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl whitespace-nowrap cursor-pointer transition-colors shrink-0"
+                  className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] sm:text-xs font-bold rounded-lg sm:rounded-xl whitespace-nowrap cursor-pointer transition-colors shrink-0"
                 >
                   Reject Optional
                 </button>
                 <button
                   type="button"
                   onClick={handleAcceptAll}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl whitespace-nowrap cursor-pointer transition-colors shadow-xs shrink-0"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] sm:text-xs font-bold rounded-lg sm:rounded-xl whitespace-nowrap cursor-pointer transition-colors shadow-xs shrink-0"
                 >
                   Accept All
                 </button>

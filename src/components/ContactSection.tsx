@@ -54,7 +54,7 @@ export default function ContactSection() {
 
     try {
       // Send data to Formspree
-      const response = await fetch('https://formspree.io/f/xojgallo', {
+      const response = await fetch('https://formspree.io/f/mbdnplad', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

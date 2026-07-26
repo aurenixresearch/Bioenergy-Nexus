@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, BookOpen, FileText, Globe, Shield, Sparkles, Leaf } from 'lucide-react';
+import { ArrowRight, BookOpen, FileText, Globe, Shield, Sparkles, Leaf, User } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface HeroProps {
@@ -25,13 +25,13 @@ export default function Hero({ onExploreResearch, onRequestConsulting, onSignIn,
           <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
             
             {/* Tagline Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full text-xs font-semibold text-emerald-800 uppercase tracking-wider mx-auto lg:mx-0 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-              Empowering Africa's Energy Future
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full text-[11px] sm:text-xs font-semibold text-emerald-800 uppercase tracking-wider mx-auto lg:mx-0 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>Empowering Africa's Energy Future</span>
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold tracking-tight text-slate-900 leading-[1.1] sm:leading-none">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-display font-extrabold tracking-tight text-slate-900 leading-[1.15] sm:leading-none">
               Advancing Clean Energy <br className="hidden sm:inline" />
               Through <span className="text-emerald-600 relative inline-block">
                 Rigorous Research
@@ -40,45 +40,45 @@ export default function Hero({ onExploreResearch, onRequestConsulting, onSignIn,
             </h1>
 
             {/* Description */}
-            <p className="max-w-2xl text-base sm:text-lg text-slate-600 leading-relaxed mx-auto lg:mx-0">
+            <p className="max-w-2xl text-sm sm:text-lg text-slate-600 leading-relaxed mx-auto lg:mx-0">
               Aurenix Research is Nigeria’s research, training, and consulting hub dedicated to accelerating waste-to-energy technologies and circular economy principles. We equip scientists, developers, and governments with verified environmental studies and sustainable feasibility insights.
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
               <button
-                onClick={onExploreResearch}
-                className="flex items-center justify-center gap-2 px-7 py-4 bg-emerald-700 text-white hover:bg-emerald-800 active:scale-[0.99] rounded-xl font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer text-sm sm:text-base"
-                id="hero_explore_btn"
+                onClick={user ? onExploreResearch : onSignIn}
+                className="flex items-center justify-center gap-2 px-5 sm:px-7 py-3 sm:py-4 bg-emerald-700 text-white hover:bg-emerald-800 active:scale-[0.99] rounded-xl font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer text-xs sm:text-base"
+                id="hero_start_documenting_btn"
               >
-                <BookOpen className="w-4 h-4 sm:w-5 h-5" />
-                Explore Research Hub
-                <ArrowRight className="w-4 h-4" />
+                <User className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                <span>Start Documenting</span>
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </button>
               
               <button
-                onClick={onRequestConsulting}
-                className="flex items-center justify-center gap-2 px-7 py-4 bg-white text-slate-800 hover:text-emerald-700 hover:bg-emerald-50/50 active:scale-[0.99] rounded-xl font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer text-sm sm:text-base border border-slate-200/80"
-                id="hero_consult_btn"
+                onClick={onExploreResearch}
+                className="flex items-center justify-center gap-2 px-5 sm:px-7 py-3 sm:py-4 bg-white text-slate-800 hover:text-emerald-700 hover:bg-emerald-50/50 active:scale-[0.99] rounded-xl font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer text-xs sm:text-base border border-slate-200/80"
+                id="hero_explore_btn"
               >
-                <FileText className="w-4 h-4 sm:w-5 h-5 text-slate-500" />
-                Request Feasibility Review
+                <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 shrink-0" />
+                <span>Explore Research Hub</span>
               </button>
             </div>
 
             {/* Trust Metrics / Badges */}
-            <div className="pt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-200/60 max-w-lg mx-auto lg:mx-0">
-              <div>
-                <span className="block text-2xl sm:text-3xl font-bold text-slate-900 font-display">4+</span>
-                <span className="block text-xs font-medium text-slate-500">Core Areas of Service</span>
+            <div className="pt-4 grid grid-cols-3 gap-2 sm:gap-4 border-t border-slate-200/60 max-w-lg mx-auto lg:mx-0">
+              <div className="text-center sm:text-left">
+                <span className="block text-xl sm:text-3xl font-bold text-slate-900 font-display">4+</span>
+                <span className="block text-[10px] sm:text-xs font-medium text-slate-500">Core Areas of Service</span>
               </div>
-              <div className="sm:border-x border-slate-200 sm:px-4 py-2 sm:py-0 border-y sm:border-y-0">
-                <span className="block text-2xl sm:text-3xl font-bold text-slate-900 font-display whitespace-nowrap">3 Months</span>
-                <span className="block text-xs font-medium text-slate-500">Typical Project Cycle</span>
+              <div className="border-x border-slate-200 px-1.5 sm:px-4 py-0 text-center sm:text-left">
+                <span className="block text-xl sm:text-3xl font-bold text-slate-900 font-display whitespace-nowrap">3 Months</span>
+                <span className="block text-[10px] sm:text-xs font-medium text-slate-500">Typical Project Cycle</span>
               </div>
-              <div>
-                <span className="block text-2xl sm:text-3xl font-bold text-slate-900 font-display">Pan</span>
-                <span className="block text-xs font-medium text-slate-500">African Focus & Reach</span>
+              <div className="text-center sm:text-left">
+                <span className="block text-xl sm:text-3xl font-bold text-slate-900 font-display">Pan</span>
+                <span className="block text-[10px] sm:text-xs font-medium text-slate-500">African Focus & Reach</span>
               </div>
             </div>
 
@@ -147,15 +147,17 @@ export default function Hero({ onExploreResearch, onRequestConsulting, onSignIn,
           </div>
 
         </div>
+      </div>
 
-        {/* Collaborating & Research Institutions (Social Proof Trust Bar) */}
-        <div className="mt-20 pt-10 border-t border-slate-200/60 dark:border-slate-800 overflow-hidden">
-          <p className="text-center text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-6 flex items-center justify-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            Trusted Technical Partner & Aligned with Leading African Institutions
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-          </p>
-          <div className="relative w-full overflow-hidden py-3 [mask-image:_linear-gradient(to_right,transparent_0,_black_80px,_black_calc(100%-80px),transparent_100%)]">
+      {/* Collaborating & Research Institutions (Social Proof Trust Bar) */}
+      <div className="mt-16 sm:mt-20 pt-8 sm:pt-10 overflow-hidden w-full px-0">
+        <p className="text-center text-[10px] sm:text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-6 flex items-center justify-center gap-2 px-4 sm:px-6">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+          <span className="hidden sm:inline">Trusted Technical Partner & Aligned with Leading African Institutions</span>
+          <span className="sm:hidden">Aligned with Leading African Institutions</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+        </p>
+        <div className="relative w-full overflow-hidden py-3 lg:[mask-image:_linear-gradient(to_right,transparent_0,_black_80px,_black_calc(100%-80px),transparent_100%)]">
             <div className="animate-marquee flex items-center gap-5 py-2 cursor-pointer">
               {/* Set 1 */}
               <div className="flex items-center gap-5 shrink-0">
@@ -217,8 +219,6 @@ export default function Hero({ onExploreResearch, onRequestConsulting, onSignIn,
             </div>
           </div>
         </div>
-
-      </div>
     </section>
   );
 }

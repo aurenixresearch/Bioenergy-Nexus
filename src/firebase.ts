@@ -1,5 +1,13 @@
 import { initializeApp } from 'firebase/app';
-import { initializeAuth, browserLocalPersistence, browserPopupRedirectResolver, GoogleAuthProvider } from 'firebase/auth';
+import { 
+  getAuth,
+  initializeAuth, 
+  indexedDBLocalPersistence,
+  browserLocalPersistence, 
+  inMemoryPersistence,
+  browserPopupRedirectResolver, 
+  GoogleAuthProvider 
+} from 'firebase/auth';
 import { 
   initializeFirestore, 
   persistentLocalCache, 
@@ -31,10 +39,18 @@ export const db = initializeFirestore(app, {
   experimentalAutoDetectLongPolling: false,
 }, config.firestoreDatabaseId || '(default)');
 
-export const auth = initializeAuth(app, {
-  persistence: browserLocalPersistence,
-  popupRedirectResolver: browserPopupRedirectResolver,
-});
+// Initialize Auth safely without global popupRedirectResolver to prevent "Pending promise was never set" assertions in sandboxed/iframe environments
+let authInstance;
+try {
+  authInstance = initializeAuth(app, {
+    persistence: [indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence],
+  });
+} catch {
+  authInstance = getAuth(app);
+}
+
+export const auth = authInstance;
+export { browserPopupRedirectResolver };
 export const googleProvider = new GoogleAuthProvider();
 
 // Standard scopes if needed

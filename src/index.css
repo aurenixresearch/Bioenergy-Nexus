@@ -8,39 +8,25 @@
 }
 
 /* Custom scroll behavior and aesthetics */
-html {
+html, body {
   scroll-behavior: smooth;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 
-/* Custom scrollbar */
+/* Hide scrollbars / thumb scroller globally for a clean UI */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 0px !important;
+  height: 0px !important;
+  display: none !important;
 }
 
-::-webkit-scrollbar-track {
-  background: #f8fafc;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Hide scrollbars completely for sidebar or custom containers */
-.custom-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.custom-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+html, body, * {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
 }
 
 /* Custom micro animations */
@@ -410,18 +396,11 @@ textarea.composer-textarea:active,
   box-shadow: 0 0 15px rgba(74, 222, 128, 0.1) !important;
 }
 
-/* Custom dark scrollbar settings */
-.dark ::-webkit-scrollbar-track {
-  background: #000000 !important;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(52, 211, 153, 0.25) !important;
-  border-radius: 4px;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(52, 211, 153, 0.45) !important;
+/* Custom dark scrollbar settings - Hidden */
+.dark ::-webkit-scrollbar {
+  width: 0px !important;
+  height: 0px !important;
+  display: none !important;
 }
 
 /* Ultimate border, divider, and demarcation line removal for dark mode */
@@ -880,6 +859,12 @@ p, h1, h2, h3, h4, h5, h6, span, div, a, li, td, th {
   white-space: nowrap !important;
 }
 
+/* Button Responsiveness & Single-Line Guarantee */
+button, .btn, [role="button"] {
+  white-space: nowrap;
+  max-width: 100%;
+}
+
 /* 5. Flexbox & Grid Item Min-Width Zero Prevention */
 .grid > *, .flex > * {
   min-width: 0;
@@ -915,6 +900,82 @@ div[role="dialog"],
 
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+/* Timeline Section white in all modes override */
+#experience_timeline,
+.dark #experience_timeline,
+#endorsements,
+.dark #endorsements {
+  background-color: #ffffff !important;
+}
+
+.dark #endorsements input,
+.dark #endorsements button:not(.bg-emerald-800),
+.dark #endorsements div:not(.bg-emerald-800):not(.bg-\[\#134e38\]):not(.bg-\[\#0d4f37\]):not(.bg-\[\#059669\]) {
+  background-color: #ffffff;
+}
+
+.dark #experience_timeline h2,
+.dark #endorsements h2,
+.dark #endorsements h3,
+.dark #endorsements h4 {
+  color: #0f172a !important;
+}
+
+.dark #experience_timeline p,
+.dark #endorsements p {
+  color: #475569 !important;
+}
+
+/* Timeline Cards white in dark mode override */
+.dark #experience_timeline .timeline-card,
+.dark .timeline-card {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+.dark #experience_timeline .timeline-line {
+  background-color: #10b981 !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5) !important;
+}
+
+.dark #experience_timeline .timeline-node {
+  background-color: #34d399 !important;
+  border-color: #0f172a !important;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.6) !important;
+}
+
+.dark #experience_timeline .timeline-card .text-slate-800,
+.dark .timeline-card .text-slate-800,
+.dark #experience_timeline .timeline-card .text-slate-900,
+.dark .timeline-card .text-slate-900 {
+  color: #0f172a !important;
+}
+
+.dark #experience_timeline .timeline-card .text-slate-500,
+.dark .timeline-card .text-slate-500,
+.dark #experience_timeline .timeline-card .text-slate-600,
+.dark .timeline-card .text-slate-600 {
+  color: #334155 !important;
+}
+
+.dark #experience_timeline .timeline-card .text-slate-400,
+.dark .timeline-card .text-slate-400 {
+  color: #64748b !important;
+}
+
+.dark #experience_timeline .timeline-card .text-emerald-700,
+.dark .timeline-card .text-emerald-700 {
+  color: #047857 !important;
+}
+
+.dark #experience_timeline .timeline-card .bg-slate-100,
+.dark .timeline-card .bg-slate-100 {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
 }
 
 

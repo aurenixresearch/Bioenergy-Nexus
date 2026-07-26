@@ -200,28 +200,28 @@ export default function AboutSection() {
             <div className="space-y-5 relative z-10 text-left">
               <div className="text-xs font-mono uppercase tracking-widest text-emerald-400 font-semibold flex items-center gap-1.5">
                 <Lightbulb className="w-3.5 h-3.5" />
-                Empirical Philosophy
+                RESEARCH-DRIVEN IMPACT
               </div>
               <h3 className="text-2xl font-display font-extrabold tracking-tight text-white leading-tight">
-                Empowering Decentralized Energy
+                Advancing Africa's Energy & Climate Future
               </h3>
               <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-light">
-                Modern bioenergy requires an empirical bridge between lab-tested kinetics and physical reactors. By analyzing regional biomass catalysts and organic waste profiles, we translate academic chemical findings into safe, robust, industrial-scale systems.
+                Aurenix Research connects African researchers, innovators, institutions, and global stakeholders to accelerate practical solutions for Africa's energy and climate challenges. By connecting research with collaboration, knowledge-sharing, and real-world application, we help turn African expertise and innovation into sustainable impact.
               </p>
             </div>
 
             <div className="space-y-4 pt-8 border-t border-slate-800/80 relative z-10 text-left">
               <div className="flex items-center gap-3">
                 <div className="w-5 h-5 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-800 flex items-center justify-center text-[10px] font-bold shrink-0">✓</div>
-                <span className="text-xs font-medium text-slate-200">100% Peer-Reviewed, Open-Source Reports</span>
+                <span className="text-xs font-medium text-slate-200">Research-driven solutions for Africa's energy and climate challenges</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-5 h-5 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-800 flex items-center justify-center text-[10px] font-bold shrink-0">✓</div>
-                <span className="text-xs font-medium text-slate-200">Chemical feedstock safety configurations</span>
+                <span className="text-xs font-medium text-slate-200">Connecting African researchers with global opportunities and partnerships</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-5 h-5 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-800 flex items-center justify-center text-[10px] font-bold shrink-0">✓</div>
-                <span className="text-xs font-medium text-slate-200">Active capacity builder for security organs & NGOs</span>
+                <span className="text-xs font-medium text-slate-200">Supporting knowledge-sharing, innovation, and practical impact</span>
               </div>
             </div>
           </div>
@@ -362,18 +362,18 @@ export default function AboutSection() {
 
 
       {/* 4. Professional Milestone Timeline & Journey */}
-      <div className="py-24 bg-slate-50/50" id="experience_timeline">
+      <div className="py-24 bg-white dark:bg-white" id="experience_timeline">
         <div className="w-full max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">
-              <Clock className="w-3.5 h-3.5 text-emerald-600" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 rounded-full text-xs font-semibold uppercase tracking-wider shadow-xs border border-transparent dark:border-emerald-800/50">
+              <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               Organizational Chronology
             </div>
-            <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-900 tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-900 dark:text-white tracking-tight">
               Our Journey of Applied Innovation
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 max-w-2xl mx-auto">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
               How Aurenix Research transitioned from conceptual laboratory testing to practical state training and municipal-scale deployment.
             </p>
           </div>
@@ -381,7 +381,7 @@ export default function AboutSection() {
           {/* Timeline Layout */}
           <div className="relative max-w-3xl mx-auto">
             {/* Center line */}
-            <div className="absolute left-4 sm:left-1/2 top-0 bottom-0 w-0.5 bg-slate-200"></div>
+            <div className="timeline-line absolute left-4 sm:left-1/2 top-0 bottom-0 w-0.5 bg-slate-300 dark:bg-emerald-500/60 shadow-xs"></div>
 
             <div className="space-y-12">
               {milestones.map((item, index) => {
@@ -392,13 +392,13 @@ export default function AboutSection() {
                     isEven ? 'sm:flex-row-reverse' : ''
                   }`}>
                     {/* Timeline Node Point */}
-                    <div className="absolute left-4 sm:left-1/2 -translate-x-1.5 sm:-translate-x-1/2 w-3.5 h-3.5 rounded-full bg-emerald-600 border-4 border-white shadow-md z-10"></div>
+                    <div className="timeline-node absolute left-4 sm:left-1/2 -translate-x-1.5 sm:-translate-x-1/2 w-4 h-4 rounded-full bg-emerald-600 dark:bg-emerald-400 border-4 border-white dark:border-slate-900 shadow-md z-10"></div>
 
                     {/* Left Space for Desktop / Card Wrapper */}
                     <div className={`w-full sm:w-1/2 pl-12 sm:pl-0 ${
                       isEven ? 'sm:pl-8 text-left' : 'sm:pr-8 text-left sm:text-right'
                     }`}>
-                      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-shadow duration-200">
+                      <div className="timeline-card bg-white p-6 rounded-2xl border border-slate-100 dark:border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                         {/* Header info */}
                         <div className={`flex flex-col mb-3 ${
                           isEven ? 'items-start' : 'items-start sm:items-end'

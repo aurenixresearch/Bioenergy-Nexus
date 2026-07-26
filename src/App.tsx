@@ -6,7 +6,7 @@ import {
   signOut, 
   User as FirebaseUser 
 } from 'firebase/auth';
-import { auth, googleProvider, db } from './firebase';
+import { auth, googleProvider, browserPopupRedirectResolver, db } from './firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { getSavedPaperIds, getUserInquiries, getUserPartnerships, getUserProfile, isDemoModeActive, getCustomPapers, getInnovationProjects, updateInnovationProject, savePaper, unsavePaper } from './services/db';
 import { ConsultationInquiry, PartnershipSubmission, ResearchPaper } from './types';
@@ -42,22 +42,14 @@ import NotificationsPage from './components/NotificationsPage';
 import SeoManager from './components/seo/SeoManager';
 import InsightsHub from './components/InsightsHub';
 import ResearchAreasPage from './components/ResearchAreasPage';
+import FeaturedPilots from './components/FeaturedPilots';
+import { TrustedLeadersBanner } from './components/TrustedLeadersBanner';
+import TestimonialsSection from './components/TestimonialsSection';
 import NotFoundPage from './components/NotFoundPage';
 import { RESEARCH_PAPERS } from './data';
 import { generateResearchPDF } from './utils/pdfGenerator';
 
-function parseUrl() {
-  if (typeof window === 'undefined') {
-    return { view: 'initializing' as const, researcherId: null as string | null, paperId: null as string | null, projectId: null as string | null, allianceId: null as string | null, insightSlug: null as string | null, areaSlug: null as string | null };
-  }
-  
-  const isInitialized = sessionStorage.getItem('nexus_system_initialized') === 'true';
-  if (!isInitialized) {
-    return { view: 'initializing' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
-  }
-  
-  const path = window.location.pathname;
-  
+function parsePath(path: string) {
   // 1. /researchers/:researcherId
   let match = path.match(/^\/researchers\/([^/]+)$/);
   if (match) {
@@ -122,13 +114,26 @@ function parseUrl() {
   }
 
   // Standard views
-  const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'initializing', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas'];
+  const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas'];
   const viewName = path.substring(1);
   if (views.includes(viewName)) {
     return { view: viewName as any, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
   }
   
   return { view: 'notfound' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+}
+
+function parseUrl() {
+  if (typeof window === 'undefined') {
+    return { view: 'initializing' as const, researcherId: null as string | null, paperId: null as string | null, projectId: null as string | null, allianceId: null as string | null, insightSlug: null as string | null, areaSlug: null as string | null };
+  }
+  
+  const isInitialized = sessionStorage.getItem('nexus_system_initialized') === 'true';
+  if (!isInitialized) {
+    return { view: 'initializing' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+  }
+  
+  return parsePath(window.location.pathname);
 }
 
 export default function App() {
@@ -442,8 +447,9 @@ export default function App() {
     console.log(`[REAL-TIME ROLE AUDIT] Role stored in application state (userProfile): "${userProfile?.role}"`);
   }, [userProfile]);
 
-  // Route Guard check and access restriction
+  // Admin Route Guard check and access restriction
   useEffect(() => {
+    if (authLoading) return;
     if (currentView === 'admin') {
       const isUserPlatformAdmin = 
         userProfile?.role?.toLowerCase() === 'admin' ||
@@ -458,10 +464,20 @@ export default function App() {
 
       if (!isUserPlatformAdmin) {
         console.warn(`[REAL-TIME ROLE AUDIT] Route guard access restriction triggered! Redirecting user to dashboard.`);
-        setView('dashboard');
+        setView(user ? 'dashboard' : 'home');
       }
     }
-  }, [currentView, userProfile, user]);
+  }, [currentView, userProfile, user, authLoading]);
+
+  // Protected User Routes guard check
+  useEffect(() => {
+    if (authLoading) return;
+    const protectedViews = ['dashboard', 'profile', 'settings', 'messages', 'notifications', 'console', 'onboarding'];
+    if (protectedViews.includes(currentView) && !user) {
+      console.warn(`[ROUTE GUARD] Unauthenticated attempt to access protected route "${currentView}". Redirecting to home.`);
+      setView('home');
+    }
+  }, [currentView, user, authLoading]);
 
   // Sync user info
   const refreshAllUserData = async (userId: string) => {
@@ -503,7 +519,7 @@ export default function App() {
   const handleSignIn = async () => {
     try {
       setAuthError(null);
-      await signInWithPopup(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
       if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
         setView('initializing');
       } else {
@@ -743,193 +759,13 @@ export default function App() {
                 </section>
 
                 {/* Real-World Pilot Projects (Social Proof of Deployments) */}
-                <section className="py-20 bg-slate-50 border-t border-slate-100 text-left" id="featured_pilots">
-                  <div className="w-full max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">
-                        <Award className="w-3.5 h-3.5 text-emerald-600" />
-                        Proven Field Deployments
-                      </div>
-                      <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-slate-900 tracking-tight">
-                        Real-World Bioenergy Impact
-                      </h2>
-                      <p className="text-base text-slate-600 leading-relaxed">
-                        We don't just write papers. Our technical team works on-site at major high-traffic facilities and municipal centers to configure, audit, and optimize bioenergy reactors.
-                      </p>
-                    </div>
+                <FeaturedPilots />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* MMA Airport Pilot */}
-                      <motion.div 
-                        whileHover={{ y: -6 }}
-                        className="bg-white rounded-3xl p-8 border border-slate-200/50 shadow-xs flex flex-col justify-between relative overflow-hidden"
-                      >
-                        <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
-                          <Building className="w-32 h-32 text-emerald-900" />
-                        </div>
-                        <div className="space-y-6 relative z-10">
-                          <div className="flex items-center gap-3">
-                            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                              Operational Pilot
-                            </span>
-                            <span className="text-xs font-mono text-slate-400">Lagos, Nigeria</span>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <h3 className="text-xl font-bold text-slate-900 font-display">Murtala Muhammed Airport Biodigester</h3>
-                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                              Configured and optimized the daily feedstock loading and biochemical digestion parameters for localized aviation waste-to-energy conversion, providing clean, secondary electrical and gas backup.
-                            </p>
-                          </div>
+                {/* Trusted By Leaders Showcase Banner */}
+                <TrustedLeadersBanner />
 
-                          <div className="space-y-2.5 pt-4 border-t border-slate-100">
-                            <h4 className="text-[10px] font-mono font-bold text-slate-400 uppercase">Key Project Achievements:</h4>
-                            <ul className="space-y-2">
-                              <li className="flex items-center gap-2 text-xs text-slate-600">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                                <span>100% locally managed bioenergy operational workflow.</span>
-                              </li>
-                              <li className="flex items-center gap-2 text-xs text-slate-600">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                                <span>Capacity-building programs delivered to technical site engineers.</span>
-                              </li>
-                              <li className="flex items-center gap-2 text-xs text-slate-600">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                                <span>Successful organic methane yield tuning in tropical conditions.</span>
-                              </li>
-                            </ul>
-                          </div>
-                        </div>
-                      </motion.div>
-
-                      {/* Lagos Waste Feasibility Pilot */}
-                      <motion.div 
-                        whileHover={{ y: -6 }}
-                        className="bg-white rounded-3xl p-8 border border-slate-200/50 shadow-xs flex flex-col justify-between relative overflow-hidden"
-                      >
-                        <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
-                          <FlaskConical className="w-32 h-32 text-emerald-900" />
-                        </div>
-                        <div className="space-y-6 relative z-10">
-                          <div className="flex items-center gap-3">
-                            <span className="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                              Analytical Case Study
-                            </span>
-                            <span className="text-xs font-mono text-slate-400">Metropolitan Lagos</span>
-                          </div>
-
-                          <div className="space-y-2">
-                            <h3 className="text-xl font-bold text-slate-900 font-display">Municipal Solid Waste Audit</h3>
-                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                              Conducted complete chemical assessment of metropolitan Lagos solid waste streams. Assessed biochemical vs thermochemical pathways to structure high-yield investment roadmaps for urban suburbs.
-                            </p>
-                          </div>
-
-                          <div className="space-y-2.5 pt-4 border-t border-slate-100">
-                            <h4 className="text-[10px] font-mono font-bold text-slate-400 uppercase">Key Project Achievements:</h4>
-                            <ul className="space-y-2">
-                              <li className="flex items-center gap-2 text-xs text-slate-600">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                                <span>Published peer-reviewed chemical compositions of local feedstocks.</span>
-                              </li>
-                              <li className="flex items-center gap-2 text-xs text-slate-600">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                                <span>Quantified exact carbon-offset metrics for regional green funds.</span>
-                              </li>
-                              <li className="flex items-center gap-2 text-xs text-slate-600">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                                <span>Presented policy benchmarks directly to municipal waste bodies.</span>
-                              </li>
-                            </ul>
-                          </div>
-                        </div>
-                      </motion.div>
-                    </div>
-                  </div>
-                </section>
-
-                {/* Scientific & Stakeholder Endorsements (Social Proof Quotes) */}
-                <section className="py-20 bg-white border-t border-slate-100 text-left" id="endorsements">
-                  <div className="w-full max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">
-                        <Quote className="w-3.5 h-3.5 text-emerald-600" />
-                        Ecosystem Endorsements
-                      </div>
-                      <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-slate-900 tracking-tight">
-                        What Aligned Stakeholders Say
-                      </h2>
-                      <p className="text-base text-slate-600 leading-relaxed">
-                        Read perspectives from university researchers, clean energy program managers, and regional policy developers who have collaborated with Aurenix Research.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      {/* Testimonial 1 */}
-                      <div className="bg-slate-50 p-6 sm:p-8 rounded-2xl border border-slate-100/80 flex flex-col justify-between space-y-6">
-                        <div className="space-y-4">
-                          <div className="text-emerald-600">
-                            <Quote className="w-8 h-8 opacity-40" />
-                          </div>
-                          <p className="text-xs sm:text-sm text-slate-600 italic leading-relaxed">
-                            "Aurenix Research delivered precise, local chemical and feedstock parameters that resolved our digester overloading issues. Their academic depth combined with physical plant experience is exceptional."
-                          </p>
-                        </div>
-                        <div className="border-t border-slate-200/60 pt-4 flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
-                            SA
-                          </div>
-                          <div>
-                            <h4 className="text-xs font-bold text-slate-900">Dr. Samuel Adebayo</h4>
-                            <p className="text-[10px] text-slate-500 font-medium">Process Chemistry Specialist, UNILAG</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Testimonial 2 */}
-                      <div className="bg-slate-50 p-6 sm:p-8 rounded-2xl border border-slate-100/80 flex flex-col justify-between space-y-6">
-                        <div className="space-y-4">
-                          <div className="text-emerald-600">
-                            <Quote className="w-8 h-8 opacity-40" />
-                          </div>
-                          <p className="text-xs sm:text-sm text-slate-600 italic leading-relaxed">
-                            "The airport waste-to-energy feasibility study was remarkably rigorous. It was the first report we reviewed that integrated local supply-chain constraints with practical chemical yield projections."
-                          </p>
-                        </div>
-                        <div className="border-t border-slate-200/60 pt-4 flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs">
-                            CO
-                          </div>
-                          <div>
-                            <h4 className="text-xs font-bold text-slate-900">Engr. Chidi Okafor</h4>
-                            <p className="text-[10px] text-slate-500 font-medium">Clean Tech Plant Operations Consultant</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Testimonial 3 */}
-                      <div className="bg-slate-50 p-6 sm:p-8 rounded-2xl border border-slate-100/80 flex flex-col justify-between space-y-6">
-                        <div className="space-y-4">
-                          <div className="text-emerald-600">
-                            <Quote className="w-8 h-8 opacity-40" />
-                          </div>
-                          <p className="text-xs sm:text-sm text-slate-600 italic leading-relaxed">
-                            "By training our cooperative waste managers, Aurenix Research built local capacity rather than just delivering templates. They are true champions of indigenous African science."
-                          </p>
-                        </div>
-                        <div className="border-t border-slate-200/60 pt-4 flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
-                            FA
-                          </div>
-                          <div>
-                            <h4 className="text-xs font-bold text-slate-900">Fatima Alao</h4>
-                            <p className="text-[10px] text-slate-500 font-medium">Director, West African Circularity NGO</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </section>
+                {/* Scientific & Stakeholder Endorsements + FAQ Testimonials */}
+                <TestimonialsSection />
               </motion.div>
             )
           )}
@@ -1449,7 +1285,12 @@ export default function App() {
                   user={user}
                   onComplete={() => {
                     sessionStorage.setItem('nexus_system_initialized', 'true');
-                    setView(user ? (needsOnboarding ? 'onboarding' : 'dashboard') : 'home');
+                    const targetRoute = parsePath(window.location.pathname);
+                    if (targetRoute.view === 'initializing' || targetRoute.view === 'home') {
+                      setView(user ? (needsOnboarding ? 'onboarding' : 'dashboard') : 'home');
+                    } else {
+                      setRouteState(targetRoute);
+                    }
                   }}
                 />
               </motion.div>
