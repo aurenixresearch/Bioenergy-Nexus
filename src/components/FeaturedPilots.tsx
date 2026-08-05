@@ -50,7 +50,7 @@ export default function FeaturedPilots() {
   const IconComponent = currentPilot.Icon;
 
   return (
-    <section className="py-20 bg-slate-50 border-t border-slate-100 text-left" id="featured_pilots">
+    <section className="py-20 bg-slate-50 text-left" id="featured_pilots">
       <div className="w-full max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">
@@ -60,13 +60,13 @@ export default function FeaturedPilots() {
           <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-slate-900 tracking-tight">
             Real-World Bioenergy Impact
           </h2>
-          <p className="text-base text-slate-600 leading-relaxed">
+          <p className="text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto px-2 sm:px-0">
             We don't just write papers. Our technical team works on-site at major high-traffic facilities and municipal centers to configure, audit, and optimize bioenergy reactors.
           </p>
         </div>
 
-        {/* PC View: Two individual cards side-by-side */}
-        <div className="hidden md:grid md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto">
+        {/* Desktop View: Two individual cards side-by-side (lg screen and above) */}
+        <div className="hidden lg:grid lg:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto">
           {PILOTS.map((pilot) => {
             const Icon = pilot.Icon;
             return (
@@ -110,8 +110,8 @@ export default function FeaturedPilots() {
           })}
         </div>
 
-        {/* Mobile View: Single auto-rotating card container */}
-        <div className="block md:hidden max-w-2xl mx-auto">
+        {/* Mobile/Tablet View: Single auto-rotating card container */}
+        <div className="block lg:hidden max-w-2xl mx-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentPilot.id}

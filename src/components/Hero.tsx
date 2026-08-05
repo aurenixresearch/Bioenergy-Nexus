@@ -40,7 +40,7 @@ export default function Hero({ onExploreResearch, onRequestConsulting, onSignIn,
             </h1>
 
             {/* Description */}
-            <p className="max-w-2xl text-sm sm:text-lg text-slate-600 leading-relaxed mx-auto lg:mx-0">
+            <p className="max-w-2xl text-xs sm:text-base md:text-lg text-slate-600 leading-relaxed mx-auto lg:mx-0 px-2 sm:px-0">
               Aurenix Research is Nigeria’s research, training, and consulting hub dedicated to accelerating waste-to-energy technologies and circular economy principles. We equip scientists, developers, and governments with verified environmental studies and sustainable feasibility insights.
             </p>
 
@@ -92,24 +92,7 @@ export default function Hero({ onExploreResearch, onRequestConsulting, onSignIn,
               <div className="relative p-6 sm:p-8 bg-white rounded-3xl shadow-lg z-10 overflow-hidden group hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 
-                {/* Visual energy recycling circle */}
-                <div className="relative w-44 h-44 sm:w-48 sm:h-48 mx-auto flex items-center justify-center mb-6">
-                  {/* Rotating dashed ring */}
-                  <div className="absolute inset-0 border-2 border-dashed border-emerald-200 rounded-full animate-[spin_40s_linear_infinite]"></div>
-                  {/* Solid accent circles */}
-                  <div className="absolute inset-4 bg-emerald-50 rounded-full flex items-center justify-center"></div>
-                  <div className="absolute inset-8 bg-white rounded-full shadow-xs flex items-center justify-center p-3">
-                    <img 
-                      src="https://lh3.googleusercontent.com/d/1POL5B_50Y1qxV72fFk68hXfMSZe52IDF" 
-                      alt="Aurenix Research Icon Logo" 
-                      referrerPolicy="no-referrer"
-                      width="56"
-                      height="56"
-                      fetchPriority="high"
-                      className="w-14 h-14 object-contain opacity-90"
-                    />
-                  </div>
-                </div>
+
 
                 {/* Status indicator badges */}
                 <div className="space-y-3">

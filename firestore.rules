@@ -124,7 +124,7 @@ service cloud.firestore {
 
     // Collection: users
     match /users/{userId} {
-      allow read: if isSignedIn() && (userId == request.auth.uid || isPlatformAdmin());
+      allow read: if isSignedIn();
       allow create: if isSignedIn() && userId == request.auth.uid && (
         isPlatformAdmin() || 
         (isValidUserProfile(incoming()) && incoming().role != 'admin' && incoming().role != 'super_admin')
@@ -157,7 +157,27 @@ service cloud.firestore {
              (!('joinedDate' in data) || (data.joinedDate is string && data.joinedDate.size() <= 100)) &&
              (!('status' in data) || (data.status is string && data.status.size() <= 50)) &&
              (!('researchCount' in data) || (data.researchCount is int || data.researchCount is float)) &&
-             (!('needsOnboarding' in data) || (data.needsOnboarding is bool));
+             (!('needsOnboarding' in data) || (data.needsOnboarding is bool)) &&
+             (!('biography' in data) || (data.biography is string && data.biography.size() <= 10000)) &&
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 10000)) &&
+             (!('department' in data) || (data.department is string && data.department.size() <= 200)) &&
+             (!('city' in data) || (data.city is string && data.city.size() <= 200)) &&
+             (!('website' in data) || (data.website is string && data.website.size() <= 1000)) &&
+             (!('keywords' in data) || (data.keywords is string || data.keywords is list)) &&
+             (!('expertise' in data) || (data.expertise is string || data.expertise is list)) &&
+             (!('skills' in data) || (data.skills is list)) &&
+             (!('orcidId' in data) || (data.orcidId is string && data.orcidId.size() <= 200)) &&
+             (!('orcidUrl' in data) || (data.orcidUrl is string && data.orcidUrl.size() <= 1000)) &&
+             (!('googleScholarUrl' in data) || (data.googleScholarUrl is string && data.googleScholarUrl.size() <= 1000)) &&
+             (!('researchGateUrl' in data) || (data.researchGateUrl is string && data.researchGateUrl.size() <= 1000)) &&
+             (!('scopusId' in data) || (data.scopusId is string && data.scopusId.size() <= 200)) &&
+             (!('linkedInUrl' in data) || (data.linkedInUrl is string && data.linkedInUrl.size() <= 1000)) &&
+             (!('education' in data) || (data.education is list)) &&
+             (!('employment' in data) || (data.employment is list)) &&
+             (!('awards' in data) || (data.awards is list)) &&
+             (!('funding' in data) || (data.funding is list)) &&
+             (!('publications' in data) || (data.publications is list)) &&
+             (!('portfolioLinks' in data) || (data.portfolioLinks is map));
     }
 
     // Collection: researchers
@@ -285,12 +305,15 @@ service cloud.firestore {
 
     // Collection: reports
     match /reports/{reportId} {
-      allow read, write: if isSignedIn() && isPlatformAdmin();
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && incoming().reporterId == request.auth.uid;
+      allow update, delete: if isSignedIn() && isPlatformAdmin();
     }
 
     // Collection: audit_logs
     match /audit_logs/{logId} {
-      allow read, write: if isSignedIn() && isPlatformAdmin();
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isPlatformAdmin();
     }
 
     // Collection: admin_roles
@@ -330,18 +353,26 @@ service cloud.firestore {
       }
     }
 
-    // Collection: reports
-    match /reports/{reportId} {
-      allow read: if isSignedIn() && isPlatformAdmin();
-      allow create: if isSignedIn() && incoming().reporterId == request.auth.uid;
-      allow update, delete: if isSignedIn() && isPlatformAdmin();
-    }
+    // Collection: reports (Consolidated above)
 
     // Collection: blocks
     match /blocks/{blockId} {
       allow read: if isSignedIn() && (resource == null || resource.data.blockerId == request.auth.uid || resource.data.blockedUserId == request.auth.uid);
       allow create: if isSignedIn() && incoming().blockerId == request.auth.uid;
       allow delete: if isSignedIn() && existing().blockerId == request.auth.uid;
+    }
+
+    // Collection: policy_acceptances
+    match /policy_acceptances/{acceptanceId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid || isPlatformAdmin());
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow update, delete: if isPlatformAdmin();
+    }
+
+    // Collection: policy_documents
+    match /policy_documents/{policyId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isPlatformAdmin();
     }
 
     // Top-level Collection: messages (optional direct collection fallback)
@@ -357,6 +388,49 @@ service cloud.firestore {
         )
       );
       allow delete: if isSignedIn() && existing().senderId == request.auth.uid;
+    }
+
+    // Collection: community_posts
+    match /community_posts/{postId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidCommunityPost(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        // Action 1: Liking or Unliking the post
+        (incoming().diff(existing()).affectedKeys().hasOnly(['likes']) &&
+         (!('likes' in incoming()) || (incoming().likes is list && incoming().likes.size() <= 10000))) ||
+        
+        // Action 2: Commenting on the post
+        (incoming().diff(existing()).affectedKeys().hasOnly(['comments']) &&
+         (!('comments' in incoming()) || (incoming().comments is list && incoming().comments.size() <= 10000))) ||
+        
+        // Action 3: General update by the post author
+        (existing().userId == request.auth.uid && isValidCommunityPost(incoming()) && incoming().userId == request.auth.uid) ||
+        
+        isPlatformAdmin()
+      );
+      allow delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid || isPlatformAdmin());
+    }
+
+    // Collection: testimonials
+    match /testimonials/{testimonialId} {
+      allow read: if true;
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid && incoming().approved == false;
+      allow update, delete: if isPlatformAdmin() || (isSignedIn() && existing().userId == request.auth.uid && incoming().approved == false);
+    }
+
+    function isValidCommunityPost(data) {
+      return data.keys().hasAll(['userId', 'authorName', 'authorInstitution', 'authorCountry', 'content', 'createdAt']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.authorName is string && data.authorName.size() <= 128 &&
+             data.authorInstitution is string && data.authorInstitution.size() <= 256 &&
+             data.authorCountry is string && data.authorCountry.size() <= 128 &&
+             data.content is string && data.content.size() <= 5000 &&
+             data.createdAt is string && data.createdAt.size() <= 100 &&
+             (!('authorAvatar' in data) || data.authorAvatar is string && data.authorAvatar.size() <= 1000) &&
+             (!('imageUrl' in data) || data.imageUrl is string && data.imageUrl.size() <= 1000) &&
+             (!('researchLink' in data) || data.researchLink is string && data.researchLink.size() <= 1000) &&
+             (!('likes' in data) || (data.likes is list && data.likes.size() <= 10000)) &&
+             (!('comments' in data) || (data.comments is list && data.comments.size() <= 10000));
     }
   }
 }

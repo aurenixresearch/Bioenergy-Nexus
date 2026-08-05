@@ -66,7 +66,7 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
           setHasWorkspaces(list.length > 0);
 
           if (profile?.role) {
-            const normalizedRole = profile.role.toLowerCase();
+            const normalizedRole = (profile.role || '').toLowerCase();
             const isScholar = ['student', 'researcher', 'lecturer', 'professor'].some(r => normalizedRole.includes(r));
             if (isScholar) {
               setConsoleType('researcher');
@@ -289,22 +289,22 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
           </p>
 
           {/* Quick Stats Panel */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 pt-6 text-left">
-            <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-              <span className="text-slate-400 font-mono text-[10px] uppercase font-bold">Matched Opportunities</span>
-              <strong className="block text-2xl font-extrabold text-slate-900 mt-1">96% Score</strong>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 md:gap-6 pt-4 sm:pt-6 text-left">
+            <div className="p-3 sm:p-4 bg-slate-50/80 hover:bg-slate-100/60 border border-slate-200/60 rounded-xl sm:rounded-2xl transition-all">
+              <span className="text-slate-500 font-mono text-[9px] sm:text-[10px] uppercase font-bold tracking-wider block truncate">Matched Opportunities</span>
+              <strong className="block text-base sm:text-xl lg:text-2xl font-extrabold text-slate-900 mt-0.5 sm:mt-1 truncate">96% Score</strong>
             </div>
-            <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-              <span className="text-slate-400 font-mono text-[10px] uppercase font-bold">Active Sponsors</span>
-              <strong className="block text-2xl font-extrabold text-slate-900 mt-1">AfDB, World Bank</strong>
+            <div className="p-3 sm:p-4 bg-slate-50/80 hover:bg-slate-100/60 border border-slate-200/60 rounded-xl sm:rounded-2xl transition-all">
+              <span className="text-slate-500 font-mono text-[9px] sm:text-[10px] uppercase font-bold tracking-wider block truncate">Active Sponsors</span>
+              <strong className="block text-base sm:text-xl lg:text-2xl font-extrabold text-slate-900 mt-0.5 sm:mt-1 truncate">AfDB, World Bank</strong>
             </div>
-            <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-              <span className="text-slate-400 font-mono text-[10px] uppercase font-bold">Research Areas</span>
-              <strong className="block text-2xl font-extrabold text-slate-900 mt-1">Anaerobic Kinetics</strong>
+            <div className="p-3 sm:p-4 bg-slate-50/80 hover:bg-slate-100/60 border border-slate-200/60 rounded-xl sm:rounded-2xl transition-all">
+              <span className="text-slate-500 font-mono text-[9px] sm:text-[10px] uppercase font-bold tracking-wider block truncate">Research Areas</span>
+              <strong className="block text-base sm:text-xl lg:text-2xl font-extrabold text-slate-900 mt-0.5 sm:mt-1 truncate">Anaerobic Kinetics</strong>
             </div>
-            <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-              <span className="text-slate-400 font-mono text-[10px] uppercase font-bold">Available Pools</span>
-              <strong className="block text-2xl font-extrabold text-emerald-700 mt-1">$50,000+</strong>
+            <div className="p-3 sm:p-4 bg-slate-50/80 hover:bg-slate-100/60 border border-slate-200/60 rounded-xl sm:rounded-2xl transition-all">
+              <span className="text-slate-500 font-mono text-[9px] sm:text-[10px] uppercase font-bold tracking-wider block truncate">Available Pools</span>
+              <strong className="block text-base sm:text-xl lg:text-2xl font-extrabold text-emerald-700 mt-0.5 sm:mt-1 truncate">$50,000+</strong>
             </div>
           </div>
         </div>
@@ -493,20 +493,22 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6">
           {stakeholderCategories.map((cat, idx) => {
             const Icon = cat.icon;
             return (
               <div
                 key={idx}
-                className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 space-y-3.5 flex flex-col justify-between"
+                className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/70 shadow-2xs hover:shadow-md hover:border-emerald-200 hover:-translate-y-0.5 transition-all duration-200 group flex flex-col justify-between"
               >
-                <div className="space-y-2.5">
-                  <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl w-fit">
+                <div className="flex items-start gap-3.5 sm:block space-y-0 sm:space-y-3">
+                  <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl w-fit shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                     <Icon className="w-5 h-5" />
                   </div>
-                  <h4 className="font-bold text-slate-950 text-sm font-display">{cat.title}</h4>
-                  <p className="text-xs text-slate-500 leading-relaxed">{cat.desc}</p>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm font-display group-hover:text-emerald-950 transition-colors">{cat.title}</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed mt-1 sm:mt-1.5">{cat.desc}</p>
+                  </div>
                 </div>
               </div>
             );

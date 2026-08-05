@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { 
   User, 
@@ -24,6 +24,7 @@ import {
   FileCheck,
   Check,
   ChevronRight,
+  ChevronLeft,
   ShieldAlert,
   Save,
   Activity,
@@ -31,7 +32,9 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getUserProfile, createUserProfile } from '../services/db';
+import { checkProfileCompleteness } from '../utils/profileValidation';
 import { openCookiePreferences } from './CookieConsent';
+import ResearchIdentityCenter from './ResearchIdentityCenter';
 
 interface SettingsPageProps {
   user: FirebaseUser;
@@ -45,6 +48,7 @@ type SettingsSection =
   | 'security' 
   | 'notifications' 
   | 'privacy' 
+  | 'legal'
   | 'collaboration' 
   | 'aimatch' 
   | 'research' 
@@ -61,6 +65,20 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
   const [activeSection, setActiveSection] = useState<SettingsSection>('account');
   const [formData, setFormData] = useState<any>(null);
   const [alertMsg, setAlertMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const mobileNavScrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScrollLeft = () => {
+    if (mobileNavScrollRef.current) {
+      mobileNavScrollRef.current.scrollBy({ left: -150, behavior: 'smooth' });
+    }
+  };
+
+  const handleScrollRight = () => {
+    if (mobileNavScrollRef.current) {
+      mobileNavScrollRef.current.scrollBy({ left: 150, behavior: 'smooth' });
+    }
+  };
 
   // Fetch complete profile and settings configuration
   const fetchSettings = async () => {
@@ -152,24 +170,8 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
     }
   };
 
-  // Profile completion calculation helper
-  const getProfileCompletion = () => {
-    if (!formData) return 0;
-    let completed = 0;
-    const checks = [
-      !!formData.profilePicture,
-      !!formData.bio,
-      formData.education?.length > 0,
-      formData.workExperience?.length > 0,
-      formData.skills?.length > 0,
-      formData.researchInterests?.length > 0,
-      Object.values(formData.portfolioLinks || {}).some(v => !!v)
-    ];
-    checks.forEach(c => { if (c) completed++; });
-    return Math.round((completed / checks.length) * 100);
-  };
-
-  const completionPercent = getProfileCompletion();
+  // Profile completion calculation helper using standard checkProfileCompleteness
+  const completionPercent = checkProfileCompleteness(formData).completionPercent;
 
   if (loading && !formData) {
     return (
@@ -185,11 +187,12 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
     { id: 'security', label: 'Security & Auth', icon: Lock, desc: 'Passwords, login sessions, Google link' },
     { id: 'notifications', label: 'Notifications', icon: Bell, desc: 'Weekly digests, alliance recommendations' },
     { id: 'privacy', label: 'Privacy Gates', icon: Eye, desc: 'Field visibility, public exposure controls' },
+    { id: 'legal', label: 'Legal & Policies', icon: ShieldCheck, desc: 'Terms, Privacy, Ethics & Disclaimers' },
     { id: 'collaboration', label: 'Collaboration Prefs', icon: Handshake, desc: 'Availability, consortium seeks' },
     { id: 'aimatch', label: 'AI Match Criteria', icon: Cpu, desc: 'TRL, funding ranges, research lands' },
     { id: 'research', label: 'Research Prefs', icon: Layers, desc: 'Default citation models, initial drafts' },
     { id: 'appearance', label: 'Appearance', icon: Monitor, desc: 'Light/dark styles, scaling' },
-    { id: 'connected', label: 'Connected Accounts', icon: Link2, desc: 'Google, ORCID, GitHub, Microsoft' },
+    { id: 'connected', label: 'Research Identity Center', icon: Link2, desc: 'Manage professional identity & publications' },
     { id: 'data', label: 'Data & Storage', icon: Database, desc: 'Download my data, export publications' },
     { id: 'subscription', label: 'Subscription & Tier', icon: CreditCard, desc: 'Billings, invoices, professional scales' },
     { id: 'help', label: 'Help & Support', icon: HelpCircle, desc: 'Aurenix community, feature tickets' },
@@ -226,32 +229,93 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
       <div className="w-full px-3 sm:px-6 lg:px-8 py-6 sm:py-10 bg-transparent">
         
         {/* Top Header Row */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-row items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
           <div>
-            <div className="flex items-center gap-2 text-xs text-emerald-800 font-bold font-mono uppercase tracking-wider mb-1">
-              <Settings className="w-4 h-4 text-emerald-600" />
-              Aurenix Research Network Settings
+            <div className="flex items-center gap-2 text-[10px] sm:text-xs text-emerald-800 font-bold font-mono uppercase tracking-wider mb-0.5 sm:mb-1">
+              <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0" />
+              <span className="truncate">Aurenix Network Settings</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-emerald-950">
+            <h1 className="text-xl sm:text-3xl font-display font-extrabold text-emerald-950 leading-tight">
               System Preferences
             </h1>
           </div>
           
           <button 
             onClick={() => onNavigateToView('dashboard')}
-            className="px-4 py-2 bg-white hover:bg-emerald-50/50 text-emerald-800 border border-emerald-150 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-colors shadow-xs"
+            className="px-3 sm:px-4 py-2 bg-white hover:bg-emerald-50/50 text-emerald-800 rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 cursor-pointer transition-colors shadow-xs shrink-0 whitespace-nowrap border-none"
             id="settings_back_btn"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Hub
+            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Back to Hub</span>
           </button>
         </div>
 
         {/* Layout Grid: Left Sidebar Selector, Right Form Panel */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           
-          {/* 1. LEFT SIDEBAR (SECTIONS SELECTOR & RESEARCH SCORE) */}
-          <div className="lg:col-span-4 space-y-6">
+          {/* Mobile & Tablet Section Selector (lg:hidden) */}
+          <div className="lg:hidden space-y-3">
+
+            {/* Mobile Horizontal Pill Scroll */}
+            <div className="relative">
+              {/* Interactive Scroll Left Button */}
+              <button
+                type="button"
+                onClick={handleScrollLeft}
+                aria-label="Scroll options left"
+                title="Scroll previous section options"
+                className="absolute left-1 top-[22px] -translate-y-1/2 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-white/95 backdrop-blur-xs border border-emerald-100 text-emerald-850 hover:bg-emerald-50 hover:text-emerald-900 shadow-xs hover:shadow-sm cursor-pointer transition-all duration-200 active:scale-90"
+              >
+                <ChevronLeft className="w-3 h-3 stroke-[2.5]" />
+              </button>
+
+              <div 
+                ref={mobileNavScrollRef} 
+                className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none no-scrollbar -mx-3 px-10 scroll-smooth"
+              >
+                {sectionsList.map((sec) => {
+                  const SecIcon = sec.icon;
+                  const isSecActive = activeSection === sec.id;
+                  return (
+                    <button
+                      key={sec.id}
+                      type="button"
+                      onClick={(e) => {
+                        setActiveSection(sec.id);
+                        (e.currentTarget as HTMLElement).scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'nearest',
+                          inline: 'center'
+                        });
+                      }}
+                      className={`shrink-0 flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-all min-h-[44px] ${
+                        isSecActive 
+                          ? 'bg-emerald-600 text-white font-bold shadow-sm' 
+                          : 'bg-white border border-emerald-100 text-slate-700 hover:bg-emerald-50/50'
+                      }`}
+                    >
+                      <SecIcon className={`w-4 h-4 shrink-0 ${isSecActive ? 'text-white' : 'text-slate-500'}`} />
+                      <span>{sec.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Interactive Scroll Right Button */}
+              <button
+                type="button"
+                onClick={handleScrollRight}
+                aria-label="Scroll options right"
+                title="Scroll next section options"
+                className="absolute right-1 top-[22px] -translate-y-1/2 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-white/95 backdrop-blur-xs border border-emerald-100 text-emerald-850 hover:bg-emerald-50 hover:text-emerald-900 shadow-xs hover:shadow-sm cursor-pointer transition-all duration-200 active:scale-90"
+              >
+                <ChevronRight className="w-3 h-3 stroke-[2.5]" />
+              </button>
+            </div>
+          </div>
+
+          {/* 1. LEFT SIDEBAR (DESKTOP SELECTOR & RESEARCH SCORE) */}
+          <div className="hidden lg:block lg:col-span-4 space-y-6">
             
             {/* Split Sidebar list */}
             <div className="bg-white border border-emerald-100 rounded-3xl p-3 shadow-xs space-y-0.5" id="settings_sections_selector">
@@ -302,7 +366,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
           </div>
 
           {/* 2. RIGHT FORM PANEL (ACTIVE CONTENT PORTAL) */}
-          <div className="lg:col-span-8 bg-white border border-emerald-100 rounded-3xl p-6 sm:p-8 shadow-md">
+          <div className="lg:col-span-8 bg-white border border-emerald-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-md" id="settings_form_container">
             
             <form onSubmit={handleSaveSettings} className="space-y-8">
               
@@ -600,6 +664,71 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                 </div>
               )}
 
+              {/* ----------------- LEGAL & POLICIES PANEL ----------------- */}
+              {activeSection === 'legal' && (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-lg font-bold text-emerald-950 font-display">Legal & Platform Governance Policies</h2>
+                      <p className="text-xs text-slate-500">Review platform rules, data protection commitments, intellectual property, and research ethics.</p>
+                    </div>
+                    
+                    <a
+                      href="/legal/terms"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Open Legal Center</span>
+                    </a>
+                  </div>
+
+                  {/* Status Banner */}
+                  <div className="p-4 bg-emerald-50/80 border border-emerald-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-600 text-white rounded-xl">
+                        <FileCheck className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-emerald-950">Aurenix Research Platform Agreements</div>
+                        <div className="text-[11px] text-emerald-800">Your account is in full compliance with current platform policies.</div>
+                      </div>
+                    </div>
+                    <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-mono font-bold">
+                      <Check className="w-3 h-3 text-emerald-600" /> Verified
+                    </span>
+                  </div>
+
+                  {/* Quick Policy Direct Links */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    {[
+                      { title: 'Terms and Conditions', id: 'terms', desc: 'Acceptance, eligibility, user accounts, suspension' },
+                      { title: 'Privacy Policy', id: 'privacy', desc: 'Data collection, security, usage, rights' },
+                      { title: 'Cookie Policy', id: 'cookies', desc: 'Session cookies, tracking, preferences' },
+                      { title: 'Community Guidelines', id: 'community', desc: 'Academic integrity, respectful collaboration' },
+                      { title: 'Copyright & IP Policy', id: 'copyright', desc: 'Research ownership, DMCA procedures' },
+                      { title: 'Research Ethics Policy', id: 'ethics', desc: 'Data integrity, authorship, conflicts' },
+                      { title: 'Disclaimer Notice', id: 'disclaimer', desc: 'Scientific accuracy, liability limits' },
+                    ].map((pol) => (
+                      <a
+                        key={pol.id}
+                        href={`/legal/${pol.id}`}
+                        className="p-3.5 bg-white border border-emerald-100 hover:border-emerald-300 hover:bg-emerald-50/30 rounded-2xl transition-all group flex items-start justify-between gap-3 text-left"
+                      >
+                        <div>
+                          <div className="text-xs font-bold text-emerald-950 group-hover:text-emerald-700 flex items-center gap-1.5">
+                            <span>{pol.title}</span>
+                          </div>
+                          <div className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                            {pol.desc}
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-600 shrink-0 mt-0.5" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* ----------------- COLLABORATION PREFERENCES PANEL ----------------- */}
               {activeSection === 'collaboration' && (
                 <div className="space-y-6">
@@ -630,7 +759,7 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
 
                     <div className="space-y-3 pt-2">
                       <label className="text-xs font-extrabold text-emerald-900">Resources & Partners Desired</label>
-                      <div className="grid grid-cols-2 gap-2.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         {[
                           'Funding', 'Laboratory Access', 'Equipment', 'Technical Mentor', 
                           'Industry Partner', 'Government Partner', 'NGO Partner', 'University Partner'
@@ -653,14 +782,14 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                                   }
                                 });
                               }}
-                              className={`p-3 border rounded-xl text-left font-semibold cursor-pointer transition-all flex items-center justify-between ${
+                              className={`p-3 min-h-[44px] border rounded-xl text-left font-semibold cursor-pointer transition-all flex items-center justify-between ${
                                 isChecked 
-                                  ? 'bg-emerald-50 border-emerald-500 text-emerald-800' 
+                                  ? 'bg-emerald-50 border-emerald-300 text-emerald-800' 
                                   : 'bg-white border-emerald-100 text-slate-500 hover:bg-emerald-50/10'
                               }`}
                             >
                               <span>{resource}</span>
-                              {isChecked ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <div className="w-4 h-4 rounded-full border border-slate-200" />}
+                              {isChecked ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 ml-2" /> : <div className="w-4 h-4 rounded-full border border-slate-200 shrink-0 ml-2" />}
                             </button>
                           );
                         })}
@@ -799,15 +928,15 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                   <div className="space-y-5 pt-4 border-t border-emerald-100 text-xs">
                     <div className="space-y-2">
                       <label className="text-xs font-extrabold text-emerald-900">Visual Mode Theme</label>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                         <button
                           type="button"
                           onClick={() => {
                             if (theme === 'dark' && onToggleTheme) onToggleTheme();
                           }}
-                          className={`p-4 border rounded-2xl cursor-pointer text-left transition-all ${
+                          className={`p-4 min-h-[52px] border rounded-2xl cursor-pointer text-left transition-all ${
                             theme === 'light' 
-                              ? 'bg-emerald-50 border-emerald-500 font-extrabold text-emerald-800' 
+                              ? 'bg-emerald-50 border-emerald-300 font-extrabold text-emerald-800' 
                               : 'bg-white border-emerald-100 text-slate-500 hover:bg-emerald-50/10'
                           }`}
                         >
@@ -821,9 +950,9 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                           onClick={() => {
                             if (theme === 'light' && onToggleTheme) onToggleTheme();
                           }}
-                          className={`p-4 border rounded-2xl cursor-pointer text-left transition-all ${
+                          className={`p-4 min-h-[52px] border rounded-2xl cursor-pointer text-left transition-all ${
                             theme === 'dark' 
-                              ? 'bg-emerald-50 border-emerald-500 font-extrabold text-emerald-800' 
+                              ? 'bg-emerald-50 border-emerald-300 font-extrabold text-emerald-800' 
                               : 'bg-white border-emerald-100 text-slate-500 hover:bg-emerald-50/10'
                           }`}
                         >
@@ -837,41 +966,18 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
                 </div>
               )}
 
-              {/* ----------------- CONNECTED ACCOUNTS ----------------- */}
+              {/* ----------------- RESEARCH IDENTITY CENTER ----------------- */}
               {activeSection === 'connected' && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-lg font-bold text-emerald-950 font-display">Linked Credentials Directories</h2>
-                    <p className="text-xs text-slate-500">Consolidate your digital academic footprints inside Aurenix.</p>
-                  </div>
-
-                  <div className="space-y-4 pt-4 border-t border-emerald-100 text-xs">
-                    <div className="flex items-center justify-between p-4 bg-[#F8FAF9] rounded-2xl border border-emerald-150">
-                      <div className="text-left">
-                        <h4 className="font-extrabold text-emerald-950">Google Workspace Identity</h4>
-                        <p className="text-[10px] text-slate-500">Authenticated: {user.email}</p>
-                      </div>
-                      <span className="text-xs font-bold text-emerald-700">Connected</span>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-[#F8FAF9] rounded-2xl border border-emerald-150">
-                      <div className="text-left">
-                        <h4 className="font-extrabold text-emerald-950">ORCID Registry Identifier</h4>
-                        <p className="text-[10px] text-slate-500">Allows automatic synchronizations of global publications metadata.</p>
-                      </div>
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          setAlertMsg({ type: 'success', text: 'Connecting to ORCID authentication sandbox...' });
-                          setTimeout(() => setAlertMsg(null), 3000);
-                        }}
-                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs cursor-pointer transition-colors"
-                      >
-                        Link Account
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <ResearchIdentityCenter
+                  userId={user.uid}
+                  initialData={formData}
+                  onSaveProfile={async (updatedProfile) => {
+                    setFormData(updatedProfile);
+                    await createUserProfile(user.uid, updatedProfile);
+                    setProfileData(updatedProfile);
+                  }}
+                  theme={theme}
+                />
               )}
 
               {/* ----------------- DATA & STORAGE PANEL ----------------- */}
@@ -1017,17 +1123,10 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
               )}
 
               {/* BOTTOM ACTIONS BAR */}
-              <div className="pt-6 border-t border-emerald-100 flex items-center justify-end gap-3 bg-transparent">
-                <button 
-                  type="button" 
-                  onClick={() => onNavigateToView('dashboard')}
-                  className="px-4 py-2.5 bg-white hover:bg-emerald-50/50 text-emerald-800 text-xs font-bold rounded-xl border border-emerald-150 cursor-pointer transition"
-                >
-                  Cancel
-                </button>
+              <div className="pt-6 border-t border-emerald-100 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 bg-transparent">
                 <button 
                   type="submit"
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-900/10 transition"
+                  className="w-full sm:w-auto px-5 py-3 sm:py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-emerald-900/10 transition min-h-[44px]"
                 >
                   <Save className="w-4 h-4" />
                   Save Preferences

@@ -28,6 +28,17 @@ html, body, * {
   scrollbar-width: none !important;  /* Firefox */
 }
 
+/* Global text selection and highlight styling - always green */
+::selection {
+  background-color: #008744 !important;
+  color: #ffffff !important;
+}
+
+::-moz-selection {
+  background-color: #008744 !important;
+  color: #ffffff !important;
+}
+
 /* Custom micro animations */
 .glow-green {
   box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
@@ -424,7 +435,6 @@ textarea.composer-textarea:active,
 .dark #mobile_aside_drawer button,
 .dark #mobile_aside_drawer a,
 .dark [id*="aside_btn_"],
-.dark #aside_toggle_btn,
 .dark #aside_theme_toggle,
 .dark #mobile_aside_trigger {
   background: transparent !important;
@@ -441,7 +451,6 @@ textarea.composer-textarea:active,
 .dark #mobile_aside_drawer button:hover,
 .dark #mobile_aside_drawer a:hover,
 .dark [id*="aside_btn_"]:hover,
-.dark #aside_toggle_btn:hover,
 .dark #aside_theme_toggle:hover {
   background: transparent !important;
   background-color: transparent !important;
@@ -897,33 +906,29 @@ div[role="dialog"],
   animation: marquee 35s linear infinite;
 }
 
-.animate-marquee:hover {
-  animation-play-state: paused;
+/* Messaging System No-Hover/Static Override */
+#messages_workspace_container *,
+#messages_workspace_container *:hover,
+#messages_workspace_container *:active,
+#messages_workspace_container *:focus {
+  transition: none !important;
+  animation: none !important;
+  transform: none !important;
+  filter: none !important;
 }
+
 
 /* Timeline Section white in all modes override */
 #experience_timeline,
-.dark #experience_timeline,
-#endorsements,
-.dark #endorsements {
+.dark #experience_timeline {
   background-color: #ffffff !important;
 }
 
-.dark #endorsements input,
-.dark #endorsements button:not(.bg-emerald-800),
-.dark #endorsements div:not(.bg-emerald-800):not(.bg-\[\#134e38\]):not(.bg-\[\#0d4f37\]):not(.bg-\[\#059669\]) {
-  background-color: #ffffff;
-}
-
-.dark #experience_timeline h2,
-.dark #endorsements h2,
-.dark #endorsements h3,
-.dark #endorsements h4 {
+.dark #experience_timeline h2 {
   color: #0f172a !important;
 }
 
-.dark #experience_timeline p,
-.dark #endorsements p {
+.dark #experience_timeline p {
   color: #475569 !important;
 }
 
@@ -975,6 +980,43 @@ div[role="dialog"],
 .dark .timeline-card .bg-slate-100 {
   background-color: #f1f5f9 !important;
   color: #334155 !important;
+}
+
+/* Premium Floating Hamburger Menu Styles */
+#aside_toggle_btn {
+  background-image: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  border: 2px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 10px 25px -5px rgba(4, 120, 87, 0.4), 0 8px 10px -6px rgba(4, 120, 87, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  backdrop-filter: blur(8px) !important;
+  z-index: 100 !important;
+}
+
+#aside_toggle_btn:hover {
+  background-image: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  transform: scale(1.08) !important;
+  box-shadow: 0 20px 30px -10px rgba(4, 120, 87, 0.55), 0 0 15px rgba(16, 185, 129, 0.3) !important;
+}
+
+#aside_toggle_btn:active {
+  transform: scale(0.95) !important;
+}
+
+/* Dark mode premium look for the floating menu button */
+.dark #aside_toggle_btn {
+  background-image: linear-gradient(135deg, #10b981 0%, #047857 100%) !important;
+  border: 2px solid rgba(16, 185, 129, 0.6) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 20px rgba(16, 185, 129, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+}
+
+.dark #aside_toggle_btn:hover {
+  background-image: linear-gradient(135deg, #34d399 0%, #059669 100%) !important;
+  transform: scale(1.08) !important;
+  box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.7), 0 0 25px rgba(52, 211, 153, 0.4) !important;
+}
+
+.dark #aside_toggle_btn:active {
+  transform: scale(0.95) !important;
 }
 
 

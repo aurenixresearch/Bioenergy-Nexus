@@ -71,7 +71,7 @@ export default function AIRecommendations({
       source: 'Ahmadu Bello University',
       compatibility: 88,
       description: `Highly cited pioneer in biochemical methane extraction and multi-stage anaerobic digestion filters. Matches your expertise in ${userInterests[1] || 'Bioenergy'}.`,
-      actionLabel: 'Invite to Project',
+      actionLabel: 'Invite Lead',
       meta: '18 Publications • 3 Shared Connections'
     },
     {
@@ -81,7 +81,7 @@ export default function AIRecommendations({
       source: 'Council for Scientific and Industrial Research (CSIR)',
       compatibility: 85,
       description: 'Advanced testing infrastructure for evaluating chemical purity and thermal parameters of agro-waste biocomposites.',
-      actionLabel: 'Request Lab Space',
+      actionLabel: 'Request Lab',
       meta: 'Located in Pretoria • Fully Funded Access for West African Scholars'
     },
     {
@@ -91,7 +91,7 @@ export default function AIRecommendations({
       source: 'NexaPower Industries Ltd',
       compatibility: 89,
       description: `Seeking an academic research lead to write regulatory policy briefs and validate localized battery storage microgrid load algorithms.`,
-      actionLabel: 'Partner with NexaPower',
+      actionLabel: 'Partner Up',
       meta: 'Active commercial pipeline'
     },
     {
@@ -128,9 +128,9 @@ export default function AIRecommendations({
 
   return (
     <div className="w-full space-y-6" id="ai_recommendations_section">
-      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-emerald-100/60 dark:border-slate-800 pb-4 w-full" style={{ maxWidth: '1040px' }}>
         <div>
-          <h3 className="text-lg font-display font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+          <h3 className="text-lg font-display font-extrabold flex items-center gap-2" style={{ color: '#4b4b4b' }}>
             <Sparkles className="w-5 h-5 text-emerald-600 animate-pulse" />
             Aurenix Intelligent AI Matches
           </h3>
@@ -141,7 +141,7 @@ export default function AIRecommendations({
       </div>
 
       {items.length > 0 ? (
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" style={{ maxWidth: '1049px' }}>
           <AnimatePresence mode="popLayout">
             {items.map((item) => (
               <motion.div
@@ -150,12 +150,12 @@ export default function AIRecommendations({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 whileHover={{ y: -3 }}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between text-left relative overflow-hidden"
+                className="w-full bg-white border border-slate-200/90 hover:border-emerald-300 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all duration-300 flex flex-col justify-between text-left relative overflow-hidden group"
               >
                 {/* Score Indicator Ring */}
                 <div className="absolute top-4 right-4 flex items-center gap-1">
-                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
-                    <Sparkles className="w-2.5 h-2.5" />
+                  <span className="text-[10px] font-mono font-black text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap shadow-2xs">
+                    <Sparkles className="w-2.5 h-2.5 text-emerald-600" />
                     {item.compatibility}% Match
                   </span>
                 </div>
@@ -168,7 +168,7 @@ export default function AIRecommendations({
 
                   {/* Title */}
                   <div className="space-y-1 pr-14">
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug line-clamp-2">
+                    <h4 className="text-sm font-bold leading-snug line-clamp-2" style={{ color: '#47474e' }}>
                       {item.title}
                     </h4>
                     <span className="block text-[10px] text-slate-400 dark:text-slate-500 font-sans font-medium">
@@ -182,7 +182,7 @@ export default function AIRecommendations({
                   </p>
 
                   {/* Meta tag */}
-                  <div className="text-[10px] font-sans font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-850 p-2.5 rounded-xl border border-slate-50 dark:border-slate-800">
+                  <div className="text-[10px] font-sans font-bold text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200/80">
                     {item.meta}
                   </div>
                 </div>

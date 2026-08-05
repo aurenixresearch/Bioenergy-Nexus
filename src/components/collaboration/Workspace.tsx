@@ -56,7 +56,7 @@ export default function Workspace({ workspace: initialWorkspace, user, onBack, o
 
   useEffect(() => {
     setWorkspace(initialWorkspace);
-    if (initialWorkspace.researchNotes.length > 0) {
+    if ((initialWorkspace?.researchNotes || []).length > 0) {
       setSelectedNoteId(initialWorkspace.researchNotes[0].id);
     }
   }, [initialWorkspace]);

@@ -246,9 +246,9 @@ export default function UserManagement({
       <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 text-left" id="user_blueprint_details_view">
         <div className="flex justify-between items-start border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center border border-slate-100 dark:border-slate-800 overflow-hidden shrink-0 select-none">
+            <div className="w-16 h-16 aspect-square rounded-full bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center border border-slate-100 dark:border-slate-800 overflow-hidden shrink-0 select-none">
               {viewingUser.avatar ? (
-                <img src={viewingUser.avatar} alt={viewingUser.fullName} className="w-full h-full object-cover" />
+                <img src={viewingUser.avatar} alt={viewingUser.fullName} className="w-full h-full aspect-square object-cover" />
               ) : (
                 <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{viewingUser.fullName.charAt(0)}</span>
               )}
@@ -534,9 +534,9 @@ export default function UserManagement({
                     {/* Name block with profile circle */}
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-slate-100 dark:border-slate-800 flex items-center justify-center font-display font-bold text-emerald-700 dark:text-emerald-400 text-xs shrink-0 select-none overflow-hidden">
+                        <div className="w-8 h-8 aspect-square rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-slate-100 dark:border-slate-800 flex items-center justify-center font-display font-bold text-emerald-700 dark:text-emerald-400 text-xs shrink-0 select-none overflow-hidden">
                           {u.avatar ? (
-                            <img src={u.avatar} alt={u.fullName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            <img src={u.avatar} alt={u.fullName} className="w-full h-full aspect-square object-cover" referrerPolicy="no-referrer" />
                           ) : (
                             u.fullName.charAt(0)
                           )}

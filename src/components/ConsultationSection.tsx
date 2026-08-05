@@ -140,53 +140,53 @@ export default function ConsultationSection({
         </div>
 
         {/* Consulting Request Form Container */}
-        <div className="bg-slate-950 text-white rounded-3xl p-8 sm:p-12 relative overflow-hidden" id="consultation_form_section">
+        <div className="bg-slate-950 text-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-12 relative overflow-hidden" id="consultation_form_section">
           {/* Decorative gradients */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-700/20 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-teal-800/20 rounded-full blur-3xl"></div>
+          <div className="absolute top-0 right-0 w-60 h-60 sm:w-80 sm:h-80 bg-emerald-700/20 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-20 -left-20 w-60 h-60 sm:w-80 sm:h-80 bg-teal-800/20 rounded-full blur-3xl pointer-events-none"></div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start relative z-10">
             
             {/* Form Left Info */}
-            <div className="lg:col-span-5 space-y-6 text-left">
-              <span className="inline-block text-xs font-mono font-bold text-emerald-400 uppercase tracking-widest">
+            <div className="lg:col-span-5 space-y-4 sm:space-y-6 text-left">
+              <span className="inline-block text-[11px] sm:text-xs font-mono font-bold text-emerald-400 uppercase tracking-widest">
                 READY TO START?
               </span>
-              <h3 className="text-2xl sm:text-3xl font-display font-bold tracking-tight leading-tight">
-                Let's discuss <br />your project
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-bold tracking-tight leading-tight">
+                Let's discuss <br className="hidden sm:inline" />your project
               </h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
+              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
                 Tell us about your organic waste profile, municipal constraints, or policy queries. An analyst will review your submission and reply within 48 hours.
               </p>
               
-              <div className="space-y-4 pt-6 border-t border-slate-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+              <div className="space-y-3 sm:space-y-4 pt-4 sm:pt-6 border-t border-slate-800">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></div>
                   <span className="text-xs text-slate-300">Technical reports delivered within 30 days</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></div>
                   <span className="text-xs text-slate-300">Certified training completion modules</span>
                 </div>
               </div>
             </div>
 
             {/* Form Right Inputs */}
-            <div className="lg:col-span-7 bg-white/5 p-6 sm:p-8 rounded-2xl">
+            <div className="lg:col-span-7 bg-white/5 border border-white/10 p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl backdrop-blur-sm">
               {success ? (
-                <div className="py-12 flex flex-col items-center text-center space-y-4 animate-in fade-in duration-300">
-                  <div className="p-4 bg-emerald-900/50 text-emerald-400 rounded-full">
-                    <CheckCircle2 className="w-10 h-10" />
+                <div className="py-8 sm:py-12 flex flex-col items-center text-center space-y-4 animate-in fade-in duration-300">
+                  <div className="p-3 sm:p-4 bg-emerald-900/50 text-emerald-400 rounded-full">
+                    <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-slate-100">Inquiry Received Successfully!</h4>
+                    <h4 className="text-base sm:text-lg font-bold text-slate-100">Inquiry Received Successfully!</h4>
                     <p className="text-xs text-slate-400 max-w-md mt-1">
                       Thank you for submitting. Our team will perform an initial feasibility review and contact you shortly.
                     </p>
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                   {errorMsg && (
                     <div className="p-3 bg-red-950/50 border border-red-900 rounded-xl text-red-200 text-xs flex items-center gap-2">
                       <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
@@ -195,23 +195,23 @@ export default function ConsultationSection({
                   )}
 
                   {!user && (
-                    <div className="p-4 bg-emerald-950/40 rounded-xl text-left">
+                    <div className="p-3.5 sm:p-4 bg-emerald-950/40 border border-emerald-500/20 rounded-xl text-left">
                       <p className="text-xs text-emerald-200 leading-relaxed">
                         <strong>Sign-In Required:</strong> To submit a consulting request and monitor its real-time review status, you must sign in with your Google account first.
                       </p>
                       <button
                         type="button"
                         onClick={onSignIn}
-                        className="mt-3 flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
+                        className="mt-3 w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer min-h-[44px]"
                       >
                         Sign In with Google
                       </button>
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1 text-left">
-                      <label className="block text-xs font-bold text-slate-300 uppercase">Organization / Entity</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+                    <div className="space-y-1.5 text-left">
+                      <label className="block text-[11px] sm:text-xs font-bold text-slate-300 uppercase">Organization / Entity</label>
                       <input
                         type="text"
                         required
@@ -219,17 +219,17 @@ export default function ConsultationSection({
                         value={organization}
                         onChange={(e) => setOrganization(e.target.value)}
                         placeholder="e.g. Lagos Waste Mgmt Authority"
-                        className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 text-sm outline-none focus:border-emerald-500 focus:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 text-sm outline-none focus:border-emerald-500 focus:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                       />
                     </div>
 
-                    <div className="space-y-1 text-left">
-                      <label className="block text-xs font-bold text-slate-300 uppercase">Required Advisory</label>
+                    <div className="space-y-1.5 text-left">
+                      <label className="block text-[11px] sm:text-xs font-bold text-slate-300 uppercase">Required Advisory</label>
                       <select
                         disabled={!user || loading}
                         value={serviceType}
                         onChange={(e) => setServiceType(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white text-sm outline-none focus:border-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full px-3 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white text-sm outline-none focus:border-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                       >
                         <option value="Bioenergy Feasibility Studies">Bioenergy Feasibility Studies</option>
                         <option value="Environmental Impact Analysis">Environmental Impact Analysis</option>
@@ -239,10 +239,10 @@ export default function ConsultationSection({
                     </div>
                   </div>
 
-                  <div className="space-y-1 text-left">
-                    <label className="block text-xs font-bold text-slate-300 uppercase">Project Brief / Questions</label>
+                  <div className="space-y-1.5 text-left">
+                    <label className="block text-[11px] sm:text-xs font-bold text-slate-300 uppercase">Project Brief / Questions</label>
                     <textarea
-                      rows={4}
+                      rows={3}
                       required
                       disabled={!user || loading}
                       value={message}
@@ -256,7 +256,7 @@ export default function ConsultationSection({
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-800/50 text-white rounded-xl font-bold transition-all shadow-xs active:scale-[0.99] cursor-pointer text-sm border-0"
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-800/50 text-white rounded-xl font-bold transition-all shadow-xs active:scale-[0.99] cursor-pointer text-sm border-0 min-h-[44px]"
                       id="submit_consult_btn"
                     >
                       {loading ? (

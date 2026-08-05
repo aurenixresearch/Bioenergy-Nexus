@@ -10,6 +10,11 @@ interface SystemBootLoaderProps {
 export default function SystemBootLoader({ user, onComplete }: SystemBootLoaderProps) {
   const [progress, setProgress] = useState(0);
   const [loadingText, setLoadingText] = useState("Initializing Research Environment...");
+  const onCompleteRef = React.useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     const totalDuration = 3000; // Exact 3-seconds
@@ -36,13 +41,13 @@ export default function SystemBootLoader({ user, onComplete }: SystemBootLoaderP
       if (currentStep >= totalSteps) {
         clearInterval(timer);
         setTimeout(() => {
-          onComplete();
+          onCompleteRef.current();
         }, 150); // Fluid finish transition
       }
     }, intervalTime);
 
     return () => clearInterval(timer);
-  }, [onComplete]);
+  }, []);
 
   return (
     <div className="fixed inset-0 z-50 bg-white text-slate-900 flex flex-col items-center justify-between p-6 sm:p-10 font-sans select-none overflow-hidden" id="premium_white_loader">

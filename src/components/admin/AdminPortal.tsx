@@ -31,9 +31,12 @@ import {
   BarChart3,
   Edit3,
   Download,
+  ShieldCheck,
   Sun,
-  Moon
+  Moon,
+  Star
 } from 'lucide-react';
+import PolicyAdminView from '../legal/PolicyAdminView';
 import { User as FirebaseUser, signOut } from 'firebase/auth';
 import { auth, db } from '../../firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
@@ -66,6 +69,7 @@ import UserManagement from './UserManagement';
 import PortfolioManagement from './PortfolioManagement';
 import ConsultingFunding from './ConsultingFunding';
 import SystemOperations from './SystemOperations';
+import TestimonialsManagement from './TestimonialsManagement';
 import { getAllUsers, saveUserProfileByAdmin } from '../../services/db';
 
 interface AdminPortalProps {
@@ -80,7 +84,7 @@ type AdminTab =
   | 'dashboard' | 'users' | 'research' | 'projects' | 'alliances' 
   | 'organizations' | 'consulting' | 'funding' | 'challenges' 
   | 'matchmaking' | 'moderation' | 'analytics' | 'notifications' 
-  | 'cms' | 'reports' | 'settings' | 'logs' | 'accounts' | 'admins_scroll';
+  | 'cms' | 'reports' | 'settings' | 'logs' | 'accounts' | 'admins_scroll' | 'legal' | 'testimonials';
 
 export default function AdminPortal({
   user,
@@ -567,8 +571,8 @@ export default function AdminPortal({
   useEffect(() => {
     if (userProfile && !isUserPlatformAdmin) {
       console.log('Redirecting non-super-admin user to normal dashboard.');
-      setView('home');
-      window.history.pushState(null, '', '/');
+      setView('dashboard');
+      window.history.pushState(null, '', '/dashboard');
     }
   }, [userProfile, isUserPlatformAdmin, setView]);
 
@@ -947,8 +951,8 @@ export default function AdminPortal({
   };
 
   const handleReturnHome = () => {
-    setView('home');
-    window.history.pushState(null, '', '/');
+    setView('dashboard');
+    window.history.pushState(null, '', '/dashboard');
   };
 
   // Structured Categories list for nesting collapsible side-items
@@ -982,6 +986,7 @@ export default function AdminPortal({
     {
       name: 'System Administration',
       items: [
+        { label: 'Public Testimonials', id: 'testimonials' as const, icon: Star },
         { label: 'Moderation Cases', id: 'moderation' as const, icon: Sliders },
         { label: 'Ecosystem Analytics', id: 'analytics' as const, icon: BarChart3 },
         { label: 'Broadcast System', id: 'notifications' as const, icon: Bell },
@@ -992,6 +997,7 @@ export default function AdminPortal({
     {
       name: 'Preferences & Safety',
       items: [
+        { label: 'Legal Management', id: 'legal' as const, icon: ShieldCheck },
         { label: 'Platform Settings', id: 'settings' as const, icon: Settings },
         { label: 'Audit Trail Logs', id: 'logs' as const, icon: Terminal },
         { label: 'Admin Role Matrix', id: 'accounts' as const, icon: UserCheck }
@@ -1072,7 +1078,7 @@ export default function AdminPortal({
       {/* 1. COLLAPSIBLE SIDERAIL Grouped by Nested categories */}
       <motion.aside
         animate={{ width: isSidebarCollapsed ? '78px' : '260px' }}
-        transition={{ type: 'spring', stiffness: 220, damping: 26 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 28 }}
         className="hidden md:flex fixed left-4 top-4 bottom-4 z-40 bg-white dark:bg-slate-900 shadow-[0_4px_30px_rgba(0,0,0,0.02)] border border-slate-100 dark:border-slate-800 rounded-3xl flex-col justify-between overflow-hidden"
       >
         <div className="flex flex-col flex-grow overflow-y-auto overflow-x-hidden custom-scrollbar py-6 px-4">
@@ -1251,9 +1257,10 @@ export default function AdminPortal({
       </motion.aside>
 
       {/* 2. MAIN BODY WRAPPER */}
-      <div 
-        className="flex-grow flex flex-col min-h-screen transition-all"
-        style={{ paddingLeft: isMobile ? '0px' : (isSidebarCollapsed ? '98px' : '280px') }}
+      <motion.div 
+        animate={{ paddingLeft: isMobile ? '0px' : (isSidebarCollapsed ? '98px' : '280px') }}
+        transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+        className="flex-grow flex flex-col min-h-screen"
       >
         {/* Top bar with Search & Identity */}
         <header className="sticky top-0 z-30 bg-[#f8fafc]/80 dark:bg-[#0b0f19]/80 backdrop-blur-md py-4 px-6 border-b border-slate-100 dark:border-slate-800/40 flex items-center justify-between gap-4">
@@ -1453,10 +1460,18 @@ export default function AdminPortal({
                   funding={adminFunding}
                 />
               )}
+
+              {activeTab === 'legal' && (
+                <PolicyAdminView onClose={() => setActiveTab('dashboard')} />
+              )}
+
+              {activeTab === 'testimonials' && (
+                <TestimonialsManagement theme={theme} />
+              )}
             </motion.div>
           </AnimatePresence>
         </main>
-      </div>
+      </motion.div>
 
       {/* Mobile drawer for admin nav */}
       <AnimatePresence>

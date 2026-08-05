@@ -114,24 +114,24 @@ export default function WorkflowVisualizer({ onNavigateToConsole }: WorkflowVisu
   };
 
   return (
-    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/60 shadow-xs" id="workflow_visualizer">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 border-b border-slate-100 pb-6">
+    <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-slate-200/60 shadow-xs" id="workflow_visualizer">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6 mb-6 sm:mb-8 border-b border-slate-100 pb-5 sm:pb-6">
         <div>
-          <span className="text-xs font-mono font-bold text-emerald-600 uppercase tracking-widest block mb-1">Interactive Systems</span>
-          <h3 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">Operational Integration Workflows</h3>
+          <span className="text-[10px] sm:text-xs font-mono font-bold text-emerald-600 uppercase tracking-widest block mb-1">Interactive Systems</span>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-display font-extrabold text-slate-900 leading-tight">Operational Integration Workflows</h3>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">Select a workflow to visualize the animated timeline of collaboration, testing, and scaling.</p>
         </div>
         
         {/* Workflow Tabs Selector */}
-        <div className="flex flex-wrap gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100 w-full md:w-auto">
+        <div className="flex items-center gap-1.5 bg-slate-50 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-slate-200/60 w-full md:w-auto overflow-x-auto no-scrollbar scroll-smooth">
           {(['funding', 'lab', 'industry', 'government', 'lifecycle'] as const).map((key) => (
             <button
               key={key}
               onClick={() => setActiveWorkflow(key)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer capitalize flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 cursor-pointer capitalize flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                 activeWorkflow === key
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-100'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
               {key === 'lifecycle' && <GitBranch className="w-3.5 h-3.5" />}
@@ -146,23 +146,23 @@ export default function WorkflowVisualizer({ onNavigateToConsole }: WorkflowVisu
       </div>
 
       {/* Steps Visualizer Container with Scroll Buttons */}
-      <div className="relative group/scroll mt-4">
-        {/* Less than (<) button pointing left */}
+      <div className="relative group/scroll mt-2 sm:mt-4">
+        {/* Scroll Left Button */}
         <button
           onClick={() => scroll('left')}
-          className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-emerald-50 text-slate-700 hover:text-emerald-600 w-10 h-10 rounded-full border border-slate-200/80 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+          className="hidden sm:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-emerald-50 text-slate-700 hover:text-emerald-600 w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-slate-200/80 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-500/40 shrink-0"
           title="Scroll Left"
           aria-label="Scroll Left"
         >
-          <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
         </button>
 
         {/* The scrolling container */}
         <div 
           ref={containerRef}
-          className="relative overflow-x-auto no-scrollbar py-4 scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          className="relative overflow-x-auto no-scrollbar py-2 sm:py-4 scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
-          <div className="flex items-stretch gap-6 min-w-max px-2">
+          <div className="flex items-stretch gap-3 sm:gap-6 min-w-max px-1">
             {getActiveSteps().map((step, idx) => {
               const Icon = step.icon;
               return (
@@ -171,46 +171,46 @@ export default function WorkflowVisualizer({ onNavigateToConsole }: WorkflowVisu
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05, type: 'spring', stiffness: 260, damping: 25 }}
-                    className="w-64 bg-slate-50/50 p-5 rounded-2xl border border-slate-200/50 flex flex-col justify-between hover:bg-white hover:shadow-md transition-all duration-300 relative group"
+                    transition={{ delay: idx * 0.04, type: 'spring', stiffness: 260, damping: 25 }}
+                    className="w-56 sm:w-64 bg-slate-50/70 p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200/60 flex flex-col justify-between hover:bg-white hover:shadow-md hover:border-emerald-200 transition-all duration-300 relative group"
                   >
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       {/* Number Badge and Icon */}
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-mono font-bold text-slate-400 bg-slate-100/80 px-2.5 py-1 rounded-full">
+                        <span className="text-[10px] font-mono font-bold text-slate-400 bg-slate-100 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full">
                           Step {String(idx + 1).padStart(2, '0')}
                         </span>
-                        <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
+                        <div className="p-2 sm:p-2.5 bg-emerald-50 text-emerald-600 rounded-lg sm:rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
                           <Icon className="w-4 h-4" />
                         </div>
                       </div>
 
                       {/* Step Title & Description */}
                       <div>
-                        <h4 className="text-sm font-bold text-slate-900 font-display group-hover:text-emerald-700 transition-colors duration-200 leading-tight">
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 font-display group-hover:text-emerald-700 transition-colors duration-200 leading-tight">
                           {step.label}
                         </h4>
-                        <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                        <p className="text-[11px] sm:text-xs text-slate-500 mt-1.5 sm:mt-2 leading-relaxed">
                           {step.desc}
                         </p>
                       </div>
                     </div>
 
                     {/* Flow progress dot at bottom */}
-                    <div className="mt-4 pt-4 border-t border-slate-100/80 flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
-                      <Clock className="w-3 h-3 text-emerald-600 animate-pulse" />
+                    <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200/50 flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
+                      <Clock className="w-3 h-3 text-emerald-600 animate-pulse shrink-0" />
                       <span>Real-time Active Stage</span>
                     </div>
                   </motion.div>
 
                   {/* Arrow connector */}
                   {idx < getActiveSteps().length - 1 && (
-                    <div className="flex items-center justify-center text-slate-300">
+                    <div className="flex items-center justify-center text-slate-300 shrink-0">
                       <motion.div
-                        animate={{ x: [0, 4, 0] }}
+                        animate={{ x: [0, 3, 0] }}
                         transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
                       >
-                        <ArrowRight className="w-5 h-5 text-emerald-600/50" />
+                        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600/50" />
                       </motion.div>
                     </div>
                   )}
@@ -220,25 +220,25 @@ export default function WorkflowVisualizer({ onNavigateToConsole }: WorkflowVisu
           </div>
         </div>
 
-        {/* Greater than (>) button pointing right */}
+        {/* Scroll Right Button */}
         <button
           onClick={() => scroll('right')}
-          className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-emerald-50 text-slate-700 hover:text-emerald-600 w-10 h-10 rounded-full border border-slate-200/80 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+          className="hidden sm:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 bg-white/95 hover:bg-emerald-50 text-slate-700 hover:text-emerald-600 w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-slate-200/80 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-500/40 shrink-0"
           title="Scroll Right"
           aria-label="Scroll Right"
         >
-          <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
         </button>
       </div>
 
       {/* Dynamic Summary Panel */}
-      <div className="mt-8 bg-emerald-50/40 p-5 rounded-2xl border border-emerald-100/50 flex flex-col sm:flex-row items-center justify-between gap-6 text-left">
-        <div className="flex items-start gap-3.5">
-          <div className="p-3 bg-emerald-100 text-emerald-800 rounded-xl shrink-0 mt-0.5">
-            <Activity className="w-5 h-5 text-emerald-600 animate-pulse" />
+      <div className="mt-6 sm:mt-8 bg-emerald-50/50 p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-emerald-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 text-left">
+        <div className="flex items-start gap-3">
+          <div className="p-2.5 sm:p-3 bg-emerald-100 text-emerald-800 rounded-xl shrink-0 mt-0.5">
+            <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 animate-pulse" />
           </div>
           <div>
-            <h5 className="text-xs font-mono font-bold text-emerald-800 uppercase tracking-wider">Dynamic Integration System</h5>
+            <h5 className="text-[11px] sm:text-xs font-mono font-bold text-emerald-800 uppercase tracking-wider">Dynamic Integration System</h5>
             <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
               When an application matches or is submitted to an Alliance Opportunity, the platform auto-indexes the research parameters and launches the corresponding workflow tracking. Accepted applications automatically trigger a complete collaborative workspace.
             </p>
@@ -253,7 +253,7 @@ export default function WorkflowVisualizer({ onNavigateToConsole }: WorkflowVisu
               if (el) el.scrollIntoView({ behavior: 'smooth' });
             }
           }}
-          className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-emerald-600 text-white rounded-xl text-[11px] sm:text-xs font-bold shadow-sm hover:bg-emerald-700 hover:shadow transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0"
+          className="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-emerald-700 transition-all duration-200 cursor-pointer text-center whitespace-nowrap shrink-0 min-h-[44px] flex items-center justify-center"
         >
           Explore Alliances Now
         </button>

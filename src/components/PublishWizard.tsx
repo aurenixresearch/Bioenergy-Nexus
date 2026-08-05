@@ -1,21 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   X, ChevronLeft, ChevronRight, Upload, Plus, Trash2, Check, Sparkles, 
   Sun, Wind, Zap, Droplets, RefreshCw, Battery, Globe, Landmark, Eye, Lock, Users, ShieldAlert,
-  FileText, Link2, Info
+  FileText, Link2, Info, ArrowLeft, Save, FileEdit, CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ResearchPaper, CoAuthor } from '../types';
+import { checkProfileCompleteness } from '../utils/profileValidation';
+import { addCustomPaper, updateCustomPaper } from '../services/db';
 
 interface PublishWizardProps {
   onClose: () => void;
   onSubmit: (paperData: Omit<ResearchPaper, 'id'>) => Promise<void>;
   initialData?: Partial<ResearchPaper>;
+  userProfile?: any;
+  onNavigateToProfile?: () => void;
 }
 
-export default function PublishWizard({ onClose, onSubmit, initialData }: PublishWizardProps) {
-  const [currentStep, setCurrentStep] = useState(1);
+export default function PublishWizard({ onClose, onSubmit, initialData, userProfile, onNavigateToProfile }: PublishWizardProps) {
+  const [currentStep, setCurrentStep] = useState(initialData?.draftStep || 1);
+  const profileValidation = useMemo(() => checkProfileCompleteness(userProfile), [userProfile]);
   
+  // Draft tracking state
+  const [draftPaperId, setDraftPaperId] = useState<string | null>(initialData?.id || null);
+  const [isDraftSaving, setIsDraftSaving] = useState(false);
+  const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
+
   // State for all form fields
   // Step 1
   const [title, setTitle] = useState(initialData?.title || '');
@@ -23,7 +33,9 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
   const [abstract, setAbstract] = useState(initialData?.abstract || '');
   const [category, setCategory] = useState<ResearchPaper['category']>(initialData?.category || 'Bioenergy Technology');
   const [keywords, setKeywords] = useState<string>(initialData?.keywords?.join(', ') || '');
-  const [status, setStatus] = useState<'Ongoing' | 'Completed' | 'Under Review' | 'Published'>(initialData?.status || 'Published');
+  const [status, setStatus] = useState<'Ongoing' | 'Completed' | 'Under Review' | 'Published'>(
+    initialData?.status === 'Draft' ? 'Published' : (initialData?.status || 'Published')
+  );
   const [language, setLanguage] = useState(initialData?.language || 'English');
   const [readingTime, setReadingTime] = useState(initialData?.readingTime || '15 mins');
 
@@ -65,6 +77,7 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
   // Step 5 - Uploads (simulated files)
   const [uploadedPdf, setUploadedPdf] = useState(initialData?.uploads?.pdf || '');
   const [uploadedCoverImage, setUploadedCoverImage] = useState(initialData?.uploads?.coverImage || '');
+  const [uploadedCoverImageName, setUploadedCoverImageName] = useState(initialData?.uploads?.coverImage ? 'Cover Image Uploaded' : '');
   const [uploadedFigures, setUploadedFigures] = useState(initialData?.uploads?.figures || '');
   const [uploadedTables, setUploadedTables] = useState(initialData?.uploads?.tables || '');
   const [uploadedDatasets, setUploadedDatasets] = useState(initialData?.uploads?.datasets || '');
@@ -82,6 +95,55 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Dynamic progress calculation based on filled fields
+  const progressPercentage = useMemo(() => {
+    const fields = [
+      Boolean(title.trim()),
+      Boolean(subtitle.trim()),
+      Boolean(abstract.trim()),
+      Boolean(keywords.trim()),
+      Boolean(leadResearcher.trim()),
+      Boolean(institution.trim()),
+      Boolean(department.trim()),
+      Boolean(country.trim()),
+      Boolean(orcid.trim()),
+      Boolean(googleScholar.trim()),
+      coAuthors.length > 0,
+      Boolean(problemStatement.trim()),
+      Boolean(objectives.trim()),
+      Boolean(researchQuestions.trim()),
+      Boolean(researchMethodology.trim()),
+      Boolean(materialsUsed.trim()),
+      Boolean(dataCollectionMethod.trim()),
+      Boolean(studyArea.trim()),
+      Boolean(durationOfResearch.trim()),
+      Boolean(keyFindings.trim()),
+      Boolean(discussion.trim()),
+      Boolean(conclusion.trim()),
+      Boolean(recommendations.trim()),
+      Boolean(futureResearch.trim()),
+      Boolean(uploadedPdf),
+      Boolean(uploadedCoverImage),
+      Boolean(uploadedFigures),
+      Boolean(uploadedTables),
+      Boolean(uploadedDatasets),
+      Boolean(uploadedSupplementary),
+      selectedTags.length > 0,
+      Boolean(isConfirmed),
+    ];
+
+    const filledCount = fields.filter(Boolean).length;
+    if (filledCount === 0) return 0;
+    return Math.min(100, Math.round((filledCount / fields.length) * 100));
+  }, [
+    title, subtitle, abstract, keywords, leadResearcher, institution, department,
+    country, orcid, googleScholar, coAuthors, problemStatement, objectives,
+    researchQuestions, researchMethodology, materialsUsed, dataCollectionMethod,
+    studyArea, durationOfResearch, keyFindings, discussion, conclusion,
+    recommendations, futureResearch, uploadedPdf, uploadedCoverImage, uploadedFigures,
+    uploadedTables, uploadedDatasets, uploadedSupplementary, selectedTags, isConfirmed
+  ]);
 
   const availableTags = [
     { name: 'Solar Energy', icon: Sun, color: 'text-amber-500 bg-amber-50 border-amber-200' },
@@ -103,7 +165,7 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
   };
 
   const handleAddCoAuthor = () => {
-    if (!tempCoAuthorName.trim()) return;
+    if (!tempCoAuthorName.trim() || coAuthors.length >= 9) return;
     const newCo: CoAuthor = {
       name: tempCoAuthorName.trim(),
       institution: tempCoAuthorInstitution.trim() || undefined,
@@ -131,16 +193,169 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
   // Simulated drag and drop / click file upload
   const handleSimulatedUpload = (fieldName: string, e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const fileName = e.target.files[0].name;
-      switch(fieldName) {
-        case 'pdf': setUploadedPdf(fileName); break;
-        case 'coverImage': setUploadedCoverImage(fileName); break;
-        case 'figures': setUploadedFigures(fileName); break;
-        case 'tables': setUploadedTables(fileName); break;
-        case 'datasets': setUploadedDatasets(fileName); break;
-        case 'supplementary': setUploadedSupplementary(fileName); break;
+      const file = e.target.files[0];
+      const fileName = file.name;
+
+      if (fieldName === 'coverImage') {
+        setUploadedCoverImageName(fileName);
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            if (event.target?.result) {
+              setUploadedCoverImage(event.target.result as string);
+            }
+          };
+          reader.readAsDataURL(file);
+        } else {
+          setUploadedCoverImage(fileName);
+        }
+      } else {
+        switch(fieldName) {
+          case 'pdf': setUploadedPdf(fileName); break;
+          case 'figures': setUploadedFigures(fileName); break;
+          case 'tables': setUploadedTables(fileName); break;
+          case 'datasets': setUploadedDatasets(fileName); break;
+          case 'supplementary': setUploadedSupplementary(fileName); break;
+        }
       }
     }
+  };
+
+  // Determine if user has entered sufficient draft data to persist
+  const isDraftContentPresent = Boolean(
+    title.trim() || 
+    abstract.trim() || 
+    leadResearcher.trim() || 
+    problemStatement.trim() || 
+    keyFindings.trim() || 
+    uploadedPdf || 
+    uploadedCoverImage || 
+    (keywords && keywords.trim())
+  );
+
+  const saveDraft = async (silent: boolean = false) => {
+    if (!isDraftContentPresent) return null;
+    setIsDraftSaving(true);
+    try {
+      const parsedKeywords = keywords.split(',').map(k => k.trim()).filter(k => k !== '');
+      const draftData: any = {
+        title: title.trim() || 'Untitled Draft Research',
+        author: leadResearcher.trim() || userProfile?.fullName || 'Anonymous Researcher',
+        category: category || 'Bioenergy Technology',
+        abstract: abstract.trim() || 'Draft research study pending completion.',
+        downloadUrl: uploadedPdf ? `#` : '#',
+        publishedYear: new Date().getFullYear(),
+        
+        subtitle: subtitle.trim() || undefined,
+        keywords: parsedKeywords.length > 0 ? parsedKeywords : undefined,
+        status: 'Draft',
+        language: language.trim() || undefined,
+        readingTime: readingTime.trim() || undefined,
+
+        leadResearcher: leadResearcher.trim() || undefined,
+        coAuthors: coAuthors.length > 0 ? coAuthors : undefined,
+        institution: institution.trim() || undefined,
+        department: department.trim() || undefined,
+        country: country.trim() || undefined,
+        orcid: orcid.trim() || undefined,
+        googleScholar: googleScholar.trim() || undefined,
+
+        problemStatement: problemStatement.trim() || undefined,
+        objectives: objectives.trim() || undefined,
+        researchQuestions: researchQuestions.trim() || undefined,
+        researchMethodology: researchMethodology.trim() || undefined,
+        materialsUsed: materialsUsed.trim() || undefined,
+        dataCollectionMethod: dataCollectionMethod.trim() || undefined,
+        studyArea: studyArea.trim() || undefined,
+        durationOfResearch: durationOfResearch.trim() || undefined,
+
+        keyFindings: keyFindings.trim() || undefined,
+        discussion: discussion.trim() || undefined,
+        conclusion: conclusion.trim() || undefined,
+        recommendations: recommendations.trim() || undefined,
+        futureResearch: futureResearch.trim() || undefined,
+
+        uploads: {
+          pdf: uploadedPdf || undefined,
+          coverImage: uploadedCoverImage || undefined,
+          figures: uploadedFigures || undefined,
+          tables: uploadedTables || undefined,
+          datasets: uploadedDatasets || undefined,
+          supplementary: uploadedSupplementary || undefined
+        },
+
+        tags: selectedTags.length > 0 ? selectedTags : undefined,
+        visibility: 'Private Draft',
+        license,
+        isConfirmed,
+        isDraft: true,
+        draftStep: currentStep,
+        updatedAt: new Date().toISOString(),
+
+        doi: initialData?.doi || `10.5281/zenodo.${Math.floor(1000000 + Math.random() * 9000000)}`,
+        viewsCount: initialData?.viewsCount ?? 0,
+        downloadsCount: initialData?.downloadsCount ?? 0,
+        bookmarksCount: initialData?.bookmarksCount ?? 0,
+        versions: initialData?.versions || [
+          {
+            id: 'v1.0',
+            version: '1.0',
+            title: title.trim() || 'Untitled Draft Research',
+            abstract: abstract.trim() || 'Draft research study pending completion.',
+            publishedYear: new Date().getFullYear(),
+            date: new Date().toISOString(),
+            notes: 'Draft Version',
+            changes: ['Draft Version']
+          }
+        ],
+        contributions: initialData?.contributions || [],
+        comments: initialData?.comments || []
+      };
+
+      if (draftPaperId) {
+        await updateCustomPaper(draftPaperId, draftData);
+      } else {
+        const userId = userProfile?.uid || 'current_user';
+        const userEmail = userProfile?.email || '';
+        const newId = await addCustomPaper(draftData, userId, userEmail);
+        if (newId) {
+          setDraftPaperId(newId);
+        }
+      }
+
+      setLastSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      if (!silent) {
+        setErrorMsg(null);
+      }
+    } catch (err) {
+      console.error('Error auto-saving draft:', err);
+    } finally {
+      setIsDraftSaving(false);
+    }
+  };
+
+  // Debounced auto-save effect whenever form fields or step change
+  useEffect(() => {
+    if (!isDraftContentPresent) return;
+    const timer = setTimeout(() => {
+      saveDraft(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [
+    title, subtitle, abstract, category, keywords, leadResearcher, coAuthors,
+    institution, department, country, orcid, googleScholar, problemStatement,
+    objectives, researchQuestions, researchMethodology, materialsUsed,
+    dataCollectionMethod, studyArea, durationOfResearch, keyFindings, discussion,
+    conclusion, recommendations, futureResearch, uploadedPdf, uploadedCoverImage,
+    uploadedFigures, uploadedTables, uploadedDatasets, uploadedSupplementary,
+    selectedTags, visibility, license, isConfirmed, currentStep
+  ]);
+
+  const handleCloseAndSaveDraft = async () => {
+    if (isDraftContentPresent && !isSubmitting) {
+      await saveDraft(true);
+    }
+    onClose();
   };
 
   const handleNextStep = () => {
@@ -163,6 +378,10 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
 
   const handleFormSubmit = async () => {
     setErrorMsg(null);
+    if (!profileValidation.isComplete) {
+      setErrorMsg(`Profile Completion Required: You cannot upload research without completing your profile (Missing: ${profileValidation.missingFields.join(', ')}).`);
+      return;
+    }
     if (!isConfirmed) {
       setErrorMsg('You must confirm that this research is your original work.');
       return;
@@ -171,7 +390,7 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
     setIsSubmitting(true);
     try {
       const parsedKeywords = keywords.split(',').map(k => k.trim()).filter(k => k !== '');
-      const paperData: Omit<ResearchPaper, 'id'> = {
+      const paperData: Omit<ResearchPaper, 'id'> & { isDraft?: boolean } = {
         title: title.trim(),
         author: leadResearcher.trim(),
         category,
@@ -182,7 +401,7 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
         // Advanced metadata
         subtitle: subtitle.trim() || undefined,
         keywords: parsedKeywords.length > 0 ? parsedKeywords : undefined,
-        status,
+        status: status === 'Draft' ? 'Published' : status,
         language: language.trim() || undefined,
         readingTime: readingTime.trim() || undefined,
 
@@ -219,15 +438,17 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
         },
 
         tags: selectedTags.length > 0 ? selectedTags : undefined,
-        visibility,
+        visibility: visibility === 'Private Draft' ? 'Public' : visibility,
         license,
         isConfirmed,
+        isDraft: false,
+        updatedAt: new Date().toISOString(),
 
-        doi: `10.5281/zenodo.${Math.floor(1000000 + Math.random() * 9000000)}`,
-        viewsCount: 1,
-        downloadsCount: 0,
-        bookmarksCount: 0,
-        versions: [
+        doi: initialData?.doi || `10.5281/zenodo.${Math.floor(1000000 + Math.random() * 9000000)}`,
+        viewsCount: initialData?.viewsCount ?? 0,
+        downloadsCount: initialData?.downloadsCount ?? 0,
+        bookmarksCount: initialData?.bookmarksCount ?? 0,
+        versions: initialData?.versions || [
           {
             id: 'v1.0',
             version: '1.0',
@@ -239,9 +460,13 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
             changes: ['Original Publication']
           }
         ],
-        contributions: [],
-        comments: []
+        contributions: initialData?.contributions || [],
+        comments: initialData?.comments || []
       };
+
+      if (draftPaperId) {
+        await updateCustomPaper(draftPaperId, paperData);
+      }
 
       await onSubmit(paperData);
     } catch (err: any) {
@@ -253,72 +478,161 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
   };
 
   const stepsInfo = [
-    { num: 1, label: 'Basic Info' },
-    { num: 2, label: 'Authors' },
-    { num: 3, label: 'Details' },
-    { num: 4, label: 'Findings' },
-    { num: 5, label: 'Uploads' },
-    { num: 6, label: 'Tags' },
-    { num: 7, label: 'Visibility' },
-    { num: 8, label: 'License' }
+    { num: 1, label: 'Basic Info', icon: FileText },
+    { num: 2, label: 'Authors', icon: Users },
+    { num: 3, label: 'Details', icon: Info },
+    { num: 4, label: 'Findings', icon: Sparkles },
+    { num: 5, label: 'Uploads', icon: Upload },
+    { num: 6, label: 'Tags', icon: Zap },
+    { num: 7, label: 'Visibility', icon: Lock },
+    { num: 8, label: 'License', icon: Check }
   ];
 
   return (
     <div className="w-full text-left" id="publish_wizard_container">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl w-full flex flex-col overflow-hidden border border-slate-200/60 dark:border-slate-800">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl w-full flex flex-col overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-xl">
         
         {/* Header bar */}
-        <div className="px-6 py-4.5 bg-slate-950 text-white flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 bg-emerald-800 text-emerald-300 rounded-lg">
-              <Sparkles className="w-5 h-5" />
+        <div className="px-5 sm:px-8 py-5 text-slate-900 relative overflow-hidden shrink-0 border-b border-slate-200" style={{ backgroundColor: '#ffffff' }}>
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl shadow-xs">
+                <Sparkles className="w-5 h-5 text-emerald-700" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-display font-extrabold tracking-tight" style={{ color: '#000000', width: '235.656px', fontSize: '14px' }}>
+                    Publish Scientific Research Study
+                  </h3>
+                  <span className="hidden sm:inline-block px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-mono font-bold rounded">
+                    Step {currentStep} of 8
+                  </span>
+                  {isDraftSaving ? (
+                    <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-mono font-bold rounded flex items-center gap-1 animate-pulse">
+                      <RefreshCw className="w-3 h-3 animate-spin text-amber-600" /> Saving draft...
+                    </span>
+                  ) : lastSavedTime ? (
+                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-mono font-bold rounded flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Draft auto-saved at {lastSavedTime}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="text-xs mt-0.5" style={{ color: '#606060' }}>
+                  Complete the peer-review wizard to register your research in the Aurenix index
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-display font-extrabold text-base tracking-tight">Publish Scientific Research Study</h3>
-              <p className="text-[10px] text-slate-400">Complete the 8-step peer-review wizard to upload your research</p>
-            </div>
+            
+            <button 
+              onClick={handleCloseAndSaveDraft}
+              className="p-2 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer text-slate-600 hover:text-black shrink-0 flex items-center gap-1.5"
+              title="Save Draft & Close Wizard"
+            >
+              <X className="w-5 h-5" style={{ color: '#000000' }} />
+            </button>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-1.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-slate-400 hover:text-white"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          {(initialData?.isDraft || initialData?.status === 'Draft' || initialData?.visibility === 'Private Draft') && (
+            <div className="mt-3 px-3.5 py-2 bg-amber-50 border border-amber-200/80 rounded-xl flex items-center gap-2 text-xs font-medium text-amber-900">
+              <FileEdit className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>
+                <strong>Resuming Saved Draft:</strong> Continue updating any step below and click <em>Finalize & Publish Study</em> when ready.
+              </span>
+            </div>
+          )}
+
+          {/* Top Progress Track */}
+          <div className="mt-4 w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-emerald-600 transition-all duration-300 ease-out" 
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
         </div>
 
         {/* Wizard Progress Stepper bar */}
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 shrink-0 overflow-x-auto scrollbar-none">
-          <div className="flex items-center justify-between min-w-[700px] gap-2 px-2">
-            {stepsInfo.map((s, index) => (
-              <React.Fragment key={s.num}>
-                <div className="flex items-center gap-2">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono font-bold transition-all ${
-                    currentStep === s.num 
-                      ? 'bg-emerald-700 text-white shadow-md ring-4 ring-emerald-100'
-                      : currentStep > s.num
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-white text-slate-400 border border-slate-200'
-                  }`}>
-                    {currentStep > s.num ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : s.num}
-                  </div>
-                  <span className={`text-xs font-semibold whitespace-nowrap ${
-                    currentStep === s.num ? 'text-emerald-950 font-extrabold' : 'text-slate-400'
-                  }`}>
-                    {s.label}
-                  </span>
-                </div>
-                {index < stepsInfo.length - 1 && (
-                  <div className={`flex-grow h-0.5 max-w-[40px] rounded ${
-                    currentStep > s.num ? 'bg-emerald-500' : 'bg-slate-200'
-                  }`} />
-                )}
-              </React.Fragment>
-            ))}
+        <div className="px-4 sm:px-8 py-3.5 border-b border-slate-200 shrink-0 overflow-x-auto scrollbar-none" style={{ backgroundColor: '#ffffff' }}>
+          <div className="flex items-center justify-between min-w-[720px] gap-2">
+            {stepsInfo.map((s, index) => {
+              const StepIcon = s.icon;
+              const isActive = currentStep === s.num;
+              const isDone = currentStep > s.num;
+
+              return (
+                <React.Fragment key={s.num}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isDone || s.num <= currentStep) {
+                        setCurrentStep(s.num);
+                      }
+                    }}
+                    disabled={!isDone && s.num > currentStep}
+                    className={`flex items-center gap-2 p-1.5 rounded-xl transition-all ${
+                      isActive || isDone ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+                    }`}
+                  >
+                    <div 
+                      className={`flex items-center justify-center text-xs font-mono font-extrabold transition-all ${
+                        isActive 
+                          ? 'bg-emerald-700 text-white shadow-md ring-4 ring-emerald-100 dark:ring-emerald-900/40'
+                          : isDone
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                            : 'bg-white dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700'
+                      }`}
+                      style={{
+                        borderRadius: '26px',
+                        width: '42.0437px',
+                        height: '28.9875px',
+                      }}
+                    >
+                      {isDone ? <Check className="w-4 h-4 stroke-[3]" /> : <StepIcon className="w-4 h-4" />}
+                    </div>
+                    <span className="whitespace-nowrap font-bold inline-block text-center" style={{ color: '#000000', width: '55px', fontSize: '11px' }}>
+                      {s.label}
+                    </span>
+                  </button>
+                  {index < stepsInfo.length - 1 && (
+                    <div className={`flex-grow h-0.5 max-w-[32px] rounded-full ${
+                      isDone ? 'bg-emerald-500' : 'bg-slate-200'
+                    }`} />
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
         </div>
 
         {/* Form Core Body */}
-        <div className="flex-grow overflow-y-auto p-6 md:p-8 text-left bg-slate-50/50">
+        <div className="flex-grow overflow-y-auto p-6 md:p-8 text-left" style={{ backgroundColor: '#ffffff' }}>
+          {!profileValidation.isComplete && (
+            <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs font-semibold animate-in fade-in duration-200">
+              <div className="flex items-center gap-3">
+                <ShieldAlert className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                <div>
+                  <strong className="block text-sm font-extrabold text-amber-950 dark:text-amber-100">Profile Completion Required</strong>
+                  <p className="text-amber-800 dark:text-amber-300 mt-0.5">
+                    Your user profile is {profileValidation.completionPercent}% complete. Missing: {profileValidation.missingFields.join(', ')}. Please complete your profile before uploading research.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  if (onNavigateToProfile) onNavigateToProfile();
+                  else window.location.hash = '#/profile';
+                }}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shrink-0 transition cursor-pointer shadow-xs"
+                id="wizard_complete_profile_btn"
+              >
+                Complete Profile Now
+              </button>
+            </div>
+          )}
+
           {errorMsg && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-start gap-3 text-sm font-semibold animate-in fade-in duration-200">
               <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5 text-red-500" />
@@ -338,103 +652,127 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
               
               {/* STEP 1: Basic Information */}
               {currentStep === 1 && (
-                <div className="space-y-4">
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-slate-400 font-mono">Step 1 — Basic Information</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="space-y-1 md:col-span-2">
-                      <label className="block text-xs font-bold text-slate-700 uppercase">Research Title <span className="text-red-500">*</span></label>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+                    <div>
+                      <h4 className="text-sm font-extrabold uppercase tracking-wider font-mono flex items-center gap-2" style={{ color: '#000000' }}>
+                        <FileText className="w-4 h-4 text-emerald-600" />
+                        Step 1 — Paper Metadata & Classification
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-0.5">Provide essential titles, abstract, and category metadata for scientific indexing.</p>
+                    </div>
+                  </div>
+
+                  <div className="w-full max-w-full rounded-2xl p-5 sm:p-8 space-y-5" style={{ backgroundColor: '#ececec', borderWidth: '1px', borderStyle: 'none' }}>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-extrabold uppercase tracking-wider" style={{ color: '#000000' }}>
+                          Research Title <span className="text-red-500" style={{ width: '42.5125px' }}>*</span>
+                        </label>
+                        <span className="text-[10px] font-mono" style={{ color: '#202020', width: '37.1187px' }}>REQUIRED</span>
+                      </div>
                       <input 
                         type="text" 
                         required
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="e.g. Biochemical Methanol Yield Tuning of High-Starch Market Residues"
-                        className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-emerald-500 rounded-xl text-slate-800 text-sm outline-none shadow-xs"
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm font-medium outline-none transition-all"
+                        style={{ backgroundColor: '#ffffff', color: '#0f172b' }}
                       />
                     </div>
 
-                    <div className="space-y-1 md:col-span-2">
-                      <label className="block text-xs font-bold text-slate-700 uppercase">Subtitle (Optional)</label>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-extrabold uppercase tracking-wider" style={{ color: '#000000' }}>Subtitle (Optional)</label>
                       <input 
                         type="text"
                         value={subtitle}
                         onChange={(e) => setSubtitle(e.target.value)}
                         placeholder="e.g. A Feasibility Case Study in Lagos Mainland"
-                        className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-emerald-500 rounded-xl text-slate-800 text-sm outline-none shadow-xs"
+                        className="w-full px-4 py-3 bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-slate-900 text-sm font-medium outline-none transition-all"
                       />
                     </div>
 
-                    <div className="space-y-1 md:col-span-2">
-                      <label className="block text-xs font-bold text-slate-700 uppercase">Abstract / Summary Summary <span className="text-red-500">*</span></label>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-extrabold uppercase tracking-wider" style={{ color: '#000000' }}>
+                          Executive Abstract <span className="text-red-500">*</span>
+                        </label>
+                        <span className="text-[10px] font-mono text-slate-500">{abstract.length} characters</span>
+                      </div>
                       <textarea 
                         rows={4}
                         required
                         value={abstract}
                         onChange={(e) => setAbstract(e.target.value)}
-                        placeholder="Provide an executive summary detailing the methodology, biochemical limits, findings, and scalability guidelines..."
-                        className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-emerald-500 rounded-xl text-slate-800 text-sm outline-none resize-none shadow-xs"
+                        placeholder="Provide an executive summary detailing the research objectives, methodology, anaerobic/biochemical limits, empirical results, and scalability guidelines..."
+                        className="w-full px-4 py-3 bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-slate-900 text-sm font-medium outline-none resize-none transition-all leading-relaxed"
                       />
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-xs font-bold text-slate-700 uppercase">Research Category <span className="text-red-500">*</span></label>
-                      <select 
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value as ResearchPaper['category'])}
-                        className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm outline-none shadow-xs"
-                      >
-                        <option value="Bioenergy Technology">Bioenergy Technology</option>
-                        <option value="Waste-to-Energy">Waste-to-Energy</option>
-                        <option value="Environmental Sustainability">Environmental Sustainability</option>
-                        <option value="Climate & Energy Policy">Climate & Energy Policy</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-xs font-bold text-slate-700 uppercase">Keywords (Comma Separated)</label>
-                      <input 
-                        type="text"
-                        value={keywords}
-                        onChange={(e) => setKeywords(e.target.value)}
-                        placeholder="e.g. Anaerobic, Biomethane, Starch Waste, Lagos"
-                        className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-emerald-500 rounded-xl text-slate-800 text-sm outline-none shadow-xs"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3 md:col-span-2">
-                      <div className="space-y-1">
-                        <label className="block text-xs font-bold text-slate-700 uppercase">Status</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold uppercase tracking-wider" style={{ color: '#000000' }}>
+                          Primary Research Category <span className="text-red-500">*</span>
+                        </label>
                         <select 
-                          value={status}
-                          onChange={(e) => setStatus(e.target.value as any)}
-                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm outline-none shadow-xs"
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value as ResearchPaper['category'])}
+                          className="w-full px-3.5 py-3 bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-slate-900 text-sm font-medium outline-none transition-all cursor-pointer"
                         >
-                          <option value="Ongoing">Ongoing</option>
-                          <option value="Completed">Completed</option>
-                          <option value="Under Review">Under Review</option>
-                          <option value="Published">Published</option>
+                          <option value="Bioenergy Technology">Bioenergy Technology</option>
+                          <option value="Waste-to-Energy">Waste-to-Energy</option>
+                          <option value="Environmental Sustainability">Environmental Sustainability</option>
+                          <option value="Climate & Energy Policy">Climate & Energy Policy</option>
                         </select>
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="block text-xs font-bold text-slate-700 uppercase">Language</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold uppercase tracking-wider" style={{ color: '#000000' }}>Keywords (Comma Separated)</label>
+                        <input 
+                          type="text"
+                          value={keywords}
+                          onChange={(e) => setKeywords(e.target.value)}
+                          placeholder="e.g. Anaerobic, Biomethane, Starch Waste, Lagos"
+                          className="w-full px-4 py-3 bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-slate-900 text-sm font-medium outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold uppercase tracking-wider" style={{ color: '#000000' }}>Publication Status</label>
+                        <select 
+                          value={status}
+                          onChange={(e) => setStatus(e.target.value as any)}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs font-bold outline-none cursor-pointer"
+                        >
+                          <option value="Ongoing">Ongoing Study</option>
+                          <option value="Completed">Completed Study</option>
+                          <option value="Under Review">Under Review</option>
+                          <option value="Published">Published Study</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold uppercase tracking-wider" style={{ color: '#000000' }}>Language</label>
                         <input 
                           type="text"
                           value={language}
                           onChange={(e) => setLanguage(e.target.value)}
                           placeholder="English"
-                          className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm outline-none shadow-xs"
+                          className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs font-bold outline-none"
                         />
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="block text-xs font-bold text-slate-700 uppercase">Est. Reading Time</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold uppercase tracking-wider" style={{ color: '#000000' }}>Est. Reading Time</label>
                         <input 
                           type="text"
                           value={readingTime}
                           onChange={(e) => setReadingTime(e.target.value)}
                           placeholder="15 mins"
-                          className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm outline-none shadow-xs"
+                          className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs font-bold outline-none"
                         />
                       </div>
                     </div>
@@ -447,14 +785,20 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
                 <div className="space-y-6">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <h4 className="text-sm font-bold uppercase tracking-wider text-slate-400 font-mono">Step 2 — Authors & Institution</h4>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddCoAuthorForm(!showAddCoAuthorForm)}
-                      className="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 hover:text-emerald-950 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border-0 cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      Add Co-author
-                    </button>
+                    {coAuthors.length < 9 ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowAddCoAuthorForm(!showAddCoAuthorForm)}
+                        className="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 hover:text-emerald-950 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border-0 cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Add Co-author ({coAuthors.length}/9)
+                      </button>
+                    ) : (
+                      <span className="text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-xl">
+                        Maximum 9 co-authors reached
+                      </span>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -466,7 +810,7 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
                         value={leadResearcher}
                         onChange={(e) => setLeadResearcher(e.target.value)}
                         placeholder="e.g. Filani Olalekan Theophilus"
-                        className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-emerald-500 rounded-xl text-slate-800 text-sm outline-none shadow-xs"
+                        className="w-full px-4 py-3.5 sm:py-2.5 bg-white border border-slate-200 focus:border-emerald-500 rounded-xl text-slate-800 text-base sm:text-sm outline-none shadow-xs"
                       />
                     </div>
 
@@ -533,96 +877,96 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="p-5 bg-white rounded-2xl border border-emerald-100 space-y-4 shadow-sm overflow-hidden"
+                        className="p-5 sm:p-6 bg-white rounded-2xl border border-emerald-200 shadow-md space-y-4 overflow-hidden"
                       >
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                          <h5 className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                          <h5 className="text-xs sm:text-sm font-bold text-emerald-950 flex items-center gap-1.5">
                             <Plus className="w-4 h-4 text-emerald-600" />
-                            Co-author Information
+                            Co-author Information ({coAuthors.length + 1}/10)
                           </h5>
                           <button
                             type="button"
                             onClick={() => setShowAddCoAuthorForm(false)}
-                            className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer border-0 bg-transparent"
+                            className="text-xs sm:text-sm text-slate-500 hover:text-slate-700 cursor-pointer border-0 bg-transparent font-medium"
                           >
                             Cancel
                           </button>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase">Full Name</label>
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">Full Name</label>
                             <input 
                               type="text"
                               value={tempCoAuthorName}
                               onChange={(e) => setTempCoAuthorName(e.target.value)}
                               placeholder="e.g. Dr. Amina Gwarzo"
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none"
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:border-emerald-500 rounded-xl text-sm font-medium text-slate-800 outline-none shadow-2xs"
                             />
                           </div>
 
-                          <div className="space-y-1">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase">Institution</label>
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">Institution</label>
                             <input 
                               type="text"
                               value={tempCoAuthorInstitution}
                               onChange={(e) => setTempCoAuthorInstitution(e.target.value)}
                               placeholder="e.g. Bayero University Kano"
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none"
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:border-emerald-500 rounded-xl text-sm font-medium text-slate-800 outline-none shadow-2xs"
                             />
                           </div>
 
-                          <div className="space-y-1">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase">Department</label>
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">Department</label>
                             <input 
                               type="text"
                               value={tempCoAuthorDepartment}
                               onChange={(e) => setTempCoAuthorDepartment(e.target.value)}
                               placeholder="Mechanical Engineering"
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none"
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:border-emerald-500 rounded-xl text-sm font-medium text-slate-800 outline-none shadow-2xs"
                             />
                           </div>
 
-                          <div className="space-y-1">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase">Country</label>
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">Country</label>
                             <input 
                               type="text"
                               value={tempCoAuthorCountry}
                               onChange={(e) => setTempCoAuthorCountry(e.target.value)}
                               placeholder="Nigeria"
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none"
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:border-emerald-500 rounded-xl text-sm font-medium text-slate-800 outline-none shadow-2xs"
                             />
                           </div>
 
-                          <div className="space-y-1">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase">ORCID</label>
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">ORCID</label>
                             <input 
                               type="text"
                               value={tempCoAuthorOrcid}
                               onChange={(e) => setTempCoAuthorOrcid(e.target.value)}
                               placeholder="0000-0001-..."
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none"
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:border-emerald-500 rounded-xl text-sm font-medium text-slate-800 outline-none shadow-2xs"
                             />
                           </div>
 
-                          <div className="space-y-1">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase">Google Scholar</label>
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">Google Scholar</label>
                             <input 
                               type="text"
                               value={tempCoAuthorScholar}
                               onChange={(e) => setTempCoAuthorScholar(e.target.value)}
                               placeholder="Profile Link"
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none"
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:border-emerald-500 rounded-xl text-sm font-medium text-slate-800 outline-none shadow-2xs"
                             />
                           </div>
                         </div>
 
-                        <div className="flex justify-end pt-2">
+                        <div className="flex justify-end pt-3">
                           <button
                             type="button"
                             onClick={handleAddCoAuthor}
                             disabled={!tempCoAuthorName.trim()}
-                            className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:bg-slate-300 text-white rounded-xl text-xs font-bold transition-all border-0 cursor-pointer"
+                            className="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 disabled:bg-slate-300 text-white rounded-xl text-sm font-bold transition-all border-0 cursor-pointer shadow-md"
                           >
                             Add to Author List
                           </button>
@@ -881,7 +1225,7 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
                       <div className="flex gap-2">
                         <label className="flex-grow flex items-center justify-center gap-2 px-4 py-2 border border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer text-xs font-bold text-slate-700">
                           <Upload className="w-4 h-4 text-slate-400" />
-                          {uploadedCoverImage ? uploadedCoverImage : 'Select Cover Image'}
+                          {uploadedCoverImageName || (uploadedCoverImage ? 'Cover Image Selected' : 'Select Cover Image')}
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => handleSimulatedUpload('coverImage', e)} />
                         </label>
                       </div>
@@ -1155,7 +1499,7 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
                       />
                       <div className="space-y-1">
                         <span className="text-sm font-extrabold text-emerald-950">Declaration of Academic Integrity <span className="text-red-500">*</span></span>
-                        <p className="text-xs text-emerald-800 leading-relaxed font-sans">
+                        <p className="text-xs text-emerald-800 leading-relaxed font-sans hidden lg:block">
                           "I confirm this research is my original work. I guarantee that all chemical process modeling, anaerobic loading rates, and spatial surveys comply with scientific research standards, and contain no plagiarized material."
                         </p>
                       </div>
@@ -1169,24 +1513,42 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
         </div>
 
         {/* Footer actions bar */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between shrink-0">
-          <button
-            type="button"
-            onClick={handlePrevStep}
-            disabled={currentStep === 1}
-            className="flex items-center gap-1 px-4 py-2 bg-white disabled:bg-slate-100 hover:bg-slate-100 disabled:text-slate-300 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-colors cursor-pointer"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Previous Step
-          </button>
+        <div className="px-5 sm:px-8 py-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0" style={{ backgroundColor: '#ffffff' }}>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handlePrevStep}
+              disabled={currentStep === 1}
+              className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 bg-white dark:bg-slate-800 disabled:bg-slate-100 dark:disabled:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:text-slate-300 dark:disabled:text-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-extrabold transition-all cursor-pointer shadow-2xs"
+            >
+              <ChevronLeft className="w-4 h-4 text-emerald-600" />
+              <span>Previous</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCloseAndSaveDraft}
+              disabled={isDraftSaving}
+              className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80 rounded-xl text-xs font-extrabold transition-all cursor-pointer"
+              title="Save current progress as a draft and close"
+            >
+              <Save className="w-3.5 h-3.5 text-amber-600" />
+              <span>Save Draft & Exit</span>
+            </button>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-1.5 text-xs font-mono font-bold text-slate-400">
+            <span>Progress:</span>
+            <span className="text-emerald-700 dark:text-emerald-400">{progressPercentage}%</span>
+          </div>
 
           {currentStep < 8 ? (
             <button
               type="button"
               onClick={handleNextStep}
-              className="flex items-center gap-1 px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer border-0"
+              className="flex items-center gap-2 px-5 sm:px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white rounded-xl text-xs font-extrabold transition-all shadow-md cursor-pointer border-0"
             >
-              Continue Wizard
+              <span>Continue Wizard</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
@@ -1194,10 +1556,10 @@ export default function PublishWizard({ onClose, onSubmit, initialData }: Publis
               type="button"
               onClick={handleFormSubmit}
               disabled={isSubmitting || !isConfirmed || !title || !abstract}
-              className="flex items-center gap-1.5 px-6 py-2.5 bg-emerald-800 hover:bg-emerald-950 disabled:bg-slate-300 text-white rounded-xl text-xs font-extrabold transition-all shadow-md cursor-pointer border-0"
+              className="flex items-center gap-2 px-6 sm:px-8 py-3 bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 disabled:from-slate-300 disabled:to-slate-400 text-white rounded-xl text-xs font-extrabold transition-all shadow-lg shadow-emerald-900/20 cursor-pointer border-0"
               id="finalize_publish_btn"
             >
-              {isSubmitting ? 'Publishing Research...' : 'Publish Research'}
+              {isSubmitting ? 'Publishing Research...' : 'Finalize & Publish Study'}
               <Check className="w-4 h-4 stroke-[3]" />
             </button>
           )}

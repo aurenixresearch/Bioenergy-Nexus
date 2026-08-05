@@ -45,8 +45,8 @@ export default function NotificationsPanel({
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-md text-left space-y-6" id="notifications_panel_section">
-      <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-800 pb-4">
+    <div className="bg-white dark:bg-slate-900 border border-emerald-100/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow text-left space-y-6" id="notifications_panel_section">
+      <div className="flex items-center justify-between border-b border-emerald-100/60 dark:border-slate-800 pb-4">
         <div className="space-y-1">
           <h3 className="text-lg font-display font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
             <Bell className="w-5 h-5 text-emerald-600" />
@@ -85,8 +85,8 @@ export default function NotificationsPanel({
                   exit={{ opacity: 0, x: -10 }}
                   className={`p-4 rounded-2xl border transition-all flex items-start gap-3 text-left relative group font-sans ${
                     notif.isRead 
-                      ? 'bg-white dark:bg-slate-900/40 border-slate-50 dark:border-slate-800/80 opacity-80' 
-                      : 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 shadow-xs'
+                      ? 'bg-white dark:bg-slate-900/40 border-emerald-100/80 dark:border-slate-800/80 opacity-80' 
+                      : 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/30 shadow-xs'
                   }`}
                 >
                   {/* Category icon */}

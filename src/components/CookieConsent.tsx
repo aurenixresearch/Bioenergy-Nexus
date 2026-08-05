@@ -51,15 +51,25 @@ export default function CookieConsent() {
   const [preferences, setPreferences] = useState(true);
 
   useEffect(() => {
-    // Check if consent has already been chosen
     const existing = getCookieConsent();
-    if (!existing) {
-      setShowBanner(true);
+    if (existing && existing.timestamp) {
+      const savedTime = new Date(existing.timestamp).getTime();
+      const now = Date.now();
+      const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
+
+      if (!isNaN(savedTime) && (now - savedTime) < TWO_WEEKS_MS) {
+        // User accepted/saved preferences within two weeks - do not show banner
+        setShowBanner(false);
+        setAnalytics(existing.analytics);
+        setPreferences(existing.preferences);
+        updateGA4Consent(existing.analytics);
+      } else {
+        // Consent expired (> 14 days)
+        setShowBanner(true);
+      }
     } else {
-      // Sync state for preferences modal
-      setAnalytics(existing.analytics);
-      setPreferences(existing.preferences);
-      updateGA4Consent(existing.analytics);
+      // No consent recorded yet
+      setShowBanner(true);
     }
 
     // Listen for custom event from Settings page or elsewhere to open preferences
@@ -125,13 +135,23 @@ export default function CookieConsent() {
             <div className="flex flex-col gap-2.5 sm:gap-4">
               {/* Header & Description */}
               <div className="space-y-1 sm:space-y-1.5">
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <div className="p-1 sm:p-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-lg">
-                    <Cookie className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <div className="p-1 sm:p-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                      <Cookie className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </div>
+                    <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white font-display">
+                      We use cookies
+                    </h3>
                   </div>
-                  <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white font-display">
-                    We use cookies
-                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowBanner(false)}
+                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg transition-colors cursor-pointer"
+                    title="Dismiss"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
                 <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 leading-normal sm:leading-relaxed">
                   Aurenix uses essential cookies to keep the platform secure. Optional cookies help us analyze usage and customize your experience.

@@ -35,9 +35,9 @@ export default function InsightsHub({
     const matchesCat = activeCategory === 'All' || art.category === activeCategory;
     const q = searchQuery.toLowerCase().trim();
     const matchesSearch = !q || 
-      art.title.toLowerCase().includes(q) || 
-      art.summary.toLowerCase().includes(q) || 
-      art.tags.some(t => t.toLowerCase().includes(q));
+      (art?.title || '').toLowerCase().includes(q) || 
+      (art?.summary || '').toLowerCase().includes(q) || 
+      (art?.tags || []).some(t => (t || '').toLowerCase().includes(q));
     return matchesCat && matchesSearch;
   });
 

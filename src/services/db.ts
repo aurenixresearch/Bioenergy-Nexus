@@ -11,7 +11,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db, auth, isFirestoreOffline, setFirestoreOffline } from '../firebase';
-import { ResearchPaper, ConsultationInquiry, PartnershipSubmission, Researcher, Publication } from '../types';
+import { ResearchPaper, ConsultationInquiry, PartnershipSubmission, Researcher, Publication, CommunityPost, CommunityComment, Testimonial } from '../types';
 import { SEED_RESEARCHERS, SEED_PUBLICATIONS } from './researchersSeed';
 
 export enum OperationType {
@@ -79,9 +79,31 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   throw new Error(JSON.stringify(errInfo));
 }
 
+// SANITIZE PAYLOADS FOR FIRESTORE (REMOVES UNDEFINED VALUES RECURSIVELY)
+export function sanitizeForFirestore<T>(data: T): T {
+  if (data === null || data === undefined) {
+    return data;
+  }
+  if (Array.isArray(data)) {
+    return data
+      .filter(item => item !== undefined)
+      .map(item => sanitizeForFirestore(item)) as unknown as T;
+  }
+  if (typeof data === 'object' && !(data instanceof Date)) {
+    const cleanObj: Record<string, any> = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined) {
+        cleanObj[key] = sanitizeForFirestore(value);
+      }
+    }
+    return cleanObj as T;
+  }
+  return data;
+}
+
 // LOCAL STORAGE SANDBOX FALLBACK HELPERS
 export function isDemoModeActive(userId?: string): boolean {
-  if (userId && (userId === 'sandbox-guest-user' || userId.startsWith('sandbox-'))) {
+  if (userId && (userId === 'sandbox-guest-user' || userId === 'demo-scholar-guest' || userId.startsWith('sandbox-') || userId.startsWith('demo-'))) {
     return true;
   }
   return localStorage.getItem('nexus_demo_mode') === 'true' || 
@@ -213,11 +235,11 @@ export async function submitInquiry(inquiry: Omit<ConsultationInquiry, 'id' | 's
   const path = 'consultation_inquiries';
   try {
     const colRef = collection(db, path);
-    const docRef = await addDoc(colRef, {
+    const docRef = await addDoc(colRef, sanitizeForFirestore({
       ...inquiry,
       status: 'Pending',
       createdAt: new Date().toISOString(),
-    });
+    }));
     return docRef.id;
   } catch (error) {
     if (isOfflineError(error)) {
@@ -282,10 +304,10 @@ export async function submitPartnership(partnership: Omit<PartnershipSubmission,
   const path = 'partnership_submissions';
   try {
     const colRef = collection(db, path);
-    const docRef = await addDoc(colRef, {
+    const docRef = await addDoc(colRef, sanitizeForFirestore({
       ...partnership,
       createdAt: new Date().toISOString(),
-    });
+    }));
     return docRef.id;
   } catch (error) {
     if (isOfflineError(error)) {
@@ -360,8 +382,16 @@ export async function updatePartnership(
   }
 }
 
+let customPapersCache: { timestamp: number; data: ResearchPaper[] } | null = null;
+const CACHE_TTL_MS = 5000;
+
+export function invalidateCustomPapersCache() {
+  customPapersCache = null;
+}
+
 // CUSTOM RESEARCH PAPERS (CONTRIBUTIONS)
 export async function addCustomPaper(paper: Omit<ResearchPaper, 'id'>, userId: string, userEmail: string): Promise<string> {
+  invalidateCustomPapersCache();
   if (isDemoModeActive(userId)) {
     const papers = getLocalCustomPapers();
     const mockId = 'paper_' + Math.random().toString(36).substring(2, 9);
@@ -377,13 +407,13 @@ export async function addCustomPaper(paper: Omit<ResearchPaper, 'id'>, userId: s
   const path = 'custom_papers';
   try {
     const colRef = collection(db, path);
-    const docRef = await addDoc(colRef, {
+    const docRef = await addDoc(colRef, sanitizeForFirestore({
       ...paper,
       isCustom: true,
       userId,
       userEmail,
       createdAt: new Date().toISOString(),
-    });
+    }));
     return docRef.id;
   } catch (error) {
     if (isOfflineError(error)) {
@@ -395,22 +425,24 @@ export async function addCustomPaper(paper: Omit<ResearchPaper, 'id'>, userId: s
 }
 
 export async function updateCustomPaper(paperId: string, paper: Partial<ResearchPaper>): Promise<void> {
+  invalidateCustomPapersCache();
+  const papers = getLocalCustomPapers();
+  const updated = papers.map(p => {
+    if (p.id === paperId) {
+      return { ...p, ...paper };
+    }
+    return p;
+  });
+  setLocalCustomPapers(updated);
+
   if (isDemoModeActive()) {
-    const papers = getLocalCustomPapers();
-    const updated = papers.map(p => {
-      if (p.id === paperId) {
-        return { ...p, ...paper };
-      }
-      return p;
-    });
-    setLocalCustomPapers(updated);
     return;
   }
 
   const path = 'custom_papers';
   try {
     const docRef = doc(db, path, paperId);
-    await setDoc(docRef, paper, { merge: true });
+    await setDoc(docRef, sanitizeForFirestore(paper), { merge: true });
   } catch (error) {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
@@ -420,10 +452,38 @@ export async function updateCustomPaper(paperId: string, paper: Partial<Research
   }
 }
 
+export async function deleteCustomPaper(paperId: string): Promise<void> {
+  invalidateCustomPapersCache();
+  const papers = getLocalCustomPapers();
+  const updated = papers.filter(p => p.id !== paperId);
+  setLocalCustomPapers(updated);
+
+  if (isDemoModeActive()) {
+    return;
+  }
+
+  const path = 'custom_papers';
+  try {
+    const docRef = doc(db, path, paperId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return deleteCustomPaper(paperId);
+    }
+    handleFirestoreError(error, OperationType.DELETE, `${path}/${paperId}`);
+  }
+}
+
 export async function getCustomPapers(): Promise<ResearchPaper[]> {
+  if (customPapersCache && (Date.now() - customPapersCache.timestamp < CACHE_TTL_MS)) {
+    return customPapersCache.data;
+  }
+
   const localPapers = getLocalCustomPapers();
 
   if (isDemoModeActive()) {
+    customPapersCache = { timestamp: Date.now(), data: localPapers };
     return localPapers;
   }
 
@@ -441,7 +501,9 @@ export async function getCustomPapers(): Promise<ResearchPaper[]> {
       } as ResearchPaper);
     });
     // Merge both for complete sandboxing
-    return [...papers, ...localPapers];
+    const result = [...papers, ...localPapers];
+    customPapersCache = { timestamp: Date.now(), data: result };
+    return result;
   } catch (error) {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
@@ -449,45 +511,50 @@ export async function getCustomPapers(): Promise<ResearchPaper[]> {
     }
     // If firebase fails entirely due to rules/restrictions, fallback gracefully to local custom papers
     console.warn('Firebase error fetching custom papers, falling back to local storage custom papers:', error);
+    customPapersCache = { timestamp: Date.now(), data: localPapers };
     return localPapers;
   }
 }
 
 // USER PROFILES
-export async function createUserProfile(userId: string, profile: {
-  fullName: string;
-  email: string;
-  role: string;
-  country: string;
-  institution?: string;
-  researchInterests?: string[];
-  termsAccepted: boolean;
-  needsOnboarding?: boolean;
-}): Promise<void> {
+export async function createUserProfile(userId: string, profile: any): Promise<void> {
+  const sanitizedProfile = {
+    fullName: profile.fullName || '',
+    email: profile.email || '',
+    role: profile.role || '',
+    country: profile.country || '',
+    institution: profile.institution || '',
+    researchInterests: profile.researchInterests || [],
+    termsAccepted: profile.termsAccepted !== undefined ? Boolean(profile.termsAccepted) : true,
+    needsOnboarding: profile.needsOnboarding !== undefined ? Boolean(profile.needsOnboarding) : false,
+    ...profile,
+  };
+
   if (isDemoModeActive(userId)) {
-    localStorage.setItem(`nexus_demo_profile_${userId}`, JSON.stringify({
-      ...profile,
+    const updated = {
+      ...sanitizedProfile,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    }));
+    };
+    localStorage.setItem(`nexus_demo_profile_${userId}`, JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId, profile: updated } }));
+    }
     return;
   }
 
   const path = 'users';
   try {
     const docRef = doc(db, path, userId);
-    await setDoc(docRef, {
-      fullName: profile.fullName,
-      email: profile.email,
-      role: profile.role,
-      country: profile.country,
-      institution: profile.institution || '',
-      researchInterests: profile.researchInterests || [],
-      termsAccepted: profile.termsAccepted,
-      needsOnboarding: profile.needsOnboarding !== undefined ? profile.needsOnboarding : false,
+    const cleanPayload = sanitizeForFirestore({
+      ...sanitizedProfile,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
+    await setDoc(docRef, cleanPayload, { merge: true });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId, profile: sanitizedProfile } }));
+    }
   } catch (error) {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
@@ -559,6 +626,7 @@ export async function getUserProfile(userId: string): Promise<any> {
         role: 'super_admin',
         country: 'Nigeria',
         institution: 'Aurenix Core Labs',
+        bio: 'Lead Bioenergy Systems Researcher & Administrator at Aurenix Core Labs.',
         researchInterests: ['Bioenergy', 'Circular Economy', 'Nuclear Energy'],
         termsAccepted: true,
         verified: true,
@@ -1136,7 +1204,7 @@ export async function addInnovationProject(userId: string, project: Omit<Innovat
 
   const path = 'innovation_projects';
   try {
-    await setDoc(doc(db, path, newId), fullProject);
+    await setDoc(doc(db, path, newId), sanitizeForFirestore(fullProject));
     return newId;
   } catch (error) {
     if (isOfflineError(error)) {
@@ -1357,7 +1425,7 @@ export async function addNotification(userId: string, notif: Omit<UserNotificati
 
   const path = 'user_notifications';
   try {
-    await setDoc(doc(db, path, newId), fullNotif);
+    await setDoc(doc(db, path, newId), sanitizeForFirestore(fullNotif));
     return newId;
   } catch (error) {
     if (isOfflineError(error)) {
@@ -1476,7 +1544,7 @@ export async function addDeadline(userId: string, deadline: Omit<UserDeadline, '
 
   const path = 'user_deadlines';
   try {
-    await setDoc(doc(db, path, newId), fullDeadline);
+    await setDoc(doc(db, path, newId), sanitizeForFirestore(fullDeadline));
     return newId;
   } catch (error) {
     if (isOfflineError(error)) {
@@ -1510,6 +1578,409 @@ export async function deleteDeadline(userId: string, deadlineId: string): Promis
     setLocalDeadlines(userId, list.filter(d => d.id !== deadlineId));
   }
 }
+
+// COMMUNITY SERVICES
+const LOCAL_POSTS_KEY = 'nexus_demo_community_posts';
+
+const SEED_COMMUNITY_POSTS: CommunityPost[] = [
+  {
+    id: 'post_seed_sarah_1',
+    userId: 'res-sarah-adeyemi',
+    authorName: 'Dr. Sarah Adeyemi',
+    authorInstitution: 'University of Lagos',
+    authorCountry: 'Nigeria',
+    authorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300&h=300',
+    content: "Excited to share that our joint solar-biogas hybrid study for municipal cold chains has passed its first round of peer review! This research demonstrates how tropical microgrids can combine municipal waste-to-energy and solar PV to ensure constant power for agricultural storage, reducing local post-harvest losses by up to 40%.",
+    researchLink: "https://aurenix-research.org/papers/solar-biogas-hybrid-study",
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
+    likes: ['res-amadi-keita', 'res-chinedu-okafor'],
+    comments: [
+      {
+        userId: 'res-amadi-keita',
+        userName: 'Prof. Amadi Keita',
+        userAvatar: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?auto=format&fit=crop&q=80&w=300&h=300',
+        content: 'This is crucial work, Sarah! The integration of organic biogas with PV represents the exact kind of firm-dispatchable balance needed in tropical microgrids. Looking forward to the full publication!',
+        createdAt: new Date(Date.now() - 3600000 * 1.5).toISOString()
+      }
+    ]
+  },
+  {
+    id: 'post_seed_amadi_1',
+    userId: 'res-amadi-keita',
+    authorName: 'Prof. Amadi Keita',
+    authorInstitution: 'Université Cheikh Anta Diop',
+    authorCountry: 'Senegal',
+    authorAvatar: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?auto=format&fit=crop&q=80&w=300&h=300',
+    content: "We just finished compiling the experimental results from our 15kW peanut hull gasifier trials in rural Kaolack, Senegal. The gas clean-up system achieved 98% tar cracking efficiency using local laterite catalysts, which is a major win for lowering operational costs of off-grid agricultural cooperatives. Paper draft coming soon!",
+    createdAt: new Date(Date.now() - 3600000 * 18).toISOString(), // 18 hours ago
+    likes: ['res-sarah-adeyemi'],
+    comments: []
+  },
+  {
+    id: 'post_seed_chinedu_1',
+    userId: 'res-chinedu-okafor',
+    authorName: 'Engr. Chinedu Okafor',
+    authorInstitution: 'Africa CleanTech Solutions',
+    authorCountry: 'Kenya',
+    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300&h=300',
+    content: "Field installation update: Successfully commissioned a 45kWp solar smart mini-grid with built-in LFP (Lithium Iron Phosphate) battery storage for a farming cooperative near Nakuru. Integrating smart controls allows the cooperative to prioritize solar direct-drive during peak sunshine for maize-milling, while preserving battery state-of-charge for household lighting after dark.",
+    imageUrl: 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&q=80&w=800&h=500',
+    createdAt: new Date(Date.now() - 3600000 * 36).toISOString(), // 1.5 days ago
+    likes: ['res-sarah-adeyemi', 'res-almaz-demissie'],
+    comments: [
+      {
+        userId: 'res-almaz-demissie',
+        userName: 'Almaz Demissie',
+        userAvatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=300&h=300',
+        content: 'Fantastic practical results, Chinedu! How did you address the voltage sag during high-torque startup of the milling motors?',
+        createdAt: new Date(Date.now() - 3600000 * 30).toISOString()
+      }
+    ]
+  }
+];
+
+function getLocalCommunityPosts(): CommunityPost[] {
+  const data = localStorage.getItem(LOCAL_POSTS_KEY);
+  if (!data) {
+    localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(SEED_COMMUNITY_POSTS));
+    return SEED_COMMUNITY_POSTS;
+  }
+  return JSON.parse(data);
+}
+
+function setLocalCommunityPosts(posts: CommunityPost[]) {
+  localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(posts));
+}
+
+export async function getCommunityPosts(): Promise<CommunityPost[]> {
+  const userId = auth.currentUser?.uid || 'anonymous';
+  if (isDemoModeActive(userId)) {
+    return getLocalCommunityPosts().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  const path = 'community_posts';
+  try {
+    const colRef = collection(db, path);
+    const snapshot = await getDocs(colRef);
+    const list: CommunityPost[] = [];
+    snapshot.forEach(docSnap => {
+      list.push({ id: docSnap.id, ...docSnap.data() } as CommunityPost);
+    });
+
+    if (list.length === 0) {
+      for (const p of SEED_COMMUNITY_POSTS) {
+        await setDoc(doc(db, path, p.id), p);
+      }
+      return SEED_COMMUNITY_POSTS;
+    }
+
+    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return getCommunityPosts();
+    }
+    console.warn('Firestore getCommunityPosts error, falling back to local storage:', error);
+    return getLocalCommunityPosts().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+}
+
+export async function createCommunityPost(userId: string, postData: Omit<CommunityPost, 'id' | 'likes' | 'comments' | 'userId'>): Promise<string> {
+  const newId = 'post_' + Math.random().toString(36).substring(2, 9);
+  const fullPost: CommunityPost = {
+    ...postData,
+    id: newId,
+    userId,
+    likes: [],
+    comments: []
+  };
+
+  if (isDemoModeActive(userId)) {
+    const list = getLocalCommunityPosts();
+    setLocalCommunityPosts([fullPost, ...list]);
+    return newId;
+  }
+
+  const path = 'community_posts';
+  try {
+    await setDoc(doc(db, path, newId), sanitizeForFirestore(fullPost));
+    return newId;
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return createCommunityPost(userId, postData);
+    }
+    console.warn('Firestore createCommunityPost error:', error);
+    const list = getLocalCommunityPosts();
+    setLocalCommunityPosts([fullPost, ...list]);
+    return newId;
+  }
+}
+
+export async function likeCommunityPost(userId: string, postId: string, post: CommunityPost): Promise<void> {
+  const likes = post.likes || [];
+  const updatedLikes = likes.includes(userId)
+    ? likes.filter(id => id !== userId)
+    : [...likes, userId];
+
+  const updatedPost = { ...post, likes: updatedLikes };
+
+  if (isDemoModeActive(userId)) {
+    const list = getLocalCommunityPosts();
+    setLocalCommunityPosts(list.map(p => p.id === postId ? updatedPost : p));
+    return;
+  }
+
+  const path = 'community_posts';
+  try {
+    await setDoc(doc(db, path, postId), sanitizeForFirestore(updatedPost));
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return likeCommunityPost(userId, postId, post);
+    }
+    console.warn('Firestore likeCommunityPost error:', error);
+    const list = getLocalCommunityPosts();
+    setLocalCommunityPosts(list.map(p => p.id === postId ? updatedPost : p));
+  }
+}
+
+export async function commentCommunityPost(userId: string, postId: string, post: CommunityPost, comment: CommunityComment): Promise<void> {
+  const comments = post.comments || [];
+  const updatedComments = [...comments, comment];
+  const updatedPost = { ...post, comments: updatedComments };
+
+  if (isDemoModeActive(userId)) {
+    const list = getLocalCommunityPosts();
+    setLocalCommunityPosts(list.map(p => p.id === postId ? updatedPost : p));
+    return;
+  }
+
+  const path = 'community_posts';
+  try {
+    await setDoc(doc(db, path, postId), sanitizeForFirestore(updatedPost));
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return commentCommunityPost(userId, postId, post, comment);
+    }
+    console.warn('Firestore commentCommunityPost error:', error);
+    const list = getLocalCommunityPosts();
+    setLocalCommunityPosts(list.map(p => p.id === postId ? updatedPost : p));
+  }
+}
+
+export async function updateCommunityComments(userId: string, postId: string, post: CommunityPost, updatedComments: CommunityComment[]): Promise<void> {
+  const updatedPost = { ...post, comments: updatedComments };
+
+  if (isDemoModeActive(userId)) {
+    const list = getLocalCommunityPosts();
+    setLocalCommunityPosts(list.map(p => p.id === postId ? updatedPost : p));
+    return;
+  }
+
+  const path = 'community_posts';
+  try {
+    await setDoc(doc(db, path, postId), sanitizeForFirestore(updatedPost));
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return updateCommunityComments(userId, postId, post, updatedComments);
+    }
+    console.warn('Firestore updateCommunityComments error:', error);
+    const list = getLocalCommunityPosts();
+    setLocalCommunityPosts(list.map(p => p.id === postId ? updatedPost : p));
+  }
+}
+
+export async function updateCommunityPost(userId: string, postId: string, updatedPost: CommunityPost): Promise<void> {
+  if (isDemoModeActive(userId)) {
+    const list = getLocalCommunityPosts();
+    setLocalCommunityPosts(list.map(p => p.id === postId ? updatedPost : p));
+    return;
+  }
+
+  const path = 'community_posts';
+  try {
+    await setDoc(doc(db, path, postId), sanitizeForFirestore(updatedPost));
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return updateCommunityPost(userId, postId, updatedPost);
+    }
+    console.warn('Firestore updateCommunityPost error:', error);
+    const list = getLocalCommunityPosts();
+    setLocalCommunityPosts(list.map(p => p.id === postId ? updatedPost : p));
+  }
+}
+
+export async function deleteCommunityPost(userId: string, postId: string): Promise<void> {
+  if (isDemoModeActive(userId)) {
+    const list = getLocalCommunityPosts();
+    setLocalCommunityPosts(list.filter(p => p.id !== postId));
+    return;
+  }
+
+  const path = 'community_posts';
+  try {
+    await deleteDoc(doc(db, path, postId));
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return deleteCommunityPost(userId, postId);
+    }
+    console.warn('Firestore deleteCommunityPost error:', error);
+    const list = getLocalCommunityPosts();
+    setLocalCommunityPosts(list.filter(p => p.id !== postId));
+  }
+}
+
+/* ============================================================================
+ * TESTIMONIALS SYSTEM (FIREBASE PERSISTENCE)
+ * ============================================================================ */
+
+const LOCAL_TESTIMONIALS_KEY = 'aurenix_local_testimonials_v1';
+
+function getLocalTestimonials(): Testimonial[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_TESTIMONIALS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function setLocalTestimonials(items: Testimonial[]): void {
+  try {
+    localStorage.setItem(LOCAL_TESTIMONIALS_KEY, JSON.stringify(items));
+  } catch (e) {
+    console.warn('Failed to save local testimonials', e);
+  }
+}
+
+export async function submitTestimonial(
+  testimonialData: Omit<Testimonial, 'id' | 'approved' | 'featured' | 'createdAt' | 'updatedAt'>
+): Promise<Testimonial> {
+  const newId = 'testim_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+  const now = new Date().toISOString();
+  
+  const testimonialItem: Testimonial = {
+    id: newId,
+    ...testimonialData,
+    approved: false, // Must default to pending approval
+    featured: false,
+    createdAt: now,
+    updatedAt: now
+  };
+
+  if (isDemoModeActive(testimonialData.userId)) {
+    const list = getLocalTestimonials();
+    list.unshift(testimonialItem);
+    setLocalTestimonials(list);
+    return testimonialItem;
+  }
+
+  const path = 'testimonials';
+  try {
+    await setDoc(doc(db, path, newId), sanitizeForFirestore(testimonialItem));
+    return testimonialItem;
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      const list = getLocalTestimonials();
+      list.unshift(testimonialItem);
+      setLocalTestimonials(list);
+      return testimonialItem;
+    }
+    console.warn('Firestore submitTestimonial error:', error);
+    const list = getLocalTestimonials();
+    list.unshift(testimonialItem);
+    setLocalTestimonials(list);
+    return testimonialItem;
+  }
+}
+
+export async function getApprovedTestimonials(): Promise<Testimonial[]> {
+  if (isFirestoreOffline) {
+    return getLocalTestimonials().filter(t => t.approved);
+  }
+
+  const path = 'testimonials';
+  try {
+    const q = query(collection(db, path), where('approved', '==', true));
+    const snapshot = await getDocs(q);
+    const items: Testimonial[] = [];
+    snapshot.forEach(d => {
+      items.push({ id: d.id, ...d.data() } as Testimonial);
+    });
+    return items;
+  } catch (error) {
+    console.warn('Firestore getApprovedTestimonials error, falling back to local:', error);
+    return getLocalTestimonials().filter(t => t.approved);
+  }
+}
+
+export async function getAllTestimonialsAdmin(): Promise<Testimonial[]> {
+  if (isFirestoreOffline) {
+    return getLocalTestimonials();
+  }
+
+  const path = 'testimonials';
+  try {
+    const snapshot = await getDocs(collection(db, path));
+    const items: Testimonial[] = [];
+    snapshot.forEach(d => {
+      items.push({ id: d.id, ...d.data() } as Testimonial);
+    });
+    return items;
+  } catch (error) {
+    console.warn('Firestore getAllTestimonialsAdmin error, falling back to local:', error);
+    return getLocalTestimonials();
+  }
+}
+
+export async function updateTestimonialAdmin(
+  testimonialId: string,
+  updates: Partial<Testimonial>
+): Promise<void> {
+  const now = new Date().toISOString();
+  const payload = sanitizeForFirestore({ ...updates, updatedAt: now });
+
+  if (isFirestoreOffline) {
+    const list = getLocalTestimonials();
+    setLocalTestimonials(list.map(t => t.id === testimonialId ? { ...t, ...updates, updatedAt: now } : t));
+    return;
+  }
+
+  const path = 'testimonials';
+  try {
+    const docRef = doc(db, path, testimonialId);
+    await setDoc(docRef, payload, { merge: true });
+  } catch (error) {
+    console.warn('Firestore updateTestimonialAdmin error:', error);
+    const list = getLocalTestimonials();
+    setLocalTestimonials(list.map(t => t.id === testimonialId ? { ...t, ...updates, updatedAt: now } : t));
+  }
+}
+
+export async function deleteTestimonialAdmin(testimonialId: string): Promise<void> {
+  if (isFirestoreOffline) {
+    const list = getLocalTestimonials();
+    setLocalTestimonials(list.filter(t => t.id !== testimonialId));
+    return;
+  }
+
+  const path = 'testimonials';
+  try {
+    await deleteDoc(doc(db, path, testimonialId));
+  } catch (error) {
+    console.warn('Firestore deleteTestimonialAdmin error:', error);
+    const list = getLocalTestimonials();
+    setLocalTestimonials(list.filter(t => t.id !== testimonialId));
+  }
+}
+
+
 
 
 

@@ -10,12 +10,23 @@ import {
 } from 'firebase/auth';
 import { 
   initializeFirestore, 
-  persistentLocalCache, 
-  persistentMultipleTabManager,
+  memoryLocalCache,
+  getFirestore,
   doc, 
-  getDocFromServer 
+  getDocFromServer,
+  setLogLevel,
+  disableNetwork
 } from 'firebase/firestore';
 import config from '../firebase-applet-config.json';
+
+// Suppress internal Firestore connection warnings from clogging the console
+try {
+  setLogLevel('error');
+} catch {
+  // Ignore if already set or unsupported
+}
+
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: config.apiKey,
@@ -29,15 +40,27 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore with custom settings to use long polling, which is robust in sandboxed/iframe/reverse proxy environments,
-// and enable multi-tab persistent cache so the app functions instantly offline/online.
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager(),
-  }),
-  experimentalForceLongPolling: true,
-  experimentalAutoDetectLongPolling: false,
-}, config.firestoreDatabaseId || '(default)');
+// Initialize Firestore with memory local cache and long polling to avoid IndexedDB persistent batch assertion crashes
+let dbInstance;
+try {
+  dbInstance = initializeFirestore(app, {
+    localCache: memoryLocalCache(),
+    experimentalForceLongPolling: true,
+  }, config.firestoreDatabaseId || '(default)');
+} catch (err) {
+  console.warn("Failed initializing Firestore with memoryLocalCache, falling back:", err);
+  dbInstance = getFirestore(app, config.firestoreDatabaseId || '(default)');
+}
+
+export const db = dbInstance;
+
+let storageInstance;
+try {
+  storageInstance = getStorage(app);
+} catch (e) {
+  console.warn("Storage initialization fallback:", e);
+}
+export const storage = storageInstance;
 
 // Initialize Auth safely without global popupRedirectResolver to prevent "Pending promise was never set" assertions in sandboxed/iframe environments
 let authInstance;
@@ -61,16 +84,19 @@ export let isFirestoreOffline = false;
 
 export function setFirestoreOffline(val: boolean) {
   isFirestoreOffline = val;
-  if (val) {
-    // Also set demo mode in local storage to keep session state in sync
-    localStorage.setItem('nexus_demo_mode', 'true');
+  if (val && db) {
+    disableNetwork(db).catch(err => {
+      console.warn("Could not disable Firestore network:", err);
+    });
   }
 }
 
 async function testConnection() {
-  const timeoutPromise = new Promise((_, reject) => 
-    setTimeout(() => reject(new Error('Connection timeout')), 4000)
-  );
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error('connection-timeout'));
+    }, 1500);
+  });
 
   try {
     await Promise.race([
@@ -82,7 +108,7 @@ async function testConnection() {
     const errMsg = error instanceof Error ? error.message : String(error);
     
     // If the error is permission-denied or document-not-found, we actually reached the Firestore backend!
-    // It means the connection is active and healthy. Only activate offline mode for actual connectivity issues or timeouts.
+    // It means the connection is active and healthy. Only activate offline mode for actual connectivity issues.
     const isPermissionOrExistsError = 
       errMsg.includes('permission-denied') || 
       errMsg.includes('Permission denied') ||
@@ -95,8 +121,18 @@ async function testConnection() {
       return;
     }
 
-    console.warn("Firestore connection check failed or timed out:", errMsg, "- Activating local storage offline fallback mode.");
-    setFirestoreOffline(true);
+    if (
+      errMsg.includes('offline') || 
+      errMsg.includes('failed to connect') || 
+      errMsg.includes('network') ||
+      errMsg.includes('unavailable') ||
+      errMsg.includes('Could not reach') ||
+      errMsg.includes('Connection failed') ||
+      errMsg.includes('connection-timeout')
+    ) {
+      console.warn("Firestore backend unavailable or offline. Operating in local sandbox/offline mode.");
+      setFirestoreOffline(true);
+    }
   }
 }
 

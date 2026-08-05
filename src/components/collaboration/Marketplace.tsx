@@ -26,6 +26,132 @@ interface MarketplaceProps {
   onSuccess: (msg: string) => void;
 }
 
+function AllianceCardItem({ 
+  alliance, 
+  match, 
+  isSaved, 
+  onSaveToggle, 
+  onApply 
+}: { 
+  key?: React.Key;
+  alliance: AllianceOpportunity; 
+  match: any; 
+  isSaved: boolean; 
+  onSaveToggle: (e: React.MouseEvent) => void; 
+  onApply: () => void; 
+}) {
+  const [imgError, setImgError] = useState(false);
+
+  const orgName = alliance.orgName || (alliance as any).organization || 'Research Alliance Partner';
+  const orgType = alliance.orgType || 'University / Industry';
+  const title = alliance.title || 'Bioenergy Research Collaboration Opportunity';
+  const description = alliance.description || 'Joint initiative seeking research proposals for sustainable energy, waste valorization, and decarbonization technologies.';
+  const country = alliance.country || 'International';
+  const fundingAmount = alliance.fundingAmount || 'Grant Funded';
+  const researchAreas = alliance.researchAreas && alliance.researchAreas.length > 0 ? alliance.researchAreas : ['Bioenergy', 'Clean Technology'];
+
+  return (
+    <motion.div
+      whileHover={{ y: -3 }}
+      className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm hover:shadow-lg hover:border-emerald-300 transition-all duration-300 flex flex-col justify-between relative group text-left"
+    >
+      <div className="space-y-4">
+        {/* Header Logo & Save Button */}
+        <div className="flex justify-between items-start gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 rounded-xl bg-[#012a24] border border-emerald-900/40 p-1.5 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+              {alliance.logo && !imgError ? (
+                <img 
+                  src={alliance.logo} 
+                  alt={orgName} 
+                  onError={() => setImgError(true)}
+                  className="w-full h-full object-contain"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <Building className="w-5 h-5 text-emerald-400" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-xs sm:text-sm font-extrabold text-[#000000] leading-snug truncate transition-colors">
+                {orgName}
+              </h4>
+              <span className="inline-block text-[9.5px] font-mono font-bold text-emerald-800 bg-emerald-100/80 border border-emerald-200 px-2 py-0.5 rounded-md mt-0.5 uppercase tracking-wider">
+                {orgType}
+              </span>
+            </div>
+          </div>
+          
+          <button
+            onClick={onSaveToggle}
+            className="w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-emerald-50 text-slate-500 hover:text-emerald-600 rounded-full cursor-pointer transition-all border border-slate-200 shrink-0"
+            title={isSaved ? "Saved" : "Save Alliance"}
+          >
+            {isSaved ? <Heart className="w-4 h-4 text-emerald-600 fill-emerald-600" /> : <Heart className="w-4 h-4" />}
+          </button>
+        </div>
+
+        {/* AI Match Banner */}
+        {match && (
+          <div className="p-3 bg-emerald-50/90 border border-emerald-200/90 rounded-xl flex items-start gap-2.5 text-xs shadow-2xs">
+            <Sparkles className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 font-extrabold text-emerald-950">
+                <span>AI Strategic Match:</span>
+                <span className="text-emerald-900 bg-emerald-200 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold">{match.score}%</span>
+              </div>
+              <p className="text-xs text-slate-700 mt-0.5 leading-snug">
+                {match.matchReasons?.[0] || 'High strategic alignment with research goals.'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Title & Description */}
+        <div className="space-y-2">
+          <h3 className="text-base font-extrabold text-[#17553f] font-display hover:text-emerald-800 transition-colors duration-200 leading-snug">
+            {title}
+          </h3>
+          <p className="text-xs sm:text-sm text-[#272727] leading-relaxed font-normal">
+            {description}
+          </p>
+        </div>
+
+        {/* Tags */}
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {researchAreas.map((area, i) => (
+            <span key={i} className="px-2.5 py-1 bg-slate-100 text-slate-800 rounded-lg text-[11px] font-semibold border border-slate-200 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">
+              {area}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom Info and Trigger Button */}
+      <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col gap-3.5">
+        <div className="flex items-center justify-between text-xs text-slate-700 gap-2">
+          <span className="flex items-center gap-1.5 text-[#7b7b7b] text-xs font-semibold truncate">
+            <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
+            {country}
+          </span>
+          <span className="flex items-center gap-1.5 text-xs font-extrabold text-emerald-800 bg-emerald-100/80 border border-emerald-200 px-2.5 py-1 rounded-lg shrink-0">
+            <Coins className="w-4 h-4 text-emerald-600" />
+            {fundingAmount}
+          </span>
+        </div>
+        
+        <button
+          onClick={onApply}
+          className="w-full py-3 px-4 bg-slate-900 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
+        >
+          Apply and Upload Research Proposal
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function Marketplace({ user, onSignIn, onSuccess }: MarketplaceProps) {
   const [alliances, setAlliances] = useState<AllianceOpportunity[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -118,7 +244,7 @@ export default function Marketplace({ user, onSignIn, onSuccess }: MarketplacePr
 
   // Automated Match Scoring calculator (based on researchArea alignment)
   const getMatchDetails = (alliance: AllianceOpportunity) => {
-    if (!projects || projects.length === 0) return null;
+    if (!projects || projects.length === 0 || !alliance) return null;
     
     // Check if we have precalculated scores
     const precalculated = INITIAL_MATCH_SCORES.find(
@@ -126,20 +252,24 @@ export default function Marketplace({ user, onSignIn, onSuccess }: MarketplacePr
     );
     if (precalculated) return precalculated;
 
+    const resAreas = alliance.researchAreas || [];
+    const techAreas = alliance.technologyAreas || [];
+    const countries = alliance.eligibleCountries || [];
+
     // Dynamically calculate matching score
     const bestMatch = projects.map(p => {
       let score = 50; // base score
       const reasons: string[] = [];
       
-      if (p.researchArea === alliance.researchAreas[0] || alliance.researchAreas.includes(p.researchArea)) {
+      if ((resAreas.length > 0 && p.researchArea === resAreas[0]) || resAreas.includes(p.researchArea)) {
         score += 30;
         reasons.push('High research area alignment');
       }
-      if (alliance.technologyAreas.includes(p.technologyArea)) {
+      if (techAreas.includes(p.technologyArea)) {
         score += 15;
         reasons.push('Technology core match');
       }
-      if (alliance.eligibleCountries.includes(p.country)) {
+      if (countries.includes(p.country)) {
         score += 10;
         reasons.push('Country eligibility verified');
       }
@@ -159,14 +289,16 @@ export default function Marketplace({ user, onSignIn, onSuccess }: MarketplacePr
   };
 
   const filteredAlliances = alliances.filter(all => {
-    const matchesSearch = all.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          all.orgName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          all.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const query = (searchTerm || '').toLowerCase().trim();
+    const matchesSearch = !query || 
+                          (all?.title || '').toLowerCase().includes(query) || 
+                          (all?.orgName || '').toLowerCase().includes(query) ||
+                          (all?.description || '').toLowerCase().includes(query);
     
-    const matchesResearch = selectedResearchArea === 'All' || all.researchAreas.includes(selectedResearchArea);
-    const matchesCountry = selectedCountry === 'All' || all.eligibleCountries.includes(selectedCountry);
-    const matchesSupport = selectedSupport === 'All' || all.supportOffered.includes(selectedSupport);
-    const matchesOrgType = selectedOrgType === 'All' || all.orgType === selectedOrgType;
+    const matchesResearch = selectedResearchArea === 'All' || (all?.researchAreas || []).includes(selectedResearchArea);
+    const matchesCountry = selectedCountry === 'All' || (all?.eligibleCountries || []).includes(selectedCountry);
+    const matchesSupport = selectedSupport === 'All' || (all?.supportOffered || []).includes(selectedSupport);
+    const matchesOrgType = selectedOrgType === 'All' || all?.orgType === selectedOrgType;
 
     return matchesSearch && matchesResearch && matchesCountry && matchesSupport && matchesOrgType;
   });
@@ -283,100 +415,17 @@ export default function Marketplace({ user, onSignIn, onSuccess }: MarketplacePr
           const isSaved = savedAllianceIds.includes(alliance.id);
           
           return (
-            <motion.div
+            <AllianceCardItem
               key={alliance.id}
-              whileHover={{ y: -4 }}
-              className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-xs flex flex-col justify-between relative group text-left"
-            >
-              <div className="space-y-4">
-                
-                {/* Header Logo & Save */}
-                <div className="flex justify-between items-start gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden">
-                      <img 
-                        src={alliance.logo} 
-                        alt={alliance.orgName} 
-                        className="w-8 h-8 object-contain"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-900 leading-tight">{alliance.orgName}</h4>
-                      <span className="text-[9px] font-mono font-bold text-slate-400 block uppercase mt-0.5">{alliance.orgType}</span>
-                    </div>
-                  </div>
-                  
-                  <button
-                    onClick={(e) => handleSaveToggle(alliance.id, e)}
-                    className="p-2 bg-slate-50 hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 rounded-full cursor-pointer transition"
-                  >
-                    {isSaved ? <Heart className="w-4 h-4 text-emerald-600 fill-emerald-600" /> : <Heart className="w-4 h-4" />}
-                  </button>
-                </div>
-
-                {/* AI Match Banner */}
-                {match && (
-                  <div className="p-3 bg-emerald-50/50 border border-emerald-100/40 rounded-xl flex items-start gap-2 text-xs">
-                    <Sparkles className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 animate-pulse" />
-                    <div>
-                      <div className="flex items-center gap-1.5 font-bold text-emerald-800">
-                        <span>AI Match Score:</span>
-                        <span className="text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded-md text-[10px]">{match.score}%</span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed italic">
-                        "{match.matchReasons[0]} & target eligibility aligns perfectly."
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Title & Description */}
-                <div className="space-y-1.5">
-                  <h3 className="text-base font-bold text-slate-900 font-display group-hover:text-emerald-700 transition-colors duration-200">
-                    {alliance.title}
-                  </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
-                    {alliance.description}
-                  </p>
-                </div>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {alliance.researchAreas.map((area, i) => (
-                    <span key={i} className="px-2 py-1 bg-slate-50 text-slate-600 border border-slate-100 rounded-lg text-[9px] font-medium">
-                      {area}
-                    </span>
-                  ))}
-                </div>
-
-              </div>
-
-              {/* Bottom Info and Trigger Button */}
-              <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col gap-3">
-                <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-slate-400">
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-emerald-600" />
-                    {alliance.country}
-                  </span>
-                  <span className="flex items-center gap-1 justify-end text-right">
-                    <Coins className="w-3 h-3 text-emerald-600" />
-                    {alliance.fundingAmount}
-                  </span>
-                </div>
-                
-                <button
-                  onClick={() => {
-                    window.history.pushState(null, '', `/alliances/${alliance.id}`);
-                    window.dispatchEvent(new Event('popstate'));
-                  }}
-                  className="w-full py-2.5 bg-slate-900 hover:bg-emerald-600 text-white hover:text-white rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  Apply and Upload Research Proposal
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </motion.div>
+              alliance={alliance}
+              match={match}
+              isSaved={isSaved}
+              onSaveToggle={(e) => handleSaveToggle(alliance.id, e)}
+              onApply={() => {
+                window.history.pushState(null, '', `/alliances/${alliance.id}`);
+                window.dispatchEvent(new Event('popstate'));
+              }}
+            />
           );
         })}
       </div>

@@ -322,6 +322,57 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["blockerId", "blockedUserId", "createdAt"]
+    },
+    "policy_acceptance": {
+      "title": "Policy Acceptance Record",
+      "description": "User consent and policy agreement audit trail record.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "User ID of accepting user." },
+        "userEmail": { "type": "string", "format": "email", "description": "Email address of accepting user." },
+        "userName": { "type": "string", "description": "Display name of accepting user." },
+        "policyVersions": {
+          "type": "object",
+          "description": "Map of policy IDs to version strings accepted."
+        },
+        "acceptedAt": { "type": "string", "format": "date-time", "description": "Timestamp when policies were accepted." },
+        "userAgent": { "type": "string", "description": "User agent string when accepted." }
+      },
+      "required": ["userId", "userEmail", "policyVersions", "acceptedAt"]
+    },
+    "policy_document": {
+      "title": "Policy Document",
+      "description": "Legal policy content document and version control.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "version": { "type": "string" },
+        "lastUpdated": { "type": "string", "format": "date-time" },
+        "sections": {
+          "type": "array",
+          "description": "Array of policy sections with title and content."
+        }
+      },
+      "required": ["title", "version", "lastUpdated"]
+    },
+    "community_post": {
+      "title": "Community Post",
+      "description": "A post published on the community feed by a scholar.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the author." },
+        "authorName": { "type": "string", "description": "Full name of the author." },
+        "authorInstitution": { "type": "string", "description": "Institution of the author." },
+        "authorCountry": { "type": "string", "description": "Country of the author." },
+        "authorAvatar": { "type": "string", "description": "Avatar image URL of the author." },
+        "content": { "type": "string", "description": "Post body text content." },
+        "imageUrl": { "type": "string", "description": "Optional image attachment URL." },
+        "researchLink": { "type": "string", "description": "Optional link to related paper or research." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp." },
+        "likes": { "type": "array", "description": "Array of user IDs who liked the post." },
+        "comments": { "type": "array", "description": "Array of comment objects." }
+      },
+      "required": ["userId", "authorName", "authorInstitution", "authorCountry", "content", "createdAt"]
     }
   },
   "firestore": {
@@ -360,6 +411,22 @@
     "messages": {
       "schema": "message",
       "description": "Individual messages in private conversations."
+    },
+    "policy_acceptances": {
+      "schema": "policy_acceptance",
+      "description": "Audit trail of user legal policy agreements."
+    },
+    "policy_documents": {
+      "schema": "policy_document",
+      "description": "Dynamic legal policies and version records."
+    },
+    "community_posts": {
+      "schema": "community_post",
+      "description": "Shared community feeds and scholarly posts."
+    },
+    "testimonials": {
+      "schema": "testimonial",
+      "description": "Public member testimonials submitted for platform review and publication."
     }
   }
 }

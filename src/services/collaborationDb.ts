@@ -61,7 +61,7 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
 
 // Check if demo mode is active
 export function isDemoModeActive(userId?: string): boolean {
-  if (userId && (userId === 'sandbox-guest-user' || userId.startsWith('sandbox-'))) {
+  if (userId && (userId === 'sandbox-guest-user' || userId === 'demo-scholar-guest' || userId.startsWith('sandbox-') || userId.startsWith('demo-'))) {
     return true;
   }
   return localStorage.getItem('nexus_demo_mode') === 'true' || 

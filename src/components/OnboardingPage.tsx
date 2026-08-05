@@ -16,6 +16,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { createUserProfile } from '../services/db';
+import { recordPolicyAcceptance } from '../services/policyService';
 
 interface OnboardingPageProps {
   user: any;
@@ -166,6 +167,12 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
         needsOnboarding: false
       });
 
+      await recordPolicyAcceptance(
+        user.uid, 
+        user.email || '', 
+        user.displayName || 'Scholar User'
+      );
+
       onComplete();
     } catch (err: any) {
       console.error('Error during Google onboarding submission:', err);
@@ -176,8 +183,9 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
   };
 
   // Country Search filters
-  const filteredAfrican = AFRICAN_COUNTRIES.filter(c => c.toLowerCase().includes(countrySearch.toLowerCase()));
-  const filteredOther = OTHER_COUNTRIES.filter(c => c.toLowerCase().includes(countrySearch.toLowerCase()));
+  const countryQuery = (countrySearch || '').toLowerCase();
+  const filteredAfrican = AFRICAN_COUNTRIES.filter(c => (c || '').toLowerCase().includes(countryQuery));
+  const filteredOther = OTHER_COUNTRIES.filter(c => (c || '').toLowerCase().includes(countryQuery));
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 md:p-8 font-sans" id="onboarding_wrapper">
@@ -258,8 +266,17 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                       I AM A: <span className="text-rose-500">*</span>
                     </label>
                     <div className="grid grid-cols-2 gap-2.5">
-                      {ROLES.map((r) => {
+                      {ROLES.map((r, idx) => {
                         const isSelected = role === r.id;
+                        let customSpanStyle: React.CSSProperties = {};
+                        if (idx === 2) {
+                          customSpanStyle = { fontSize: '9px', fontWeight: 'bold' };
+                        } else if (idx === 4) {
+                          customSpanStyle = { fontSize: '9px', paddingLeft: '-12px', fontWeight: 'bold' };
+                        } else if (idx === 5) {
+                          customSpanStyle = { fontSize: '9px', fontWeight: 'bold' };
+                        }
+
                         return (
                           <motion.button
                             key={r.id}
@@ -267,14 +284,14 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => { setRole(r.id); setErrorMsg(null); }}
-                            className={`p-3.5 rounded-xl border text-left transition-all flex items-center gap-3 cursor-pointer ${
+                            className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all flex items-center gap-2.5 cursor-pointer min-w-0 ${
                               isSelected 
                                 ? 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-2 ring-emerald-500/10 font-bold' 
                                 : 'bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/5 text-slate-700 font-semibold'
                             }`}
                           >
-                            <span className="text-xl shrink-0">{r.emoji}</span>
-                            <span className="text-xs leading-tight">{r.label}</span>
+                            <span className="text-lg sm:text-xl shrink-0">{r.emoji}</span>
+                            <span className="text-xs leading-tight min-w-0 flex-1 break-words" style={customSpanStyle}>{r.label}</span>
                           </motion.button>
                         );
                       })}

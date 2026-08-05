@@ -59,14 +59,16 @@ export default function UpcomingDeadlines({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-md text-left space-y-6" id="upcoming_deadlines_section">
-      <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-800 pb-4">
+    <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-all duration-300 text-left space-y-6 relative overflow-hidden" id="upcoming_deadlines_section">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100/80 pb-4">
         <div>
-          <h3 className="text-lg font-display font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-emerald-600" />
+          <h3 className="text-lg font-display font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
+              <Calendar className="w-4 h-4" />
+            </div>
             Upcoming Academic Deadlines ({deadlines.length})
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-sans font-medium mt-0.5">
+          <p className="text-xs text-slate-500 font-sans font-medium mt-1">
             Synchronize project deliverable targets, alliance application cycles, and peer reviews.
           </p>
         </div>
@@ -74,7 +76,8 @@ export default function UpcomingDeadlines({
           onClick={() => setShowAddModal(true)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="p-2 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-600 dark:text-emerald-400 rounded-xl cursor-pointer border-0"
+          className="w-9 h-9 shrink-0 flex items-center justify-center bg-slate-50 hover:bg-emerald-50/80 text-emerald-700 border border-slate-200/80 hover:border-emerald-200 cursor-pointer transition-colors shadow-2xs"
+          style={{ borderRadius: '6.47392px' }}
           title="Add New Target"
         >
           <Plus className="w-4 h-4" />
@@ -82,7 +85,7 @@ export default function UpcomingDeadlines({
       </div>
 
       {deadlines.length > 0 ? (
-        <div className="space-y-3">
+        <div className="space-y-3 bg-white dark:bg-white border-0" style={{ backgroundColor: '#ffffff', borderStyle: 'none' }}>
           {deadlines.map((dl) => {
             const daysLeft = getDaysRemaining(dl.date);
             const isOverdue = daysLeft < 0;
@@ -92,38 +95,39 @@ export default function UpcomingDeadlines({
               <motion.div
                 key={dl.id}
                 whileHover={{ y: -2 }}
-                className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left cursor-pointer bg-white dark:bg-slate-900/40 hover:bg-emerald-50/25 dark:hover:bg-emerald-950/10 ${
+                style={{ backgroundColor: '#ffffff' }}
+                className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left cursor-pointer bg-white dark:bg-white hover:bg-slate-50/60 shadow-2xs hover:shadow-sm ${
                   isOverdue 
-                    ? 'border-slate-100 hover:border-red-300 dark:border-slate-800/80 dark:hover:border-red-900/50' 
+                    ? 'border-red-200/90 hover:border-red-400' 
                     : isClose
-                    ? 'border-slate-100 hover:border-amber-300 dark:border-slate-800/80 dark:hover:border-amber-900/50'
-                    : 'border-slate-100 hover:border-emerald-300 dark:border-slate-800/80 dark:hover:border-emerald-900/50'
+                    ? 'border-amber-200/90 hover:border-amber-400'
+                    : 'border-slate-200/90 hover:border-emerald-300'
                 }`}
                 onClick={() => setSelectedDeadline(dl)}
               >
                 <div className="space-y-1.5 font-sans flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 border border-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:border-emerald-900/40 dark:text-emerald-300 rounded-md text-[8px] font-mono font-bold uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white dark:bg-white border border-slate-200/80 text-slate-700 rounded-lg text-[9px] font-mono font-bold uppercase tracking-wider shadow-2xs" style={{ backgroundColor: '#ffffff' }}>
                       {dl.category}
                     </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-slate-450 dark:text-slate-500" />
-                      {new Date(dl.date).toLocaleDateString()}
+                    <span className="text-[10px] text-slate-500 font-semibold flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-slate-400" />
+                      {new Date(dl.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
                   </div>
 
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug line-clamp-1">
+                  <h4 className="text-xs font-bold text-slate-800 leading-snug line-clamp-1">
                     {dl.title}
                   </h4>
                 </div>
 
                 <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                  <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full ${
+                  <span className={`text-[10px] font-mono font-extrabold uppercase px-2.5 py-1 rounded-full border ${
                     isOverdue 
-                      ? 'bg-red-500/10 text-red-600 dark:bg-red-950/30 dark:text-red-400' 
+                      ? 'bg-red-50 text-red-700 border-red-200/80' 
                       : isClose
-                      ? 'bg-amber-500/10 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400'
-                      : 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400'
+                      ? 'bg-amber-50 text-amber-700 border-amber-200/80'
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
                   }`}>
                     {isOverdue 
                       ? 'Overdue' 
@@ -148,7 +152,7 @@ export default function UpcomingDeadlines({
           })}
         </div>
       ) : (
-        <div className="py-8 bg-slate-50/50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl text-center space-y-2">
+        <div className="py-8 bg-white dark:bg-white rounded-2xl text-center space-y-2 border-0" style={{ backgroundColor: '#ffffff', borderStyle: 'none' }}>
           <Calendar className="w-8 h-8 text-slate-300 mx-auto" />
           <h4 className="text-xs font-bold text-slate-600">No Upcoming Targets</h4>
         </div>

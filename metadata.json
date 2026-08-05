@@ -1,6 +1,6 @@
 {
   "name": "Aurenix Research",
   "description": "A research, training, and environmental consulting hub dedicated to accelerating waste-to-energy technologies and sustainability in Nigeria and Africa.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["camera", "microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

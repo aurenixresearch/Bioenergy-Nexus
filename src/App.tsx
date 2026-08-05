@@ -6,50 +6,80 @@ import {
   signOut, 
   User as FirebaseUser 
 } from 'firebase/auth';
-import { auth, googleProvider, browserPopupRedirectResolver, db } from './firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { getSavedPaperIds, getUserInquiries, getUserPartnerships, getUserProfile, isDemoModeActive, getCustomPapers, getInnovationProjects, updateInnovationProject, savePaper, unsavePaper } from './services/db';
+import { auth, googleProvider, browserPopupRedirectResolver, db, setFirestoreOffline } from './firebase';
+import { doc, onSnapshot, collection } from 'firebase/firestore';
+import { getSavedPaperIds, getUserInquiries, getUserPartnerships, getUserProfile, isDemoModeActive, getCustomPapers, getInnovationProjects, updateInnovationProject, savePaper, unsavePaper, isOfflineError } from './services/db';
 import { ConsultationInquiry, PartnershipSubmission, ResearchPaper } from './types';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, ShieldAlert, Sparkles, X, UserCheck, KeyRound, HelpCircle, BookOpen, Users, HeartHandshake, Leaf, Award, Quote, Building, CheckCircle2, FlaskConical } from 'lucide-react';
 
 // Core layout components
 import Navbar from './components/Navbar';
+import AnnouncementBar from './components/AnnouncementBar';
 import FloatingAside from './components/FloatingAside';
 import Hero from './components/Hero';
 import Footer from './components/Footer';
 import SystemBootLoader from './components/SystemBootLoader';
 import CookieConsent from './components/CookieConsent';
 import SeoManager from './components/seo/SeoManager';
-import FeaturedPilots from './components/FeaturedPilots';
-import { TrustedLeadersBanner } from './components/TrustedLeadersBanner';
-import TestimonialsSection from './components/TestimonialsSection';
+import ErrorBoundary from './components/ErrorBoundary';
 import { RESEARCH_PAPERS } from './data';
-import { generateResearchPDF } from './utils/pdfGenerator';
+
+// Safe lazy loading helper with retry & cache recovery
+function safeLazy<T extends React.ComponentType<any>>(
+  factory: () => Promise<{ default: T } | { [key: string]: any }>
+) {
+  return lazy(async () => {
+    try {
+      return await factory();
+    } catch (error) {
+      console.warn('Dynamic import failed, retrying...', error);
+      try {
+        await new Promise((res) => setTimeout(res, 400));
+        return await factory();
+      } catch (retryError) {
+        console.error('Retry loading dynamic module failed:', retryError);
+        const key = 'ais_dynamic_import_reload';
+        const lastReload = parseInt(sessionStorage.getItem(key) || '0', 10);
+        if (Date.now() - lastReload > 8000) {
+          sessionStorage.setItem(key, String(Date.now()));
+          window.location.reload();
+        }
+        throw retryError;
+      }
+    }
+  });
+}
 
 // Route-based code splitting
-const SignInPage = lazy(() => import('./components/SignInPage'));
-const OnboardingPage = lazy(() => import('./components/OnboardingPage'));
-const AboutSection = lazy(() => import('./components/AboutSection'));
-const ResearchSection = lazy(() => import('./components/ResearchSection'));
-const ResearchDetail = lazy(() => import('./components/ResearchDetail'));
-const ProjectDetailsPage = lazy(() => import('./components/ProjectDetailsPage'));
-const AllianceDetailsPage = lazy(() => import('./components/AllianceDetailsPage'));
-const SavedStudiesPage = lazy(() => import('./components/SavedStudiesPage'));
-const ConsultationSection = lazy(() => import('./components/ConsultationSection'));
-const CollaborationSection = lazy(() => import('./components/CollaborationSection'));
-const ContactSection = lazy(() => import('./components/ContactSection'));
-const UserDashboard = lazy(() => import('./components/UserDashboard'));
-const ExploreResearchers = lazy(() => import('./components/ExploreResearchers'));
-const OperationalConsole = lazy(() => import('./components/collaboration/OperationalConsole'));
-const ProfilePage = lazy(() => import('./components/ProfilePage'));
-const SettingsPage = lazy(() => import('./components/SettingsPage'));
-const AdminPortal = lazy(() => import('./components/admin/AdminPortal'));
-const MessagesPage = lazy(() => import('./components/MessagesPage'));
-const NotificationsPage = lazy(() => import('./components/NotificationsPage'));
-const InsightsHub = lazy(() => import('./components/InsightsHub'));
-const ResearchAreasPage = lazy(() => import('./components/ResearchAreasPage'));
-const NotFoundPage = lazy(() => import('./components/NotFoundPage'));
+const FeaturedPilots = safeLazy(() => import('./components/FeaturedPilots'));
+const TrustedLeadersBanner = safeLazy(() => import('./components/TrustedLeadersBanner').then(m => ({ default: m.TrustedLeadersBanner })));
+const TestimonialsSection = safeLazy(() => import('./components/TestimonialsSection'));
+const SignInPage = safeLazy(() => import('./components/SignInPage'));
+const OnboardingPage = safeLazy(() => import('./components/OnboardingPage'));
+const AboutSection = safeLazy(() => import('./components/AboutSection'));
+const ResearchSection = safeLazy(() => import('./components/ResearchSection'));
+const ResearchDetail = safeLazy(() => import('./components/ResearchDetail'));
+const ProjectDetailsPage = safeLazy(() => import('./components/ProjectDetailsPage'));
+const AllianceDetailsPage = safeLazy(() => import('./components/AllianceDetailsPage'));
+const SavedStudiesPage = safeLazy(() => import('./components/SavedStudiesPage'));
+const ConsultationSection = safeLazy(() => import('./components/ConsultationSection'));
+const CollaborationSection = safeLazy(() => import('./components/CollaborationSection'));
+const ContactSection = safeLazy(() => import('./components/ContactSection'));
+const UserDashboard = safeLazy(() => import('./components/UserDashboard'));
+const ExploreResearchers = safeLazy(() => import('./components/ExploreResearchers'));
+const OperationalConsole = safeLazy(() => import('./components/collaboration/OperationalConsole'));
+const ProfilePage = safeLazy(() => import('./components/ProfilePage'));
+const SettingsPage = safeLazy(() => import('./components/SettingsPage'));
+const AdminPortal = safeLazy(() => import('./components/admin/AdminPortal'));
+const MessagesPage = safeLazy(() => import('./components/MessagesPage'));
+const NotificationsPage = safeLazy(() => import('./components/NotificationsPage'));
+const InsightsHub = safeLazy(() => import('./components/InsightsHub'));
+const ResearchAreasPage = safeLazy(() => import('./components/ResearchAreasPage'));
+const LegalLayout = safeLazy(() => import('./components/legal/LegalLayout'));
+const CommunityPage = safeLazy(() => import('./components/CommunityPage'));
+const UtilityPage = safeLazy(() => import('./components/UtilityPage'));
+const NotFoundPage = safeLazy(() => import('./components/NotFoundPage'));
 
 function ViewLoadingFallback() {
   return (
@@ -121,20 +151,39 @@ function parsePath(path: string) {
     return { view: 'research-areas' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
   }
 
+  // 10. /legal/:policyId or /legal
+  match = path.match(/^\/legal\/([^/]+)$/);
+  if (match) {
+    return { view: 'legal' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: match[1] };
+  }
+  if (path === '/legal' || path === '/legal/') {
+    return { view: 'legal' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: 'hub' };
+  }
+
   // Root homepage
   if (path === '/' || path === '') {
-    return { view: 'home' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+    return { view: 'home' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
   }
 
   // Standard views
-  const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas'];
+  const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas', 'legal', 'community', 'utility'];
   const viewName = path.substring(1);
   if (views.includes(viewName)) {
-    return { view: viewName as any, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+    return { view: viewName as any, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: 'terms' };
   }
   
-  return { view: 'notfound' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+  return { view: 'notfound' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
 }
+
+const DEMO_GUEST_USER = {
+  uid: 'demo-scholar-guest',
+  displayName: 'Dr. Sarah Jenkins',
+  email: 's.jenkins@aurenix-research.org',
+  photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
+  emailVerified: true,
+  isAnonymous: false,
+  metadata: { creationTime: '2026-01-15T08:00:00.000Z' }
+};
 
 function parseUrl() {
   if (typeof window === 'undefined') {
@@ -175,13 +224,22 @@ export default function App() {
   };
 
   const setView = (view: string) => {
-    let effectiveView = view;
-    if (effectiveView === 'home' && user) {
-      effectiveView = 'dashboard';
-    }
+    let effectiveView = view === 'saved_studies' ? 'saved' : (view === 'collaborations' ? 'collaboration' : view);
 
     if (effectiveView === 'initializing') {
       setRouteState({ view: 'initializing', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null });
+      return;
+    }
+
+    // Signed-in users must never view or access the home page
+    if (user && effectiveView === 'home') {
+      effectiveView = 'dashboard';
+    }
+
+    // Direct subpaths or path handles (e.g. 'legal/terms', '/legal/privacy')
+    if (effectiveView.includes('/') || effectiveView.startsWith('/')) {
+      const targetPath = effectiveView.startsWith('/') ? effectiveView : `/${effectiveView}`;
+      navigateTo(targetPath);
       return;
     }
     const pathMap: Record<string, string> = {
@@ -203,7 +261,10 @@ export default function App() {
       messages: '/messages',
       notifications: '/notifications',
       insights: '/insights',
-      'research-areas': '/research-areas'
+      'research-areas': '/research-areas',
+      legal: '/legal',
+      community: '/community',
+      utility: '/utility'
     };
 
     const currentPath = window.location.pathname;
@@ -212,7 +273,8 @@ export default function App() {
                                    (effectiveView === 'dashboard' && currentPath.startsWith('/projects/')) ||
                                    (effectiveView === 'collaboration' && currentPath.startsWith('/alliances/')) ||
                                    (effectiveView === 'insights' && currentPath.startsWith('/insights/')) ||
-                                   (effectiveView === 'research-areas' && currentPath.startsWith('/research-areas/'));
+                                   (effectiveView === 'research-areas' && currentPath.startsWith('/research-areas/')) ||
+                                   (effectiveView === 'legal' && currentPath.startsWith('/legal/'));
 
     if (isCurrentSubpathOfView) {
       navigateTo(currentPath);
@@ -220,14 +282,6 @@ export default function App() {
       navigateTo(pathMap[effectiveView] || '/');
     }
   };
-
-  // Ensure logged-in users visiting root '/' or 'home' are directed to the user dashboard
-  useEffect(() => {
-    if (user && routeState.view === 'home' && !authLoading) {
-      window.history.replaceState(null, '', '/dashboard');
-      setRouteState(parseUrl());
-    }
-  }, [user, routeState.view, authLoading]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -263,23 +317,31 @@ export default function App() {
   }, [theme]);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 1280);
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Load custom papers & user projects on load / auth state changes
+  // Load custom papers in real-time & user projects on load / auth state changes
   useEffect(() => {
-    async function loadAllPapersAndProjects() {
-      try {
-        const custom = await getCustomPapers();
-        setAllPapers([...RESEARCH_PAPERS, ...custom]);
-      } catch (err) {
-        console.error('Error loading papers:', err);
-        setAllPapers(RESEARCH_PAPERS);
-      }
-      
+    const customPapersCol = collection(db, 'custom_papers');
+    const unsubCustomPapers = onSnapshot(customPapersCol, (snapshot) => {
+      const custom: ResearchPaper[] = [];
+      snapshot.forEach((docSnap) => {
+        custom.push({ id: docSnap.id, isCustom: true, ...docSnap.data() } as ResearchPaper);
+      });
+      setAllPapers([...RESEARCH_PAPERS, ...custom]);
+    }, (err) => {
+      console.warn('custom_papers snapshot error in App:', err);
+      getCustomPapers().then(custom => setAllPapers([...RESEARCH_PAPERS, ...custom])).catch(() => {});
+    });
+
+    return () => unsubCustomPapers();
+  }, []);
+
+  useEffect(() => {
+    async function loadUserProjects() {
       if (user) {
         try {
           const projs = await getInnovationProjects(user.uid);
@@ -291,7 +353,7 @@ export default function App() {
         setDbProjects([]);
       }
     }
-    loadAllPapersAndProjects();
+    loadUserProjects();
   }, [user]);
 
   const handleUpdateProjectInApp = async (id: string, fields: Partial<any>) => {
@@ -312,13 +374,40 @@ export default function App() {
 
   // Listen to Auth state changes
   useEffect(() => {
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       const handleAuthChange = async () => {
+        // Check if session has expired (> 30 days of inactivity)
+        const lastActiveStr = localStorage.getItem('nexus_last_active_timestamp');
+        if (lastActiveStr) {
+          const lastActive = parseInt(lastActiveStr, 10);
+          if (!isNaN(lastActive) && (Date.now() - lastActive > THIRTY_DAYS_MS)) {
+            console.log('Session expired due to 30+ days of inactivity. Logging out.');
+            localStorage.removeItem('nexus_demo_mode');
+            localStorage.removeItem('nexus_demo_user');
+            localStorage.removeItem('nexus_last_active_timestamp');
+            sessionStorage.removeItem('nexus_system_initialized');
+            if (currentUser) {
+              try { await signOut(auth); } catch (e) { /* silent fail */ }
+            }
+            setUser(null);
+            setAuthLoading(false);
+            setSavedPaperIds([]);
+            setActiveInquiries([]);
+            setActivePartnerships([]);
+            setUserProfileState(null);
+            setView('signin');
+            return;
+          }
+        }
+
         if (currentUser) {
           // Real authenticated Firebase user is present (e.g. Google Sign-In)
           // We MUST clear any cached sandbox/guest demo mode and use the real user details.
           localStorage.removeItem('nexus_demo_mode');
           localStorage.removeItem('nexus_demo_user');
+          localStorage.setItem('nexus_last_active_timestamp', Date.now().toString());
           
           setUser(currentUser);
           setAuthLoading(false);
@@ -339,11 +428,13 @@ export default function App() {
               if (demoObj.uid === 'sandbox-guest-user' || demoObj.email === 'guest.researcher@aurenix-research.org') {
                 localStorage.removeItem('nexus_demo_mode');
                 localStorage.removeItem('nexus_demo_user');
+                localStorage.removeItem('nexus_last_active_timestamp');
                 setUser(null);
                 setAuthLoading(false);
                 setView('home');
                 return;
               }
+              localStorage.setItem('nexus_last_active_timestamp', Date.now().toString());
               setUser(demoObj);
               setAuthLoading(false);
               await refreshAllUserData(demoObj.uid);
@@ -363,15 +454,25 @@ export default function App() {
         setActiveInquiries([]);
         setActivePartnerships([]);
         setUserProfileState(null);
-        // Keep the view intact unless we're on dashboard (which requires login)
+        // Keep the view intact unless we're on onboarding
         const prevView = routeState.view;
-        setView(prevView === 'dashboard' || prevView === 'onboarding' ? 'home' : prevView);
+        setView(prevView === 'onboarding' ? 'home' : prevView);
       };
 
       handleAuthChange();
     });
     return () => unsubscribe();
   }, []);
+
+  // Rolling session activity updater: updates last active timestamp when logged in
+  useEffect(() => {
+    if (!user) return;
+    localStorage.setItem('nexus_last_active_timestamp', Date.now().toString());
+    const interval = setInterval(() => {
+      localStorage.setItem('nexus_last_active_timestamp', Date.now().toString());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Real-time Firestore onSnapshot listener for User Profile (Source of Truth)
   useEffect(() => {
@@ -390,8 +491,10 @@ export default function App() {
         if (localData) {
           try {
             const profile = JSON.parse(localData);
-            console.log(`[REAL-TIME ROLE AUDIT] Role loaded from LocalStorage (Demo Mode): "${profile?.role}"`);
-            setUserProfileState(profile);
+            setUserProfileState(prev => {
+              if (prev && JSON.stringify(prev) === localData) return prev;
+              return profile;
+            });
           } catch (e) {
             console.error('Error parsing local storage profile:', e);
           }
@@ -402,6 +505,7 @@ export default function App() {
             role: 'super_admin',
             country: 'Nigeria',
             institution: 'Aurenix Core Labs',
+            bio: 'Lead Bioenergy Systems Researcher & Administrator at Aurenix Core Labs.',
             researchInterests: ['Bioenergy', 'Circular Economy', 'Nuclear Energy'],
             termsAccepted: true,
             verified: true,
@@ -446,7 +550,12 @@ export default function App() {
           }
         }
       }, (error) => {
-        console.error(`[REAL-TIME ROLE AUDIT] error onSnapshot:`, error);
+        if (isOfflineError(error)) {
+          setFirestoreOffline(true);
+          console.warn(`[REAL-TIME ROLE AUDIT] Firestore connection offline, operating in local sandbox/demo mode.`);
+        } else {
+          console.error(`[REAL-TIME ROLE AUDIT] error onSnapshot:`, error);
+        }
       });
 
       return () => unsubscribeSnap();
@@ -485,10 +594,19 @@ export default function App() {
   // Protected User Routes guard check
   useEffect(() => {
     if (authLoading) return;
-    const protectedViews = ['dashboard', 'profile', 'settings', 'messages', 'notifications', 'console', 'onboarding'];
+    const protectedViews = ['dashboard', 'profile', 'settings', 'messages', 'notifications', 'onboarding'];
     if (protectedViews.includes(currentView) && !user) {
       console.warn(`[ROUTE GUARD] Unauthenticated attempt to access protected route "${currentView}". Redirecting to home.`);
       setView('home');
+    }
+  }, [currentView, user, authLoading]);
+
+  // Home Page Guard check: Signed-in users must never view or access the home page
+  useEffect(() => {
+    if (authLoading) return;
+    if (user && currentView === 'home') {
+      console.warn(`[ROUTE GUARD] Signed-in user attempted to view Home page. Redirecting to dashboard.`);
+      setView('dashboard');
     }
   }, [currentView, user, authLoading]);
 
@@ -532,7 +650,19 @@ export default function App() {
   const handleSignIn = async () => {
     try {
       setAuthError(null);
-      await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
+      let res;
+      try {
+        res = await signInWithPopup(auth, googleProvider);
+      } catch (firstErr: any) {
+        if (browserPopupRedirectResolver) {
+          res = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
+        } else {
+          throw firstErr;
+        }
+      }
+      if (res && res.user) {
+        setUser(res.user);
+      }
       if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
         setView('initializing');
       } else {
@@ -552,6 +682,8 @@ export default function App() {
         errStr.includes('cancelled-popup-request')
       ) {
         setAuthError('popup-closed');
+      } else if (errCode === 'auth/unauthorized-domain' || errStr.includes('unauthorized-domain')) {
+        setAuthError('unauthorized-domain');
       } else {
         setAuthError(err?.message || errStr);
       }
@@ -562,6 +694,7 @@ export default function App() {
     try {
       localStorage.removeItem('nexus_demo_mode');
       localStorage.removeItem('nexus_demo_user');
+      localStorage.removeItem('nexus_last_active_timestamp');
       sessionStorage.removeItem('nexus_system_initialized');
       await signOut(auth);
       setUser(null);
@@ -580,8 +713,8 @@ export default function App() {
   return (
     <div className="bg-slate-50 min-h-screen font-sans flex flex-col justify-between" id="app_root">
       
-      {/* Collapsible Floating Aside Section */}
-      {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && (
+      {/* Collapsible Floating Aside Section (visible when logged in) */}
+      {user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && (
         <FloatingAside 
           user={user}
           userProfile={userProfile}
@@ -595,77 +728,69 @@ export default function App() {
         />
       )}
 
-      {/* Main layout container with animated padding-left for the side menu */}
+      {/* Main layout container */}
       <motion.div
         animate={{ 
-          paddingLeft: (user && !isMobile && currentView !== 'onboarding' && currentView !== 'admin') ? (isCollapsed ? '94px' : '280px') : '0px'
+          paddingLeft: user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin'
+            ? (isMobile ? '0px' : (isCollapsed ? '80px' : '280px'))
+            : '0px'
         }}
-        transition={{ type: 'spring', stiffness: 220, damping: 26 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="flex-grow flex flex-col justify-between min-h-screen w-full"
         id="app_layout_wrapper"
       >
         {/* Dynamic Navigation */}
         {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && (
-          <Navbar 
-            user={user}
-            onSignIn={() => setView('signin')}
-            onSignOut={handleSignOut}
-            currentView={currentView}
-            setView={setView}
-            theme={theme}
-            onToggleTheme={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
-          />
+          <>
+            <Navbar 
+              user={user}
+              userProfile={userProfile}
+              onSignIn={() => setView('signin')}
+              onSignOut={handleSignOut}
+              currentView={currentView}
+              setView={setView}
+              theme={theme}
+              onToggleTheme={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
+            />
+            {user && (
+              <AnnouncementBar 
+                user={user}
+                userProfile={userProfile}
+                currentView={currentView}
+                setView={setView}
+              />
+            )}
+          </>
         )}
 
         {/* Main Container */}
         <main className="flex-grow">
-          <Suspense fallback={<ViewLoadingFallback />}>
+          <ErrorBoundary>
+            <Suspense fallback={<ViewLoadingFallback />}>
           {/* Bypassing AnimatePresence prevents the fatal React 19 "Expected static flag was missing" reconciler assertion crash while preserving mounting fade-ins */}
           {currentView === 'home' && (
-            user ? (
-              <motion.div
-                key="dashboard-home-page"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
-              >
-                <SeoManager noIndex={true} />
-                <UserDashboard 
-                  user={user}
-                  onBackToLanding={() => setView('home')}
-                  activeInquiries={activeInquiries}
-                  activePartnerships={activePartnerships}
-                  onRefreshAll={handleRefreshAll}
-                  onNavigateToProfile={() => setView('profile')}
-                  onNavigateToSettings={() => setView('settings')}
-                  onNavigateToView={setView}
-                  setSavedPaperIds={setSavedPaperIds}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="home-page"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
-              >
-                <SeoManager
-                  title="Aurenix — Connecting Energy and Climate Research, Innovation, and Global Collaboration"
-                  description="Aurenix connects African researchers, universities, students, climate tech leaders, and funding bodies to accelerate renewable energy research, bioenergy, energy storage, and clean technology."
-                  keywords={['Energy research', 'Renewable energy', 'Clean energy innovation', 'Climate technology', 'African research', 'Global research collaboration']}
-                  canonicalUrl="https://aurenix-research.org/"
-                />
-                <Hero 
-                  onExploreResearch={() => setView('research')}
-                  onRequestConsulting={() => setView('services')}
-                  onSignIn={() => setView('signin')}
-                  user={user}
-                />
+            <motion.div
+              key="home-page"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+            >
+              <SeoManager
+                title="Aurenix — Connecting Energy and Climate Research, Innovation, and Global Collaboration"
+                description="Aurenix connects African researchers, universities, students, climate tech leaders, and funding bodies to accelerate renewable energy research, bioenergy, energy storage, and clean technology."
+                keywords={['Energy research', 'Renewable energy', 'Clean energy innovation', 'Climate technology', 'African research', 'Global research collaboration']}
+                canonicalUrl="https://aurenix-research.org/"
+              />
+              <Hero 
+                onExploreResearch={() => setView('research')}
+                onRequestConsulting={() => setView('services')}
+                onSignIn={() => setView('signin')}
+                user={user}
+              />
                 
                 {/* Dedicated Hub Ecosystem section on the Home page */}
-                <section className="py-20 bg-white border-t border-slate-100" id="ecosystem_overview">
+                <section className="py-20 bg-white" id="ecosystem_overview">
                   <div className="w-full max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
                       <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider shadow-sm">
@@ -675,7 +800,7 @@ export default function App() {
                       <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-slate-900 tracking-tight">
                         Explore Our Operational Areas
                       </h2>
-                      <p className="text-base text-slate-600 leading-relaxed">
+                      <p className="text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto px-2 sm:px-0">
                         We bridge the gap between scientific feasibility and industrial-scale implementation to support sustainable energy deployment across Africa.
                       </p>
                     </div>
@@ -781,8 +906,7 @@ export default function App() {
                 {/* Scientific & Stakeholder Endorsements + FAQ Testimonials */}
                 <TestimonialsSection />
               </motion.div>
-            )
-          )}
+            )}
 
             {currentView === 'about' && (
               <motion.div
@@ -891,8 +1015,14 @@ export default function App() {
                           try { await savePaper(user.uid, selectedPaperId); } catch (err) { setSavedPaperIds(prev => prev.filter(id => id !== selectedPaperId)); }
                         }
                       }}
-                      onDownload={(paper) => {
-                        try { generateResearchPDF(paper); } catch (err) { console.error('Error generating PDF:', err); }
+                      onDownload={async (paper) => {
+                        try {
+                          const { generateResearchPDF } = await import('./utils/pdfGenerator');
+                          await generateResearchPDF(paper);
+                        } catch (err) {
+                          console.error('Error generating PDF:', err);
+                          throw err;
+                        }
                       }}
                       user={user}
                       onSignIn={() => setView('signin')}
@@ -932,9 +1062,11 @@ export default function App() {
                 />
                 <ResearchSection 
                   user={user}
+                  userProfile={userProfile}
                   onSignIn={() => setView('signin')}
                   savedPaperIds={savedPaperIds}
                   setSavedPaperIds={setSavedPaperIds}
+                  onNavigateToProfile={() => setView('profile')}
                 />
               </motion.div>
             )}
@@ -1072,7 +1204,7 @@ export default function App() {
               </motion.div>
             )}
 
-            {currentView === 'dashboard' && user && selectedProjectId && (
+            {currentView === 'dashboard' && selectedProjectId && (
               <motion.div
                 key="project-details-page"
                 initial={{ opacity: 0, y: 15 }}
@@ -1082,7 +1214,7 @@ export default function App() {
               >
                 <ProjectDetailsPage 
                   projectId={selectedProjectId}
-                  user={user}
+                  user={user || (DEMO_GUEST_USER as any)}
                   onBack={() => {
                     window.history.pushState(null, '', '/dashboard');
                     window.dispatchEvent(new Event('popstate'));
@@ -1093,7 +1225,7 @@ export default function App() {
               </motion.div>
             )}
 
-            {currentView === 'dashboard' && user && !selectedProjectId && (
+            {currentView === 'dashboard' && !selectedProjectId && (
               <motion.div
                 key="dashboard-page"
                 initial={{ opacity: 0, y: 15 }}
@@ -1102,8 +1234,8 @@ export default function App() {
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
                 <UserDashboard 
-                  user={user}
-                  onBackToLanding={() => setView('home')}
+                  user={user || (DEMO_GUEST_USER as any)}
+                  onBackToLanding={() => setView('research')}
                   activeInquiries={activeInquiries}
                   activePartnerships={activePartnerships}
                   onRefreshAll={handleRefreshAll}
@@ -1115,7 +1247,29 @@ export default function App() {
               </motion.div>
             )}
 
-            {currentView === 'profile' && user && (
+            {currentView === 'utility' && (
+              <motion.div
+                key="utility-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <UtilityPage 
+                  user={user || (DEMO_GUEST_USER as any)}
+                  onBackToLanding={() => setView('research')}
+                  activeInquiries={activeInquiries}
+                  activePartnerships={activePartnerships}
+                  onRefreshAll={handleRefreshAll}
+                  onNavigateToProfile={() => setView('profile')}
+                  onNavigateToSettings={() => setView('settings')}
+                  onNavigateToView={setView}
+                  setSavedPaperIds={setSavedPaperIds}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'profile' && (
               <motion.div
                 key="profile-page"
                 initial={{ opacity: 0, y: 15 }}
@@ -1124,14 +1278,14 @@ export default function App() {
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
                 <ProfilePage 
-                  user={user}
+                  user={user || (DEMO_GUEST_USER as any)}
                   onNavigateToView={setView}
                   theme={theme}
                 />
               </motion.div>
             )}
 
-            {currentView === 'settings' && user && (
+            {currentView === 'settings' && (
               <motion.div
                 key="settings-page"
                 initial={{ opacity: 0, y: 15 }}
@@ -1140,7 +1294,7 @@ export default function App() {
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
                 <SettingsPage 
-                  user={user}
+                  user={user || (DEMO_GUEST_USER as any)}
                   onNavigateToView={setView}
                   theme={theme}
                   onToggleTheme={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
@@ -1148,7 +1302,7 @@ export default function App() {
               </motion.div>
             )}
 
-            {currentView === 'messages' && user && (
+            {currentView === 'messages' && (
               <motion.div
                 key="messages-page"
                 initial={{ opacity: 0, y: 15 }}
@@ -1157,7 +1311,7 @@ export default function App() {
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
                 <MessagesPage 
-                  user={user}
+                  user={user || (DEMO_GUEST_USER as any)}
                   userProfile={userProfile}
                   theme={theme}
                   initialTargetUserId={selectedResearcherId}
@@ -1185,7 +1339,27 @@ export default function App() {
               </motion.div>
             )}
 
-            {currentView === 'saved' && user && (
+            {currentView === 'community' && (
+              <motion.div
+                key="community-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <SeoManager
+                  title="Scholar Community Feed | Aurenix Network"
+                  description="Share and discuss peer research updates on bioenergy, climate tech, and solar photovoltaics with scientists worldwide."
+                  canonicalUrl="https://aurenix-research.org/community"
+                />
+                <CommunityPage 
+                  user={user}
+                  userProfile={userProfile}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'saved' && (
               <motion.div
                 key="saved-studies-page"
                 initial={{ opacity: 0, y: 15 }}
@@ -1358,6 +1532,27 @@ export default function App() {
               </motion.div>
             )}
 
+            {currentView === 'legal' && (
+              <motion.div
+                key="legal-page"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <SeoManager
+                  title="Legal & Platform Compliance Center — Aurenix Research"
+                  description="Aurenix Research legal policies, Terms and Conditions, Privacy Policy, Cookie Policy, Research Ethics, and IP guidelines."
+                  canonicalUrl="https://aurenix-research.org/legal"
+                />
+                <LegalLayout 
+                  initialPolicyId={(routeState as any).policyId || 'terms'}
+                  onNavigateHome={() => setView(user ? 'dashboard' : 'home')}
+                  currentUser={user || (DEMO_GUEST_USER as any)}
+                />
+              </motion.div>
+            )}
+
             {currentView === 'notfound' && (
               <motion.div
                 key="notfound-page"
@@ -1389,7 +1584,8 @@ export default function App() {
               </motion.div>
             )}
           </Suspense>
-        </main>
+        </ErrorBoundary>
+      </main>
 
         {/* Footer */}
         {!user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && <Footer onNavClick={handlePageSelect} />}

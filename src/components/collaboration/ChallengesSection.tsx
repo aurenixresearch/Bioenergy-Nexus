@@ -146,7 +146,7 @@ export default function ChallengesSection({ user, onSignIn, onSuccess }: Challen
                 <div className="space-y-2">
                   <h5 className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">Resources Available:</h5>
                   <ul className="space-y-1.5 text-xs text-slate-600">
-                    {challenge.resourcesAvailable.map((res, i) => (
+                    {(challenge.resourcesAvailable || []).map((res, i) => (
                       <li key={i} className="flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0"></span>
                         <span>{res}</span>
@@ -159,7 +159,7 @@ export default function ChallengesSection({ user, onSignIn, onSuccess }: Challen
                 <div className="space-y-2">
                   <h5 className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">Expected Deliverables:</h5>
                   <ul className="space-y-1.5 text-xs text-slate-600">
-                    {challenge.expectedDeliverables.map((del, i) => (
+                    {(challenge.expectedDeliverables || []).map((del, i) => (
                       <li key={i} className="flex items-center gap-1.5">
                         <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 shrink-0" />
                         <span>{del}</span>

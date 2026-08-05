@@ -83,7 +83,7 @@ export interface EligibilityResult {
 
 // 1. DEMO / LOCAL STORAGE HELPER FOR MESSAGING
 function isDemoModeActive(userId?: string): boolean {
-  if (userId && (userId === 'sandbox-guest-user' || userId.startsWith('sandbox-'))) {
+  if (userId && (userId === 'sandbox-guest-user' || userId === 'demo-scholar-guest' || userId.startsWith('sandbox-') || userId.startsWith('demo-'))) {
     return true;
   }
   return localStorage.getItem('nexus_demo_mode') === 'true' || 
@@ -479,12 +479,46 @@ export async function sendMessage(
   } catch (err) {
     if (isOfflineError(err)) {
       setFirestoreOffline(true);
-      return sendMessage(conversationId, senderId, senderName, senderPhoto, text, attachments);
+      return sendMessage(conversationId, senderId, senderName, senderPhoto, text, attachments, replyTo);
     }
-    console.error("Error sending message to Firestore:", err);
-    return false;
+    console.error("Error sending message to Firestore, falling back to local persistence:", err);
+    try {
+      const msgs = getLocalMessages(conversationId);
+      const newMsg: Message = { id: `msg_${Date.now()}`, ...messageData };
+      msgs.push(newMsg);
+      saveLocalMessages(conversationId, msgs);
+
+      let convs = getLocalConversations(senderId);
+      convs = convs.map(c => {
+        if (c.id === conversationId) {
+          const otherUser = c.participants.find(p => p !== senderId) || '';
+          const currentUnread = c.unreadCount?.[otherUser] || 0;
+          return {
+            ...c,
+            lastMessage: text.trim(),
+            lastMessageTimestamp: nowISO,
+            lastMessageSenderId: senderId,
+            unreadCount: {
+              ...(c.unreadCount || {}),
+              [senderId]: 0,
+              [otherUser]: currentUnread + 1
+            },
+            updatedAt: nowISO
+          };
+        }
+        return c;
+      });
+      saveLocalConversations(senderId, convs);
+    } catch (localErr) {
+      console.error("Local fallback save failed:", localErr);
+    }
+    return true;
   }
 }
+
+// Sets to track messages currently being processed for read/delivered status
+const processingReadMsgIds = new Set<string>();
+const processingDeliveredMsgIds = new Set<string>();
 
 // 8. MARK MESSAGES AS DELIVERED
 export async function markMessagesAsDelivered(
@@ -499,7 +533,7 @@ export async function markMessagesAsDelivered(
 
   if (messages && messages.length > 0) {
     undelivered = messages.filter(
-      m => m.senderId !== recipientId && (!m.status || m.status === 'sent')
+      m => m.senderId !== recipientId && (!m.status || m.status === 'sent') && !processingDeliveredMsgIds.has(m.id)
     );
   } else if (!isDemoModeActive(recipientId)) {
     try {
@@ -508,7 +542,7 @@ export async function markMessagesAsDelivered(
       const snap = await getDocs(q);
       snap.forEach(docSnap => {
         const data = docSnap.data() as Message;
-        if (data.senderId !== recipientId && (!data.status || data.status === 'sent')) {
+        if (data.senderId !== recipientId && (!data.status || data.status === 'sent') && !processingDeliveredMsgIds.has(docSnap.id)) {
           undelivered.push({ id: docSnap.id, ...data });
         }
       });
@@ -516,6 +550,10 @@ export async function markMessagesAsDelivered(
       console.warn("Error fetching undelivered messages:", err);
     }
   }
+
+  if (undelivered.length === 0) return;
+
+  undelivered.forEach(m => processingDeliveredMsgIds.add(m.id));
 
   if (isDemoModeActive(recipientId)) {
     const msgs = getLocalMessages(conversationId);
@@ -530,9 +568,9 @@ export async function markMessagesAsDelivered(
     if (changed) {
       saveLocalMessages(conversationId, updatedMsgs);
     }
+    undelivered.forEach(m => processingDeliveredMsgIds.delete(m.id));
+    return;
   }
-
-  if (undelivered.length === 0) return;
 
   try {
     const batchPromises = undelivered.map(m => {
@@ -547,6 +585,8 @@ export async function markMessagesAsDelivered(
     await Promise.all(batchPromises);
   } catch (err) {
     console.warn("Error marking messages as delivered:", err);
+  } finally {
+    undelivered.forEach(m => processingDeliveredMsgIds.delete(m.id));
   }
 }
 
@@ -563,7 +603,7 @@ export async function markMessagesAsRead(
   let unreadMessages: Message[] = [];
   if (messages && messages.length > 0) {
     unreadMessages = messages.filter(
-      m => m.senderId !== recipientId && m.status !== 'read'
+      m => m.senderId !== recipientId && m.status !== 'read' && !processingReadMsgIds.has(m.id)
     );
   } else if (!isDemoModeActive(recipientId)) {
     try {
@@ -572,7 +612,7 @@ export async function markMessagesAsRead(
       const snap = await getDocs(q);
       snap.forEach(docSnap => {
         const data = docSnap.data() as Message;
-        if (data.senderId !== recipientId && data.status !== 'read') {
+        if (data.senderId !== recipientId && data.status !== 'read' && !processingReadMsgIds.has(docSnap.id)) {
           unreadMessages.push({ id: docSnap.id, ...data });
         }
       });
@@ -580,6 +620,18 @@ export async function markMessagesAsRead(
       console.warn("Error fetching unread messages to mark as read:", err);
     }
   }
+
+  if (unreadMessages.length === 0) return;
+
+  unreadMessages.forEach(m => processingReadMsgIds.add(m.id));
+
+  // Reset parent conversation unread count in parallel if possible
+  try {
+    const convRef = doc(db, 'conversations', conversationId);
+    updateDoc(convRef, {
+      [`unreadCount.${recipientId}`]: 0
+    }).catch(() => {});
+  } catch (e) {}
 
   if (isDemoModeActive(recipientId)) {
     const msgs = getLocalMessages(conversationId);
@@ -595,9 +647,9 @@ export async function markMessagesAsRead(
     if (changed) {
       saveLocalMessages(conversationId, updatedMsgs);
     }
+    unreadMessages.forEach(m => processingReadMsgIds.delete(m.id));
+    return;
   }
-
-  if (unreadMessages.length === 0) return;
 
   try {
     const batchPromises = unreadMessages.map(m => {
@@ -613,6 +665,8 @@ export async function markMessagesAsRead(
     await Promise.all(batchPromises);
   } catch (err) {
     console.warn("Error marking messages as read:", err);
+  } finally {
+    unreadMessages.forEach(m => processingReadMsgIds.delete(m.id));
   }
 }
 

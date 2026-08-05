@@ -59,13 +59,19 @@ export interface ResearchPaper {
   downloadUrl: string;
   publishedYear: number;
   isCustom?: boolean;
+  isDraft?: boolean;
+  draftStep?: number;
   userId?: string; // Owner of custom research
   userEmail?: string;
 
   // Step 1: Basic Information
   subtitle?: string;
   keywords?: string[];
-  status?: 'Ongoing' | 'Completed' | 'Under Review' | 'Published';
+  status?: string;
+  visibility?: 'Public' | 'Registered Users' | 'Collaborators Only' | 'Private Draft' | string;
+  createdAt?: string;
+  updatedAt?: string;
+  completionStatus?: string;
   language?: string;
   readingTime?: string;
 
@@ -107,9 +113,6 @@ export interface ResearchPaper {
 
   // Step 6: Tags
   tags?: string[];
-
-  // Step 7: Visibility
-  visibility?: 'Public' | 'Registered Users' | 'Collaborators Only' | 'Private Draft';
 
   // Step 8: License
   license?: 'Copyright' | 'Creative Commons' | 'Open Access';
@@ -197,4 +200,187 @@ export interface Publication {
   citations: number;
   createdAt: string;
 }
+
+export interface UserResearchPublication {
+  id: string;
+  title: string;
+  authors: string;
+  publishedYear: number | string;
+  journal: string;
+  doi: string;
+  abstract: string;
+  keywords: string | string[];
+  publicationUrl: string;
+  pdfUrl?: string;
+  pdfFileName?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CommunityComment {
+  id?: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface CommunityPost {
+  id: string;
+  userId: string;
+  authorName: string;
+  authorInstitution: string;
+  authorCountry: string;
+  authorAvatar?: string;
+  content: string;
+  imageUrl?: string;
+  researchLink?: string;
+  createdAt: string;
+  likes?: string[]; // Array of user IDs
+  comments?: CommunityComment[];
+}
+
+export interface Testimonial {
+  id: string;
+  userId: string;
+  fullName: string;
+  occupation: string;
+  institution: string;
+  country: string;
+  rating: number;
+  message: string;
+  imageUrl?: string;
+  website?: string;
+  socialProfile?: string;
+  approved: boolean;
+  featured: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type FeedbackType = 'bug' | 'feedback' | 'idea';
+
+export type FeedbackCategory =
+  | 'Bug report'
+  | 'Feature request'
+  | 'User interface feedback'
+  | 'User experience feedback'
+  | 'Performance issue'
+  | 'Security issue'
+  | 'Research submission issue'
+  | 'Messaging issue'
+  | 'Community issue'
+  | 'Other';
+
+export interface FeedbackFormValues {
+  type: FeedbackType;
+  fullName: string;
+  email: string;
+  subject: string;
+  category: FeedbackCategory;
+  message: string;
+  screenshot?: string;
+  browserInfo?: string;
+  deviceInfo?: string;
+}
+
+export interface UserProfilePrivacySettings {
+  email?: 'public' | 'private';
+  website?: 'public' | 'private';
+  orcid?: 'public' | 'private';
+  googleScholar?: 'public' | 'private';
+  linkedin?: 'public' | 'private';
+  researchgate?: 'public' | 'private';
+}
+
+export interface UserProfileProject {
+  id: string;
+  title: string;
+  description?: string;
+  status?: string;
+  category?: string;
+  trl?: number;
+  link?: string;
+}
+
+export interface UserProfilePatent {
+  id: string;
+  title: string;
+  patentNumber?: string;
+  year?: number | string;
+  description?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  accountType?: 'individual' | 'institution';
+  isOrganization?: boolean;
+  
+  // Overview Tab - Basic
+  profilePicture?: string;
+  fullName?: string;
+  professionalTitle?: string;
+  bio?: string;
+  country?: string;
+  city?: string;
+  institution?: string;
+  department?: string;
+
+  // Overview Tab - Academic
+  primaryResearchArea?: string;
+  secondaryResearchAreas?: string[];
+  areasOfSpecialization?: string[];
+  academicQualifications?: string[];
+  professionalCertifications?: string[];
+  currentPosition?: string;
+  yearsOfExperience?: number;
+
+  // Overview Tab - Skills
+  technicalSkills?: string[];
+  laboratorySkills?: string[];
+  softwareSkills?: string[];
+  languagesSpoken?: string[];
+
+  // Research Tab
+  researchInterests?: string[];
+  researchKeywords?: string[];
+  researchProjects?: UserProfileProject[];
+  currentResearchWork?: string;
+  researchCategories?: string[];
+
+  // Publications Tab
+  publishedPapers?: ResearchPaper[];
+  ongoingResearch?: ResearchPaper[];
+  draftResearch?: ResearchPaper[];
+  patents?: UserProfilePatent[];
+
+  // Collaborations Tab
+  openToCollaboration?: boolean;
+  openToMentoring?: boolean;
+  openToConsulting?: boolean;
+  collaborationAreasOfInterest?: string[];
+
+  // Contact Information Tab
+  email?: string;
+  website?: string;
+  orcid?: string;
+  googleScholar?: string;
+  linkedin?: string;
+  researchgate?: string;
+  privacySettings?: UserProfilePrivacySettings;
+
+  // Organization Specifics (If Institution account)
+  organizationName?: string;
+  organizationLogo?: string;
+  organizationType?: string;
+  organizationDescription?: string;
+
+  // Meta / Stats
+  isVerified?: boolean;
+  verified?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 

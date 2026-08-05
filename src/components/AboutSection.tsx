@@ -147,7 +147,7 @@ export default function AboutSection() {
           <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-slate-900 tracking-tight" id="about_heading">
             Advancing Practical Energy Solutions Across Africa
           </h2>
-          <p className="text-base text-slate-600 leading-relaxed font-sans" id="about_subheading">
+          <p className="text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed font-sans max-w-2xl mx-auto px-2 sm:px-0" id="about_subheading">
             Aurenix Research is an independent digital and technical advisory hub. We bridge the critical gap between academic chemical research and the industrial-scale implementation of sustainable bio-waste systems in Nigeria.
           </p>
         </div>
@@ -370,9 +370,6 @@ export default function AboutSection() {
               <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               Organizational Chronology
             </div>
-            <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-900 dark:text-white tracking-tight">
-              Our Journey of Applied Innovation
-            </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
               How Aurenix Research transitioned from conceptual laboratory testing to practical state training and municipal-scale deployment.
             </p>

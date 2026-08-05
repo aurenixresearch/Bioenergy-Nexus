@@ -25,8 +25,16 @@ import {
   CheckCircle2,
   X,
   Pencil,
-  User
+  User,
+  MessageSquare,
+  UploadCloud,
+  Settings,
+  Camera,
+  Loader2,
+  ShieldAlert,
+  AlertTriangle
 } from 'lucide-react';
+import { validateAndProcessProfilePicture } from '../services/avatarValidation';
 import { ConsultationInquiry, PartnershipSubmission, ResearchPaper } from '../types';
 import { RESEARCH_PAPERS } from '../data';
 import { 
@@ -34,6 +42,7 @@ import {
   unsavePaper, 
   getCustomPapers, 
   getUserProfile, 
+  createUserProfile,
   applyForVerification, 
   approveVerification,
   updatePartnership,
@@ -56,7 +65,7 @@ import {
 import { motion } from 'motion/react';
 
 // Modular Sub-components
-import QuickActions from './dashboard/QuickActions';
+import ResearchOverview from './dashboard/ResearchOverview';
 import InnovationProjects from './dashboard/InnovationProjects';
 import NetworkPanel from './dashboard/NetworkPanel';
 import AIRecommendations from './dashboard/AIRecommendations';
@@ -92,6 +101,74 @@ export default function UserDashboard({
   const [savedPapers, setSavedPapers] = useState<ResearchPaper[]>([]);
   const [loading, setLoading] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const avatarInputRef = React.useRef<HTMLInputElement>(null);
+  const [isAnalyzingAvatar, setIsAnalyzingAvatar] = useState(false);
+  const [avatarStatusText, setAvatarStatusText] = useState('Analyzing image content...');
+  const [avatarValidationResult, setAvatarValidationResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const handleDashboardAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsAnalyzingAvatar(true);
+    setAvatarStatusText('Analyzing image content with AI...');
+    setAvatarValidationResult(null);
+
+    try {
+      const result = await validateAndProcessProfilePicture(file, user.uid, (status) => {
+        setAvatarStatusText(status);
+      });
+
+      if (!result.isValid) {
+        setAvatarValidationResult({
+          type: 'error',
+          message: result.reason || 'The uploaded image could not be verified. Please upload a clear photograph of your face or organization logo.'
+        });
+        setIsAnalyzingAvatar(false);
+        if (e.target) e.target.value = '';
+        return;
+      }
+
+      const newPhotoUrl = result.storageUrl || result.compressedBase64;
+
+      const currentProfile = userProfile || {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName || 'Adeyemi Bolanle',
+        createdAt: new Date().toISOString()
+      };
+
+      const updated = {
+        ...currentProfile,
+        profilePicture: newPhotoUrl,
+        updatedAt: new Date().toISOString()
+      };
+
+      await createUserProfile(user.uid, updated);
+      setUserProfile(updated);
+
+      setAvatarValidationResult({
+        type: 'success',
+        message: result.reason || 'Profile picture verified and updated successfully!'
+      });
+
+      const event = new CustomEvent('user-profile-updated', {
+        detail: { userId: user.uid, profile: updated }
+      });
+      window.dispatchEvent(event);
+
+    } catch (err: any) {
+      console.error('Error saving profile picture:', err);
+      setAvatarValidationResult({
+        type: 'error',
+        message: 'The uploaded image could not be verified. Please try again.'
+      });
+    } finally {
+      setIsAnalyzingAvatar(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
   const [myUploadedPapers, setMyUploadedPapers] = useState<ResearchPaper[]>([]);
   const [isSubmittingApp, setIsSubmittingApp] = useState(false);
   const [showAppForm, setShowAppForm] = useState(false);
@@ -229,6 +306,14 @@ export default function UserDashboard({
   useEffect(() => {
     if (!user) return;
 
+    const handleProfileUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && customEvent.detail.userId === user.uid) {
+        setUserProfile(customEvent.detail.profile);
+      }
+    };
+    window.addEventListener('user-profile-updated', handleProfileUpdate as EventListener);
+
     if (isDemoModeActive(user.uid)) {
       // Offline / sandbox fallback polling to simulate real-time updates safely
       const interval = setInterval(async () => {
@@ -256,7 +341,10 @@ export default function UserDashboard({
       }, 4000);
 
       fetchSavedAndCustom();
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('user-profile-updated', handleProfileUpdate as EventListener);
+      };
     }
 
     setLoading(true);
@@ -382,6 +470,7 @@ export default function UserDashboard({
     });
 
     return () => {
+      window.removeEventListener('user-profile-updated', handleProfileUpdate as EventListener);
       unsubProfile();
       unsubCustomPapers();
       unsubSaved();
@@ -577,7 +666,7 @@ export default function UserDashboard({
     alert(`Bookmarked matching target: "${rec.title}" to saved recommendations list.`);
   };
 
-  const safeOnNavigate = (viewName: any) => {
+  const safeOnNavigate = (viewName: any, paperId?: string) => {
     if (onNavigateToView) {
       onNavigateToView(viewName);
     }
@@ -648,7 +737,7 @@ export default function UserDashboard({
 
   if (editingPartnership) {
     return (
-      <div className="bg-[#FAFDFB] dark:bg-slate-950 min-h-screen py-10 px-4 sm:px-6 lg:px-8 text-left" id="edit_partnership_full_workspace">
+      <div className="bg-white dark:bg-slate-950 min-h-screen py-10 px-4 sm:px-6 lg:px-8 text-left" id="edit_partnership_full_workspace">
         <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 rounded-3xl border border-slate-150 dark:border-slate-800 shadow-xl overflow-hidden p-6 sm:p-8">
           <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
             <div>
@@ -743,15 +832,15 @@ export default function UserDashboard({
   }
 
   return (
-    <div className="bg-[#FAFDFB] dark:bg-slate-950 min-h-screen py-10" id="user_dashboard">
-      <div className="w-full px-4 sm:px-6 lg:px-8 space-y-8 font-bold">
+    <div className="bg-white min-h-screen py-10" id="user_dashboard" style={{ backgroundColor: '#ffffff' }}>
+      <div className="w-full px-3 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 font-bold">
         
         {/* Navigation Bar Refresh button */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <LayoutDashboard className="w-6 h-6 text-emerald-600" />
-            <h1 className="text-xl font-display font-extrabold text-emerald-950">
-              Research Command Center
+            <h1 className="text-[19px] font-display font-extrabold text-slate-900">
+              User dashboard
             </h1>
           </div>
           <motion.button
@@ -759,694 +848,206 @@ export default function UserDashboard({
             disabled={loading}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-emerald-50/50 text-emerald-800 rounded-xl shadow-xs transition-colors cursor-pointer border border-emerald-150 text-xs font-semibold"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-emerald-800 rounded-xl shadow-xs hover:shadow-sm transition-all cursor-pointer border border-emerald-100/90 text-xs font-semibold"
+            style={{ backgroundColor: '#ffffff' }}
             id="refresh_dashboard_btn"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>{loading ? 'Reloading...' : 'Reload Dashboard'}</span>
+            <span>{loading ? 'Reloading...' : 'Reload'}</span>
           </motion.button>
         </div>
 
         {/* Dashboard Profile Hero */}
-        <div className="bg-white text-emerald-950 rounded-3xl p-6 sm:p-10 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 relative overflow-hidden text-center sm:text-left shadow-md border border-emerald-100">
-          {/* Background overlay */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl"></div>
-          
-          <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10">
-            {user.photoURL ? (
-              <img 
-                src={user.photoURL} 
-                alt={user.displayName || 'User avatar'} 
-                className="w-20 h-20 rounded-full object-cover shadow-md border-2 border-emerald-500/35"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="w-20 h-20 bg-emerald-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-md">
-                {user.displayName?.charAt(0) || 'U'}
-              </div>
-            )}
+        <div className="bg-white text-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-8 lg:p-6 xl:p-10 flex flex-col lg:flex-row lg:items-center lg:justify-between relative overflow-hidden shadow-xs border border-slate-100 max-w-full w-full gap-5 lg:gap-4 xl:gap-8">
+          {/* Subtle background glow */}
+          <div className="absolute -top-12 -left-12 w-36 h-36 bg-emerald-500/5 rounded-full blur-xl pointer-events-none"></div>
+          <div className="absolute -top-12 -right-12 w-36 h-36 bg-emerald-500/5 rounded-full blur-xl pointer-events-none"></div>
 
-            <div className="space-y-1.5 text-left">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md text-[10px] font-bold uppercase tracking-wider">
-                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                  Active Aurenix Member
-                </span>
-                {userProfile?.verificationStatus === 'verified' && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-600 rounded-md text-[10px] font-bold uppercase tracking-wider text-white shadow-xs">
-                    <Award className="w-3 h-3" />
-                    Verified Researcher
-                  </span>
-                )}
-                {userProfile?.verificationStatus === 'pending' && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500 rounded-md text-[10px] font-bold uppercase tracking-wider text-white">
-                    <Clock className="w-3 h-3 animate-pulse" />
-                    Pending Verification
-                  </span>
-                )}
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight flex items-center gap-2 text-emerald-950">
-                Welcome back, {userProfile?.fullName || user.displayName || 'Researcher'}
-                {userProfile?.verificationStatus === 'verified' && (
-                  <CheckCircle2 className="w-6 h-6 text-emerald-600 fill-emerald-100 stroke-[2.5]" title="Verified Scholar Badge" />
-                )}
-              </h2>
-              <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-xs text-emerald-700/90 font-sans mt-2 font-medium">
-                <span className="flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-emerald-600" />
-                  {userProfile?.email || user.email}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                  Member since {user.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString(undefined, { year: 'numeric', month: 'short' }) : 'July 2026'}
-                </span>
-              </div>
-
-              {/* High-fidelity Profile & Settings quick links */}
-              <div className="flex flex-wrap items-center gap-2.5 pt-4">
-                <button
-                  onClick={onNavigateToProfile || (() => safeOnNavigate('profile'))}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-500/10 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shadow-xs"
-                  id="dashboard_btn_public_profile"
-                >
-                  <User className="w-4 h-4 text-white" />
-                  <span>View Public Profile</span>
-                </button>
-                {onNavigateToSettings && (
-                  <button
-                    onClick={onNavigateToSettings}
-                    className="px-4 py-2 bg-emerald-50 hover:bg-emerald-100/70 border border-emerald-200/50 text-emerald-800 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shadow-xs"
-                  >
-                    <Pencil className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Configure Preferences</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-4 justify-center sm:justify-start shrink-0 relative z-10 font-mono text-xs text-emerald-700">
-            <div className="px-4 py-3 bg-emerald-50/50 border border-emerald-100/60 rounded-xl text-center min-w-[70px]">
-              <span className="block text-2xl font-bold text-emerald-950">{savedPapers.length}</span>
-              <span className="font-sans font-bold text-[10px] text-emerald-800">Saved Papers</span>
-            </div>
-            <div className="px-4 py-3 bg-emerald-50/50 border border-emerald-100/60 rounded-xl text-center min-w-[70px]">
-              <span className="block text-2xl font-bold text-emerald-950">{localInquiries.length}</span>
-              <span className="font-sans font-bold text-[10px] text-emerald-800">Inquiries</span>
-            </div>
-            <div className="px-4 py-3 bg-emerald-50/80 border border-emerald-200/60 rounded-xl text-center min-w-[70px]">
-              <span className="block text-2xl font-bold text-emerald-950">{myUploadedPapers.length}</span>
-              <span className="font-sans font-bold text-[10px] text-emerald-800">Uploads</span>
-            </div>
-          </div>
-        </div>
-
-        {/* SECTION 1: QUICK ACTIONS BAR */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-sans font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider text-left">
-            Quick Actions Console
-          </h3>
-          <QuickActions
-            onPublishResearch={() => safeOnNavigate('research')}
-            onCreateProject={() => {
-              const el = document.getElementById('innovation_projects_section');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
-            onBrowseAlliances={() => safeOnNavigate('collaboration')}
-            onFindCollaborators={() => safeOnNavigate('researchers')}
-            onCreateConsulting={() => safeOnNavigate('services')}
-            onOpenMessages={() => safeOnNavigate('contact')}
-            onNavigateToSettings={onNavigateToSettings || (() => {})}
-            onNavigateToProfile={onNavigateToProfile || (() => safeOnNavigate('profile'))}
-          />
-        </div>
-
-        {/* SECTION 2: GRID OF CORE DASHBOARD LAYOUTS */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* LEFT COLUMN: PRIMARY MODULES (8/12 widths) */}
-          <div className="lg:col-span-8 space-y-8">
-            
-            {/* 1. Innovation Projects */}
-            <InnovationProjects
-              projects={projects}
-              onCreateProject={handleCreateProject}
-              onUpdateProject={handleUpdateProject}
-              onDeleteProject={handleDeleteProject}
-            />
-
-            {/* 2. Research & Platform Analytics (SVG Line Chart) */}
-            <ResearchAnalytics 
-              views={liveViews} 
-              downloads={liveDownloads} 
-              citations={liveCitations} 
-              followers={followersCount} 
-              reads={liveReads} 
-              requests={liveRequests} 
-              funding={fundingStr} 
-              progress={progressStr} 
-            />
-
-            {/* 3. Saved Studies Library */}
-            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-100 shadow-md space-y-6 text-left">
-              <div className="flex items-center justify-between border-b border-emerald-100 pb-4">
-                <div className="flex items-center gap-2">
-                  <Bookmark className="w-5 h-5 text-emerald-600" />
-                  <h3 className="text-lg font-display font-extrabold text-emerald-950">
-                    Your Bookmarked Studies ({savedPapers.length})
-                  </h3>
-                </div>
-              </div>
-
-              {savedPapers.length > 0 ? (
-                <div className="space-y-4" id="dashboard_saved_papers">
-                  {savedPapers.map((paper) => (
-                    <motion.div 
-                      key={paper.id} 
-                      whileHover={{ y: -3 }}
-                      className="p-5 bg-emerald-50/20 border border-emerald-100/70 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:shadow-xs transition-shadow duration-300"
-                    >
-                      <div className="space-y-1 font-sans">
-                        <span className="text-[10px] font-mono font-bold text-emerald-700 uppercase tracking-wider">{paper.category}</span>
-                        <h4 className="text-sm font-bold text-emerald-950 leading-snug">{paper.title}</h4>
-                        <p className="text-xs text-slate-500">Author: {paper.author} • {paper.publishedYear}</p>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
-                        <motion.button
-                          onClick={() => handleDownload(paper.title)}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="p-2 bg-white hover:bg-emerald-50 text-emerald-700 transition-colors cursor-pointer border border-emerald-100 shadow-xs rounded-xl"
-                          title="Download Study"
-                        >
-                          <Download className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          onClick={() => handleRemoveBookmark(paper.id)}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="p-2 bg-white hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors cursor-pointer border border-slate-100 shadow-xs rounded-xl"
-                          title="Remove bookmark"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </motion.button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-12 flex flex-col items-center justify-center text-center space-y-3 font-sans">
-                  <Bookmark className="w-10 h-10 text-slate-300 mx-auto" />
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-700">No bookmarked studies</h4>
-                    <p className="text-xs text-slate-400 max-w-xs mt-1">
-                      Navigate back to the Aurenix Research Repository on the main page to find and bookmark studies.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 4. Scholar Verification & Badge Card (PRESERVED UNTOUCHED) */}
-            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-100 space-y-6 text-left" id="scholar_verification_section">
-              <div className="flex items-center justify-between border-b border-emerald-100 pb-4">
-                <div className="flex items-center gap-2">
-                  <Award className="w-5 h-5 text-emerald-600" />
-                  <h3 className="text-lg font-display font-extrabold text-emerald-950">
-                    Scholar Verification & Badge
-                  </h3>
-                </div>
-              </div>
-
-              {/* Status and Notifications */}
-              {errorMessage && (
-                <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 text-red-800 dark:text-red-400 text-xs rounded-xl flex items-center justify-between gap-2">
-                  <span>{errorMessage}</span>
-                  <button onClick={() => setErrorMessage(null)} className="text-red-500 hover:text-red-700 bg-transparent border-0 cursor-pointer">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-              {successMessage && (
-                <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-400 text-xs rounded-xl flex items-center justify-between gap-2">
-                  <span>{successMessage}</span>
-                  <button onClick={() => setSuccessMessage(null)} className="text-emerald-500 hover:text-emerald-700 bg-transparent border-0 cursor-pointer">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-
-              {/* 1. Verified Scholar State */}
-              {userProfile?.verificationStatus === 'verified' && (
-                <div className="space-y-6 text-left font-sans">
-                  <div className="bg-emerald-50 border border-emerald-200 p-5 rounded-2xl flex items-start gap-4">
-                    <div className="p-3 bg-emerald-600 text-white rounded-xl shrink-0">
-                      <Award className="w-6 h-6" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <h4 className="text-sm font-bold text-emerald-950 flex items-center gap-1.5">
-                        Your Profile is Verified
-                        <Check className="w-4 h-4 text-emerald-600 font-extrabold" />
-                      </h4>
-                      <p className="text-xs text-emerald-900/85 leading-relaxed font-medium">
-                        Congratulations! Your academic background and research outputs have been verified by the Aurenix Research board. The certified researcher badge is active on your publications and profile.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Credentials details list */}
-                  <div className="p-5 bg-emerald-50/20 border border-emerald-100/60 rounded-2xl space-y-4">
-                    <h5 className="text-xs font-bold text-emerald-800 uppercase tracking-wider">Verified Scholar Credentials</h5>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans text-slate-600">
-                      <div className="space-y-1">
-                        <span className="block text-[10px] font-mono font-bold text-emerald-600 uppercase">Institutional Affiliation</span>
-                        <span className="font-semibold text-emerald-950">{userProfile.verificationDetails?.institution || userProfile.institution || 'Aurenix Research Network'}</span>
-                      </div>
-                      <div className="space-y-1">
-                        <span className="block text-[10px] font-mono font-bold text-emerald-600 uppercase">ORCID Identifier</span>
-                        <span className="font-semibold text-emerald-950">{userProfile.verificationDetails?.orcid || 'Not provided'}</span>
-                      </div>
-                      <div className="space-y-1 col-span-1 md:col-span-2">
-                        <span className="block text-[10px] font-mono font-bold text-emerald-600 uppercase font-bold">Google Scholar Profile</span>
-                        {userProfile.verificationDetails?.googleScholar ? (
-                          <a href={userProfile.verificationDetails.googleScholar} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-emerald-700 hover:underline font-bold">
-                            {userProfile.verificationDetails.googleScholar}
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        ) : (
-                          <span className="text-slate-550 font-medium">Not provided</span>
-                        )}
-                      </div>
-                      <div className="space-y-1 col-span-1 md:col-span-2">
-                        <span className="block text-[10px] font-mono font-bold text-emerald-600 uppercase font-bold">Research Statement / Focus Area</span>
-                        <p className="italic text-emerald-900/80 bg-white p-3 rounded-xl border border-emerald-150 font-medium shadow-xs">
-                          "{userProfile.verificationDetails?.bio || 'Verified scientific author and contributor.'}"
-                        </p>
-                      </div>
-                      <div className="space-y-1 col-span-1 md:col-span-2">
-                        <span className="block text-[10px] font-mono font-bold text-emerald-600 uppercase font-bold">Verified Expertise Topics</span>
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                          {(userProfile.verificationDetails?.researchInterests || userProfile.researchInterests || ['Bioenergy']).map((interest: string) => (
-                            <span key={interest} className="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-250 rounded-full text-[10px] font-semibold">
-                              {interest}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* 2. Pending Verification State */}
-              {userProfile?.verificationStatus === 'pending' && (
-                <div className="space-y-6 text-left font-sans">
-                  <div className="bg-amber-50 border border-amber-200 p-5 rounded-2xl flex items-start gap-4">
-                    <div className="p-3 bg-amber-500 text-white rounded-xl shrink-0">
-                      <Clock className="w-6 h-6" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <h4 className="text-sm font-bold text-slate-900">Application Under Active Audit</h4>
-                      <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                        Thank you for applying. Your background profile and custom contributions are currently being audited against our peer-review quality standards. Verification checks typically complete within 2-3 business days.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-emerald-50/10 border border-emerald-100/60 rounded-xl space-y-3">
-                    <span className="block text-[10px] font-mono font-bold text-emerald-600 uppercase tracking-wider">Submitted Credentials Preview</span>
-                    <ul className="text-xs space-y-1 font-sans text-slate-600">
-                      <li><strong>Institution:</strong> {userProfile.verificationDetails?.institution}</li>
-                      <li><strong>ORCID iD:</strong> {userProfile.verificationDetails?.orcid || 'N/A'}</li>
-                      <li><strong>Scholar Profile:</strong> {userProfile.verificationDetails?.googleScholar || 'N/A'}</li>
-                    </ul>
-                  </div>
-
-                  {/* Sandbox Admin Approval Panel */}
-                  <div className="p-5 bg-emerald-50/40 border border-emerald-250 rounded-2xl space-y-3 text-left">
-                    <h5 className="text-xs font-bold text-emerald-900 flex items-center gap-1.5 font-sans">
-                      <Sparkles className="w-4 h-4 text-emerald-600" />
-                      Sandbox Developer Admin Tool
-                    </h5>
-                    <p className="text-xs text-emerald-800 leading-relaxed font-medium">
-                      You are in sandbox/preview mode. You can instantly bypass the review delay and approve this application to see the "Verified" badge live!
-                    </p>
-                    <button
-                      onClick={handleSimulateApproval}
-                      disabled={isSubmittingApp}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer border-0"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      {isSubmittingApp ? 'Approving...' : 'Approve Application Now'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* 3. Not Applied Yet State */}
-              {(!userProfile?.verificationStatus || userProfile?.verificationStatus === 'none') && (
-                <div className="space-y-6 text-left">
-                  {/* Explanation card */}
-                  <div className="bg-emerald-50/20 border border-emerald-100 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-1.5 max-w-xl font-sans">
-                      <h4 className="text-sm font-bold text-emerald-950 flex items-center gap-1.5">
-                        <Award className="w-4.5 h-4.5 text-emerald-600" />
-                        Scholar Verification
-                      </h4>
-                      <p className="text-xs text-slate-500 leading-relaxed">
-                        Establish academic trust in the Aurenix Research network. Verified scholars earn a distinct verification checkmark badge, highlight their researcher profile, and gain authorized indexing across African circular economy channels.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Requirements Progress checklist */}
-                  <div className="space-y-3 font-sans">
-                    <h5 className="text-xs font-bold text-emerald-800 uppercase tracking-wider">Application Requirements Check</h5>
-                    
-                    {/* Requirement 1: 3 custom uploads */}
-                    <div className="p-4 bg-[#F8FAF9] border border-emerald-100 rounded-xl flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-1.5 rounded-full ${myUploadedPapers.length >= 3 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                          {myUploadedPapers.length >= 3 ? (
-                            <Check className="w-4 h-4 font-extrabold" />
-                          ) : (
-                            <Clock className="w-4 h-4" />
-                          )}
-                        </div>
-                        <div className="space-y-0.5">
-                          <span className="block text-xs font-bold text-slate-800">Upload 3 or More Research Studies</span>
-                          <span className="block text-[10px] text-slate-500 font-normal">
-                            Contribute academic journals, feasibility reports, or regulatory briefs to the repo.
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-xs font-mono font-bold text-emerald-800 shrink-0">
-                        {myUploadedPapers.length}/3 Uploaded
-                      </span>
-                    </div>
-
-                    {/* Requirement 2: Submit Details */}
-                    <div className="p-4 bg-[#F8FAF9] border border-emerald-100 rounded-xl flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-1.5 rounded-full bg-slate-100 text-slate-400">
-                          <Lock className="w-4 h-4" />
-                        </div>
-                        <div className="space-y-0.5">
-                          <span className="block text-xs font-bold text-slate-800">Provide Scholar Association Details</span>
-                          <span className="block text-[10px] text-slate-500 font-normal">
-                            Specify academic institution, professional bio, areas of expertise, and ORCID iD.
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-xs font-mono font-medium text-slate-400 shrink-0">
-                        {myUploadedPapers.length >= 3 ? 'Unlocked' : 'Locked'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Locked vs. Unlocked Action Buttons */}
-                  {myUploadedPapers.length < 3 ? (
-                    <div className="space-y-4">
-                      {/* Progress visual bar */}
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-[10px] font-mono text-slate-400">
-                          <span>Verification Progress</span>
-                          <span>{Math.round((myUploadedPapers.length / 3) * 100)}%</span>
-                        </div>
-                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                          <div 
-                            className="bg-gradient-to-r from-emerald-500 to-teal-600 h-full transition-all duration-500" 
-                            style={{ width: `${Math.min((myUploadedPapers.length / 3) * 100, 100)}%` }}
-                          ></div>
-                        </div>
-                      </div>
-
-                      <div className="p-4 bg-amber-50/60 border border-amber-200 rounded-xl text-xs text-slate-600 leading-relaxed flex items-start gap-2.5">
-                        <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                        <p>
-                          Please upload at least <strong>{3 - myUploadedPapers.length} more study</strong> to fulfill the publishing criteria. Use the "Aurenix Repository" page to contribute a new document.
-                        </p>
-                      </div>
-
-                      <button
-                        onClick={onBackToLanding}
-                        className="inline-flex items-center gap-2 px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer border border-slate-200 text-left"
-                      >
-                        <ArrowLeft className="w-3.5 h-3.5" />
-                        Return to Research Hub to Upload
-                      </button>
-                    </div>
+          {/* Left Section: Avatar + User Info */}
+          <div className="flex flex-col md:flex-row items-center md:items-start lg:items-center gap-4 md:gap-6 lg:gap-4 xl:gap-6 min-w-0 w-full lg:w-auto">
+            {/* 1. Avatar Section with Ring & Shield Badge */}
+            <div className="relative inline-block shrink-0">
+              <div className="p-1 md:p-1.5 rounded-full border border-emerald-200 bg-emerald-50/40 ring-2 ring-emerald-100/80 shadow-2xs relative">
+                <div className="w-18 h-18 md:w-24 md:h-24 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full bg-[#E84A1C] flex items-center justify-center text-white text-2xl md:text-4xl lg:text-2xl xl:text-4xl font-extrabold shadow-inner overflow-hidden relative">
+                  {userProfile?.profilePicture || user.photoURL || user.email ? (
+                    <img 
+                      src={userProfile?.profilePicture || user.photoURL || `https://unavatar.io/google/${user.email}`} 
+                      alt={user.displayName || 'User avatar'} 
+                      className="w-full h-full object-cover rounded-full"
+                      referrerPolicy="no-referrer"
+                    />
                   ) : (
-                    <div className="space-y-4 pt-2">
-                      <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 rounded-xl text-xs text-slate-600 dark:text-slate-400 leading-relaxed flex items-start gap-2.5">
-                        <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600 shrink-0 mt-0.5" />
-                        <p>
-                          <strong>Minimum publishing requirements met!</strong> You have contributed {myUploadedPapers.length} research studies. You can now complete the application below to receive your verified checkmark badge.
-                        </p>
-                      </div>
+                    <span>{(userProfile?.username || userProfile?.fullName || user.displayName || 'A').charAt(0).toUpperCase()}</span>
+                  )}
 
-                      {!showAppForm ? (
-                        <button
-                          onClick={() => setShowAppForm(true)}
-                          className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer border-0"
-                        >
-                          <Unlock className="w-3.5 h-3.5" />
-                          Apply for Scholar Verification Badge
-                        </button>
-                      ) : (
-                        <motion.form 
-                          onSubmit={handleApplyVerification}
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          className="bg-emerald-50/15 p-5 sm:p-6 border border-emerald-150 rounded-2xl space-y-4"
-                        >
-                          <div className="flex items-center justify-between border-b border-emerald-150 pb-2.5 mb-2 font-sans">
-                            <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
-                              <Unlock className="w-4 h-4 text-emerald-600" />
-                              Scholar Verification Application
-                            </span>
-                            <button 
-                              type="button" 
-                              onClick={() => setShowAppForm(false)}
-                              className="text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-0"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-
-                          <div className="space-y-3.5 text-xs text-slate-700 font-sans">
-                            {/* Institution */}
-                            <div className="space-y-1 text-left">
-                              <label className="block font-bold text-emerald-900">Academic / Institutional Affiliation *</label>
-                              <input 
-                                type="text"
-                                placeholder="e.g. University of Ibadan, Nigeria"
-                                value={institution}
-                                onChange={(e) => setInstitution(e.target.value)}
-                                className="w-full px-3 py-2.5 bg-white border border-emerald-200/80 rounded-xl text-xs focus:border-emerald-600 outline-hidden font-medium text-emerald-950"
-                                required
-                              />
-                            </div>
-
-                            {/* ORCID iD */}
-                            <div className="space-y-1 text-left">
-                              <label className="block font-bold text-emerald-900">ORCID iD (Optional)</label>
-                              <input 
-                                type="text"
-                                placeholder="e.g. 0000-0002-1825-0097"
-                                value={orcid}
-                                onChange={(e) => setOrcid(e.target.value)}
-                                className="w-full px-3 py-2.5 bg-white border border-emerald-200/80 rounded-xl text-xs focus:border-emerald-600 outline-hidden font-mono text-emerald-950"
-                              />
-                              <p className="text-[10px] text-slate-400">Enables automatic syncing of research citations globally.</p>
-                            </div>
-
-                            {/* Google Scholar URL */}
-                            <div className="space-y-1 text-left">
-                              <label className="block font-bold text-emerald-900">Google Scholar Profile URL (Optional)</label>
-                              <input 
-                                type="url"
-                                placeholder="https://scholar.google.com/citations?user=..."
-                                value={googleScholar}
-                                onChange={(e) => setGoogleScholar(e.target.value)}
-                                className="w-full px-3 py-2.5 bg-white border border-emerald-200/80 rounded-xl text-xs focus:border-emerald-600 outline-hidden font-medium text-emerald-950"
-                              />
-                            </div>
-
-                            {/* Bio / Research Statement */}
-                            <div className="space-y-1 text-left">
-                              <label className="block font-bold text-emerald-900">Research Focus & Bio Statement *</label>
-                              <textarea 
-                                placeholder="Describe your primary focus area, expert topics, and research objectives. This will be displayed on your certified profile."
-                                value={bio}
-                                onChange={(e) => setBio(e.target.value)}
-                                rows={4}
-                                className="w-full px-3 py-2.5 bg-white border border-emerald-200/80 rounded-xl text-xs focus:border-emerald-600 outline-hidden font-medium leading-relaxed resize-none text-emerald-950"
-                                required
-                              />
-                            </div>
-
-                            {/* Interests Checklist */}
-                            <div className="space-y-1.5 text-left font-sans">
-                              <label className="block font-bold text-emerald-900">Expertise Topics (Select multiple)</label>
-                              <div className="flex flex-wrap gap-2 pt-1">
-                                {ALL_INTERESTS.map((interest) => {
-                                  const isSelected = selectedInterests.includes(interest);
-                                  return (
-                                    <button
-                                      key={interest}
-                                      type="button"
-                                      onClick={() => handleToggleInterest(interest)}
-                                      className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
-                                        isSelected 
-                                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300' 
-                                          : 'bg-white text-slate-600 border-slate-200 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200'
-                                      }`}
-                                    >
-                                      {interest}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-3 pt-2">
-                            <motion.button
-                              type="submit"
-                              disabled={isSubmittingApp}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer border-0"
-                            >
-                              {isSubmittingApp ? 'Submitting...' : 'Submit Credentials'}
-                            </motion.button>
-                            <button
-                              type="button"
-                              onClick={() => setShowAppForm(false)}
-                              className="px-4 py-2.5 bg-slate-150 text-slate-700 hover:bg-slate-200 rounded-xl text-xs font-bold transition-colors cursor-pointer border-0"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </motion.form>
-                      )}
+                  {/* Loading Overlay During AI Analysis */}
+                  {isAnalyzingAvatar && (
+                    <div className="absolute inset-0 bg-slate-900/75 backdrop-blur-xs flex flex-col items-center justify-center text-white p-2 text-center animate-fade-in">
+                      <Loader2 className="w-6 h-6 animate-spin text-emerald-400 mb-1" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-200">Analyzing</span>
                     </div>
                   )}
                 </div>
-              )}
+              </div>
+              {/* Upload dynamic profile picture button */}
+              <button
+                type="button"
+                id="dashboard_avatar_change_btn"
+                disabled={isAnalyzingAvatar}
+                onClick={() => avatarInputRef.current?.click()}
+                className="absolute bottom-0 right-0 w-6 h-6 md:w-7 md:h-7 lg:w-6 lg:h-6 xl:w-7 xl:h-7 bg-[#008744] hover:bg-[#00733a] disabled:bg-slate-400 text-white rounded-full border-2 border-white flex items-center justify-center shadow-md cursor-pointer transition-colors duration-200"
+                title="Upload a new profile picture"
+              >
+                {isAnalyzingAvatar ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                ) : (
+                  <Camera className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-3 lg:h-3 xl:w-4 xl:h-4 text-white" />
+                )}
+              </button>
+              <input
+                type="file"
+                ref={avatarInputRef}
+                onChange={handleDashboardAvatarChange}
+                accept="image/*"
+                className="hidden"
+              />
             </div>
 
-            {/* 5. Aurenix Intelligent AI Recommendations */}
-            <AIRecommendations
-              userProfile={userProfile}
-              onApplyAction={handleApplyRecommendation}
-              onSaveAction={handleSaveRecommendation}
-            />
-
-          </div>
-
-          {/* RIGHT COLUMN: SECONDARY MODULES (4/12 widths) */}
-          <div className="lg:col-span-4 space-y-8">
-            
-            {/* 1. Upcoming Deadlines */}
-            <UpcomingDeadlines
-              deadlines={deadlines}
-              onAddDeadline={handleAddDeadline}
-              onDeleteDeadline={handleDeleteDeadline}
-            />
-
-            {/* 3. Alliance Status & Application Editing */}
-            <div className="bg-white p-6 rounded-3xl border border-emerald-100 shadow-md space-y-4 text-left">
-              <div className="flex items-center justify-between border-b border-emerald-100 pb-3">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4.5 h-4.5 text-emerald-600" />
-                  <h4 className="text-sm font-bold text-emerald-950">Alliance Status ({localPartnerships.length})</h4>
+            {/* Details Column */}
+            <div className="flex flex-col items-center md:items-start text-center md:text-left space-y-2.5 min-w-0 w-full">
+              {/* Analyzing status indicator */}
+              {isAnalyzingAvatar && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-800 rounded-lg text-xs font-semibold border border-emerald-200 animate-pulse">
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-600 shrink-0" />
+                  <span>{avatarStatusText}</span>
                 </div>
+              )}
+
+              {/* Validation Result Feedback Banner */}
+              {avatarValidationResult && (
+                <div className={`p-3 rounded-xl border text-xs font-medium flex items-start gap-2.5 max-w-lg w-full ${
+                  avatarValidationResult.type === 'error'
+                    ? 'bg-rose-50 border-rose-200 text-rose-900'
+                    : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                }`}>
+                  {avatarValidationResult.type === 'error' ? (
+                    <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  )}
+                  <div className="flex-1">
+                    <p className="font-bold">{avatarValidationResult.type === 'error' ? 'Profile Picture Rejection' : 'Validation Success'}</p>
+                    <p className="mt-0.5 leading-relaxed">{avatarValidationResult.message}</p>
+                  </div>
+                  <button 
+                    onClick={() => setAvatarValidationResult(null)}
+                    className="text-slate-400 hover:text-slate-700 p-0.5 rounded-md"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+              {/* Active Member Pill Badge */}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-[#008744] rounded-full text-[10px] md:text-[11px] lg:text-[10px] xl:text-[11px] font-extrabold uppercase tracking-wider border border-emerald-100/90 shadow-2xs">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#008744] shrink-0" />
+                <span>ACTIVE AURENIX MEMBER</span>
               </div>
 
-              {localPartnerships.length > 0 ? (
-                <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
-                  {localPartnerships.map((sub) => (
-                    <motion.div 
-                      key={sub.id} 
-                      whileHover={{ x: 2 }}
-                      className="p-4 bg-[#F8FAF9] border border-emerald-100/60 rounded-xl space-y-2 shadow-xs hover:shadow-sm transition-shadow duration-300"
-                    >
-                      <div className="flex items-center justify-between gap-2 font-sans">
-                        <span className="text-[10px] font-bold text-emerald-950 truncate max-w-[130px]">{sub.partnerName}</span>
-                        <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase bg-emerald-100 text-emerald-800">
-                          Registered
-                        </span>
-                      </div>
-                      <span className="block text-xs font-semibold text-emerald-700 font-sans">{sub.stakeholderType}</span>
-                      <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed font-sans font-medium">{sub.message}</p>
-                      
-                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-emerald-100 mt-1 font-sans">
-                        <span className="text-[9px] font-mono text-slate-500 truncate max-w-[120px]">
-                          Area: {sub.collaborationArea || 'General'}
-                        </span>
-                        <button
-                          onClick={() => handleStartEditPartnership(sub)}
-                          className="px-2 py-0.5 hover:bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold transition flex items-center gap-1 cursor-pointer bg-transparent border-0"
-                        >
-                          <Pencil className="w-2.5 h-2.5" />
-                          Edit App
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400 text-center py-6 font-sans">No active alliance applications.</p>
-              )}
-            </div>
+              {/* Welcome Heading */}
+              <h2 className="text-xl md:text-3xl lg:text-xl xl:text-3xl font-display font-extrabold text-slate-900 leading-tight">
+                Welcome back, <span className="text-[#008744]">{userProfile?.username || userProfile?.fullName || user.displayName || 'Adeyemi Bolanle'}</span>
+              </h2>
 
-            {/* 4. Consultation tracker widget */}
-            <div className="bg-white p-6 rounded-3xl border border-emerald-100 shadow-md space-y-4 text-left">
-              <div className="flex items-center justify-between border-b border-emerald-100 pb-3">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4.5 h-4.5 text-emerald-600" />
-                  <h4 className="text-sm font-bold text-emerald-950 font-display">Consulting Reviews ({localInquiries.length})</h4>
-                </div>
+
+
+              {/* Action Buttons Row */}
+              <div className="flex flex-row flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 lg:gap-2 xl:gap-3 pt-2 w-full md:w-auto">
+                <button
+                  onClick={onNavigateToProfile || (() => safeOnNavigate('profile'))}
+                  className="flex-1 md:flex-initial px-2.5 md:px-4 lg:px-2.5 xl:px-4 py-2 md:py-2.5 lg:py-2 xl:py-2.5 bg-[#008744] hover:bg-[#00733a] text-white font-bold rounded-xl text-[11px] md:text-sm lg:text-[11px] xl:text-xs inline-flex items-center justify-center gap-1 md:gap-2 shadow-xs cursor-pointer border-0 transition-all whitespace-nowrap"
+                  id="dashboard_btn_public_profile"
+                >
+                  <User className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-3.5 lg:h-3.5 xl:w-4 xl:h-4 text-white shrink-0" />
+                  <span>View Public Profile</span>
+                </button>
+
+                <button
+                  onClick={onNavigateToSettings || (() => safeOnNavigate('profile'))}
+                  className="flex-1 md:flex-initial px-2.5 md:px-4 lg:px-2.5 xl:px-4 py-2 md:py-2.5 lg:py-2 xl:py-2.5 bg-white hover:bg-emerald-50/50 text-[#008744] border border-[#008744]/40 font-bold rounded-xl text-[11px] md:text-sm lg:text-[11px] xl:text-xs inline-flex items-center justify-center gap-1 md:gap-2 shadow-2xs cursor-pointer transition-all whitespace-nowrap"
+                >
+                  <Pencil className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-3.5 lg:h-3.5 xl:w-4 xl:h-4 text-[#008744] shrink-0" />
+                  <span>Configure Preferences</span>
+                </button>
               </div>
-
-              {localInquiries.length > 0 ? (
-                <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
-                  {localInquiries.map((inq) => (
-                    <motion.div 
-                      key={inq.id} 
-                      whileHover={{ x: 2 }}
-                      className="p-4 bg-[#F8FAF9] border border-emerald-100/60 rounded-xl space-y-2 shadow-xs hover:shadow-sm transition-shadow duration-300 font-sans"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-bold text-emerald-800 uppercase max-w-[130px] truncate">{inq.organization}</span>
-                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${
-                          inq.status === 'Pending' 
-                            ? 'bg-amber-100 text-amber-800' 
-                            : inq.status === 'In Review' 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-emerald-100 text-emerald-800'
-                        }`}>
-                          {inq.status}
-                        </span>
-                      </div>
-                      <span className="block text-xs font-semibold text-slate-700"> {inq.serviceType}</span>
-                      <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed font-medium">{inq.message}</p>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400 text-center py-6 font-sans">No advisory inquiries submitted yet.</p>
-              )}
             </div>
-
-             {/* 6. Activity Timeline Logger */}
-            <ActivityTimeline customActivities={liveActivities} />
-
           </div>
 
+          {/* Right Section: 3 Stat Cards Grid */}
+          <div className="grid grid-cols-3 w-full lg:w-auto gap-2 md:gap-4 lg:gap-2 xl:gap-4 shrink-0 pt-2 lg:pt-0">
+            {/* Stat Card 1: Saved Papers */}
+            <div className="bg-white rounded-xl md:rounded-2xl p-2.5 md:p-4 lg:p-2.5 xl:p-4 border border-slate-100/90 shadow-2xs hover:shadow-xs transition-all flex flex-col md:flex-row items-center md:items-center gap-1.5 md:gap-3 lg:gap-1.5 xl:gap-3 w-full justify-center md:justify-start text-center md:text-left">
+              <div className="p-2 md:p-2.5 lg:p-1.5 xl:p-2.5 rounded-xl bg-emerald-50/90 text-[#008744] shrink-0">
+                <Bookmark className="w-4 h-4 md:w-5 md:h-5 lg:w-4 lg:h-4 xl:w-5 xl:h-5 text-[#008744]" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-lg md:text-2xl lg:text-lg xl:text-2xl font-extrabold text-slate-900 leading-none">{savedPapers.length}</span>
+                <span className="block text-[9px] md:text-xs lg:text-[9px] xl:text-xs text-slate-500 font-semibold mt-1 truncate max-w-full">Saved Papers</span>
+              </div>
+            </div>
+
+            {/* Stat Card 2: Inquiries */}
+            <div className="bg-white rounded-xl md:rounded-2xl p-2.5 md:p-4 lg:p-2.5 xl:p-4 border border-slate-100/90 shadow-2xs hover:shadow-xs transition-all flex flex-col md:flex-row items-center md:items-center gap-1.5 md:gap-3 lg:gap-1.5 xl:gap-3 w-full justify-center md:justify-start text-center md:text-left">
+              <div className="p-2 md:p-2.5 lg:p-1.5 xl:p-2.5 rounded-xl bg-emerald-50/90 text-[#008744] shrink-0">
+                <MessageSquare className="w-4 h-4 md:w-5 md:h-5 lg:w-4 lg:h-4 xl:w-5 xl:h-5 text-[#008744]" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-lg md:text-2xl lg:text-lg xl:text-2xl font-extrabold text-slate-900 leading-none">{localInquiries.length}</span>
+                <span className="block text-[9px] md:text-xs lg:text-[9px] xl:text-xs text-slate-500 font-semibold mt-1 truncate max-w-full">Inquiries</span>
+              </div>
+            </div>
+
+            {/* Stat Card 3: Uploads */}
+            <div className="bg-white rounded-xl md:rounded-2xl p-2.5 md:p-4 lg:p-2.5 xl:p-4 border border-slate-100/90 shadow-2xs hover:shadow-xs transition-all flex flex-col md:flex-row items-center md:items-center gap-1.5 md:gap-3 lg:gap-1.5 xl:gap-3 w-full justify-center md:justify-start text-center md:text-left">
+              <div className="p-2 md:p-2.5 lg:p-1.5 xl:p-2.5 rounded-xl bg-emerald-50/90 text-[#008744] shrink-0">
+                <UploadCloud className="w-4 h-4 md:w-5 md:h-5 lg:w-4 lg:h-4 xl:w-5 xl:h-5 text-[#008744]" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-lg md:text-2xl lg:text-lg xl:text-2xl font-extrabold text-slate-900 leading-none">{myUploadedPapers.length}</span>
+                <span className="block text-[9px] md:text-xs lg:text-[9px] xl:text-xs text-slate-500 font-semibold mt-1 truncate max-w-full">Uploads</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION: RESEARCH OVERVIEW */}
+        <ResearchOverview 
+          user={user} 
+          userProfile={userProfile}
+          onNavigateToView={(v, id) => safeOnNavigate(v, id)} 
+          onUploadResearch={(draft) => {
+            if (draft && draft.id) {
+              window.location.hash = `#/research/${draft.id}`;
+            }
+            safeOnNavigate('research');
+          }} 
+        />
+
+        {/* SECTION 2: GRID OF CORE DASHBOARD LAYOUTS */}
+        <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200 text-center space-y-3 font-sans max-w-2xl mx-auto mt-6">
+          <Settings className="w-8 h-8 text-slate-400 mx-auto" />
+          <h4 className="text-sm font-bold text-slate-800">Advanced Modules Moved to Utility</h4>
+          <p className="text-xs text-slate-500 leading-relaxed font-medium">
+            Your scholar verification, innovation pipelines, active milestones, and AI recommendations are now managed inside the dedicated <strong>Utility</strong> console in the sidebar.
+          </p>
+          <div className="pt-2">
+            <button
+              onClick={() => safeOnNavigate('utility')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition cursor-pointer border-0"
+            >
+              <span>Go to Utility Console</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
       </div>

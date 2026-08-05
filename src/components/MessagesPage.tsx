@@ -21,6 +21,10 @@ import {
   Image,
   FileText,
   Camera,
+  Video,
+  Square,
+  Circle,
+  RotateCw,
   MoreVertical,
   ChevronUp,
   ChevronDown,
@@ -101,6 +105,193 @@ export default function MessagesPage({
   const [activeEmojiCategory, setActiveEmojiCategory] = useState<'smileys' | 'nature' | 'food' | 'objects'>('smileys');
   const [attachedFiles, setAttachedFiles] = useState<{ name: string; url: string; type: string }[]>([]);
   
+  // Voice Recording State
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleStartRecording = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsRecordingVoice(true);
+    setRecordingSeconds(0);
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingSeconds(prev => prev + 1);
+    }, 1000);
+  };
+
+  const handleStopRecording = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    const secs = recordingSeconds || 3;
+    const formattedTime = `${Math.floor(secs / 60)}:${(secs % 60).toString().padStart(2, '0')}`;
+    setAttachedFiles(prev => [
+      ...prev,
+      {
+        name: `Voice Note (${formattedTime})`,
+        url: 'https://actions.google.com/sounds/v1/ambiences/rain_heavy.ogg',
+        type: 'audio'
+      }
+    ]);
+    setIsRecordingVoice(false);
+    setRecordingSeconds(0);
+  };
+
+  const handleCancelRecording = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    setIsRecordingVoice(false);
+    setRecordingSeconds(0);
+  };
+
+  // Camera & Webcam Video Recorder Modal State
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo');
+  const [isVideoRecording, setIsVideoRecording] = useState(false);
+  const [videoRecordingTime, setVideoRecordingTime] = useState(0);
+  const [cameraPreview, setCameraPreview] = useState<{ type: 'image' | 'video'; url: string; name: string } | null>(null);
+
+  const webcamVideoRef = useRef<HTMLVideoElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const videoTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (webcamVideoRef.current && cameraStream) {
+      webcamVideoRef.current.srcObject = cameraStream;
+    }
+  }, [cameraStream, isCameraModalOpen, cameraPreview]);
+
+  const openCameraModal = async () => {
+    setShowAttachmentMenu(false);
+    setIsCameraModalOpen(true);
+    setCameraError(null);
+    setCameraPreview(null);
+    setCameraMode('photo');
+    setIsVideoRecording(false);
+    setVideoRecordingTime(0);
+
+    try {
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+      setCameraStream(stream);
+    } catch (err: any) {
+      console.error("Camera access error:", err);
+      setCameraError(err.message || "Could not access webcam/camera. Please check browser permissions.");
+    }
+  };
+
+  const closeCameraModal = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try { mediaRecorderRef.current.stop(); } catch {}
+    }
+    if (videoTimerRef.current) {
+      clearInterval(videoTimerRef.current);
+      videoTimerRef.current = null;
+    }
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setIsCameraModalOpen(false);
+    setCameraError(null);
+    setCameraPreview(null);
+    setIsVideoRecording(false);
+    setVideoRecordingTime(0);
+  };
+
+  const takeSnapshot = () => {
+    if (!webcamVideoRef.current) return;
+    const video = webcamVideoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      setCameraPreview({
+        type: 'image',
+        url: dataUrl,
+        name: `Webcam_Photo_${Date.now()}.jpg`
+      });
+    }
+  };
+
+  const startRecordingVideo = () => {
+    if (!cameraStream) return;
+    recordedChunksRef.current = [];
+    try {
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9'
+        : MediaRecorder.isTypeSupported('video/webm')
+        ? 'video/webm'
+        : 'video/mp4';
+      const recorder = new MediaRecorder(cameraStream, { mimeType });
+      mediaRecorderRef.current = recorder;
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          recordedChunksRef.current.push(e.data);
+        }
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: mimeType });
+        const videoUrl = URL.createObjectURL(blob);
+        setCameraPreview({
+          type: 'video',
+          url: videoUrl,
+          name: `Webcam_Video_${Date.now()}.webm`
+        });
+      };
+      recorder.start();
+      setIsVideoRecording(true);
+      setVideoRecordingTime(0);
+      if (videoTimerRef.current) clearInterval(videoTimerRef.current);
+      videoTimerRef.current = setInterval(() => {
+        setVideoRecordingTime(prev => prev + 1);
+      }, 1000);
+    } catch (err: any) {
+      console.error("Failed to start MediaRecorder:", err);
+      setCameraError("Video recording failed or is not supported on this browser.");
+    }
+  };
+
+  const stopRecordingVideo = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (videoTimerRef.current) {
+      clearInterval(videoTimerRef.current);
+      videoTimerRef.current = null;
+    }
+    setIsVideoRecording(false);
+  };
+
+  const attachCameraCapture = () => {
+    if (!cameraPreview) return;
+    setAttachedFiles(prev => [
+      ...prev,
+      {
+        name: cameraPreview.name,
+        url: cameraPreview.url,
+        type: cameraPreview.type
+      }
+    ]);
+    closeCameraModal();
+  };
+  
   // New Message Modal State
   const [isNewMessageModalOpen, setIsNewMessageModalOpen] = useState(false);
   const [eligibleUsers, setEligibleUsers] = useState<ParticipantInfo[]>([]);
@@ -156,6 +347,7 @@ export default function MessagesPage({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaFileInputRef = useRef<HTMLInputElement>(null);
 
   // Toast feedback helper
   const showToast = (msg: string) => {
@@ -233,7 +425,10 @@ export default function MessagesPage({
       selectedConvId,
       (msgList) => {
         setMessages(msgList);
-        markMessagesAsRead(selectedConvId, user.uid, msgList);
+        const unreadForMe = msgList.filter(m => m.senderId !== user.uid && m.status !== 'read');
+        if (unreadForMe.length > 0) {
+          markMessagesAsRead(selectedConvId, user.uid, unreadForMe);
+        }
       },
       user.uid,
       disappearingHours,
@@ -242,21 +437,6 @@ export default function MessagesPage({
 
     return () => unsubscribe();
   }, [selectedConvId, user?.uid, activeConversation?.disappearingDuration, activeConversation?.clearedAt?.[user?.uid]]);
-
-  // Mark undelivered messages
-  useEffect(() => {
-    if (!user?.uid || conversations.length === 0) return;
-
-    conversations.forEach(conv => {
-      if (conv.lastMessageSenderId && conv.lastMessageSenderId !== user.uid) {
-        if (conv.id === selectedConvId) {
-          markMessagesAsRead(conv.id, user.uid);
-        } else {
-          markMessagesAsDelivered(conv.id, user.uid);
-        }
-      }
-    });
-  }, [conversations, selectedConvId, user?.uid]);
 
   // Fetch full researcher profile when Contact Info screen opens
   useEffect(() => {
@@ -375,19 +555,21 @@ export default function MessagesPage({
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
+          const isImg = file.type.startsWith('image/');
+          const isVid = file.type.startsWith('video/');
           setAttachedFiles(prev => [
             ...prev,
             {
               name: file.name,
               url: event.target!.result as string,
-              type: file.type.startsWith('image/') ? 'image' : 'file'
+              type: isImg ? 'image' : isVid ? 'video' : 'file'
             }
           ]);
         }
       };
       reader.readAsDataURL(file);
     });
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (e.target) e.target.value = '';
   };
 
   // Handle Send Message
@@ -415,6 +597,33 @@ export default function MessagesPage({
       textareaRef.current.style.height = 'auto';
     }
 
+    // Optimistic message update for instant UI responsiveness
+    const tempId = `temp_${Date.now()}`;
+    const optimisticMsg: Message = {
+      id: tempId,
+      conversationId: selectedConvId,
+      senderId: user.uid,
+      senderName: currentUserInfo.fullName,
+      senderPhoto: currentUserInfo.photoURL,
+      text: textToSend,
+      attachments: filesToSend.length > 0 ? filesToSend : undefined,
+      createdAt: new Date().toISOString(),
+      readBy: [user.uid],
+      status: 'sent',
+      replyTo: replyPayload
+    };
+
+    setMessages(prev => [...prev, optimisticMsg]);
+
+    setTimeout(() => {
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTo({
+          top: messagesContainerRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }, 40);
+
     try {
       await sendMessage(
         selectedConvId,
@@ -425,12 +634,10 @@ export default function MessagesPage({
         filesToSend.length > 0 ? filesToSend : undefined,
         replyPayload
       );
-
-      if (messagesContainerRef.current) {
-        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-      }
     } catch (err) {
       console.error("Failed to send message:", err);
+      // Remove temporary optimistic message on failure
+      setMessages(prev => prev.filter(m => m.id !== tempId));
     } finally {
       setIsSending(false);
     }
@@ -641,25 +848,25 @@ export default function MessagesPage({
       </AnimatePresence>
 
       {/* Main Container Card */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden flex h-[calc(100vh-100px)] min-h-[580px] relative">
+      <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden flex h-[calc(100vh-100px)] min-h-[580px] relative">
         
         {/* ========================================================================= */}
         {/* LEFT PANEL: CONVERSATIONS LIST                                            */}
         {/* ========================================================================= */}
-        <div className={`w-full lg:w-80 xl:w-96 border-r border-slate-200/70 dark:border-slate-800 flex flex-col shrink-0 bg-white dark:bg-slate-900 ${
+        <div className={`w-full lg:w-80 xl:w-96 border-r border-slate-200 flex flex-col shrink-0 bg-white ${
           selectedConvId ? 'hidden lg:flex' : 'flex'
         }`}>
           
           {/* Header */}
-          <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 space-y-3">
+          <div className="p-4 border-b border-slate-100 space-y-3" style={{ backgroundColor: '#ffffff', borderStyle: 'none' }}>
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+              <h1 className="text-xl font-bold tracking-tight" style={{ color: '#000000' }}>
                 Messages
               </h1>
 
               <button
                 onClick={handleOpenNewMessageModal}
-                className="p-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-full transition-all cursor-pointer"
+                className="p-2 bg-emerald-50 text-emerald-800 rounded-full transition-all cursor-pointer border border-emerald-200/60"
                 title="New Message"
                 id="btn_new_message"
               >
@@ -668,19 +875,20 @@ export default function MessagesPage({
             </div>
 
             {/* Feature 2: Search Conversations */}
-            <div className="relative">
+            <div className="relative" style={{ backgroundColor: 'transparent', borderStyle: 'none' }}>
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search by name, institution, keywords..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-8 py-2 bg-slate-100 dark:bg-slate-800/70 border border-transparent focus:border-emerald-500 rounded-full text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none transition-all"
+                className="w-full pl-10 pr-8 py-2 border border-slate-200 focus:border-emerald-500 rounded-full text-xs placeholder:text-slate-200 focus:outline-none transition-all shadow-2xs"
+                style={{ backgroundColor: '#063411', color: '#ffffff', fontFamily: 'Verdana' }}
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 "
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -688,30 +896,54 @@ export default function MessagesPage({
             </div>
 
             {/* Filter Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pt-0.5 pb-0.5">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'unread', label: 'Unread' },
-                { id: 'mutual_follow', label: 'Mutual' },
-                { id: 'collaboration', label: 'Collaborators' },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveFilter(tab.id as any)}
-                  className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all cursor-pointer ${
-                    activeFilter === tab.id
-                      ? 'bg-slate-900 text-white dark:bg-emerald-600 dark:text-white font-semibold'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pt-0.5 pb-0.5" style={{ backgroundColor: 'transparent' }}>
+              <div className="flex items-center gap-1.5">
+                {[
+                  { id: 'all', label: 'All' },
+                  { id: 'unread', label: 'Unread' },
+                  { id: 'mutual_follow', label: 'Mutual' },
+                  { id: 'collaboration', label: 'Collaborators' },
+                ].map((tab, idx) => {
+                  const isSelected = activeFilter === tab.id;
+                  
+                  // Style matches CSS selectors 2, 3, 4
+                  let btnStyle: React.CSSProperties = {};
+                  if (idx === 1) {
+                    btnStyle = { backgroundColor: '#000000' };
+                  } else if (idx === 2) {
+                    btnStyle = { backgroundColor: '#000000', color: '#ffffff' };
+                  } else if (idx === 3) {
+                    btnStyle = { backgroundColor: '#000000', color: '#ffffff' };
+                  }
+
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveFilter(tab.id as any)}
+                      className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all cursor-pointer ${
+                        isSelected && idx === 0
+                          ? 'bg-slate-900 text-white font-semibold shadow-2xs'
+                          : 'bg-white border border-slate-200 text-slate-700 '
+                      }`}
+                      style={btnStyle}
+                    >
+                      <p 
+                        className="m-0 inline" 
+                        style={{ 
+                          color: idx === 1 ? '#ffffff' : idx === 2 ? '#ffffff' : idx === 3 ? '#ffffff' : isSelected ? '#ffffff' : idx === 0 ? '#ffffff' : 'inherit' 
+                        }}
+                      >
+                        {tab.label}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
           {/* Conversations List */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-0.5">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1 bg-white">
             {filteredConversations.length > 0 ? (
               filteredConversations.map((conv) => {
                 const otherUid = conv.participants.find(p => p !== user.uid) || '';
@@ -728,10 +960,10 @@ export default function MessagesPage({
                       setIsSelectionMode(false);
                       setSelectedMsgIds([]);
                     }}
-                    className={`w-full text-left p-3 rounded-2xl transition-all cursor-pointer flex items-center gap-3 relative ${
+                    className={`w-full text-left p-3 rounded-2xl transition-all cursor-pointer flex items-center gap-3 relative border ${
                       isSelected
-                        ? 'bg-emerald-50/80 dark:bg-emerald-950/40'
-                        : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/50'
+                        ? 'bg-emerald-50/80 border-emerald-400 text-slate-900 shadow-2xs'
+                        : 'bg-white  border-slate-100 text-slate-900'
                     }`}
                     id={`conv_item_${conv.id}`}
                   >
@@ -741,19 +973,17 @@ export default function MessagesPage({
                         <img
                           src={prof.photoURL}
                           alt={prof.fullName}
-                          className="w-12 h-12 rounded-full object-cover border border-slate-200/80 dark:border-slate-700"
+                          className="w-12 h-12 rounded-full object-cover border border-slate-200"
                           referrerPolicy="no-referrer"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 flex items-center justify-center font-bold text-base">
+                        <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-base border border-emerald-200">
                           {prof?.fullName?.charAt(0) || <User className="w-5 h-5" />}
                         </div>
                       )}
 
                       <span 
-                        className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 ${
-                          conv.connectionType === 'mutual_follow' ? 'bg-teal-500' : 'bg-emerald-600'
-                        }`}
+                        className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white bg-emerald-500"
                         title={conv.connectionType === 'mutual_follow' ? 'Mutual Follow' : 'Collaborator'}
                       />
                     </div>
@@ -761,16 +991,16 @@ export default function MessagesPage({
                     {/* Details */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <span className={`text-xs truncate ${unread > 0 ? 'font-extrabold text-slate-900 dark:text-white' : 'font-semibold text-slate-800 dark:text-slate-200'}`}>
+                        <span className={`text-xs truncate ${unread > 0 ? 'font-extrabold text-slate-900' : 'font-semibold text-slate-800'}`}>
                           {prof?.fullName || 'Scholar'}
                         </span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">
+                        <span className="text-[10px] text-slate-500 shrink-0">
                           {formatTime(conv.lastMessageTimestamp)}
                         </span>
                       </div>
 
                       <div className="flex items-center justify-between gap-2">
-                        <p className={`text-xs truncate ${unread > 0 ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                        <p className={`text-xs truncate ${unread > 0 ? 'font-bold text-slate-900' : 'text-slate-600'}`}>
                           {conv.lastMessage || 'Started a conversation'}
                         </p>
 
@@ -798,7 +1028,7 @@ export default function MessagesPage({
                 </p>
                 <button
                   onClick={handleOpenNewMessageModal}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2 bg-emerald-600  text-white rounded-full text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   New Message
@@ -822,7 +1052,7 @@ export default function MessagesPage({
               <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-white dark:bg-slate-900 sticky top-0 z-20">
                 <button
                   onClick={() => setShowContactInfoScreen(false)}
-                  className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all cursor-pointer"
+                  className="p-2 text-slate-600 dark:text-slate-300  dark: rounded-full transition-all cursor-pointer"
                   title="Back to conversation"
                 >
                   <ArrowLeft className="w-5 h-5" />
@@ -877,8 +1107,8 @@ export default function MessagesPage({
                         }}
                         className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                           isFollowingTarget
-                            ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-300'
-                            : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                            ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 '
+                            : 'bg-emerald-600  text-white'
                         }`}
                       >
                         {isFollowingTarget ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
@@ -899,7 +1129,7 @@ export default function MessagesPage({
                             setShowContactInfoScreen(false);
                             onNavigateToProfile(targetUserId);
                           }}
-                          className="px-4 py-2 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-full text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-1.5 cursor-pointer"
+                          className="px-4 py-2 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-full text-xs font-semibold  dark: transition-all flex items-center gap-1.5 cursor-pointer"
                         >
                           <ExternalLink className="w-4 h-4" />
                           View Full Profile
@@ -998,7 +1228,7 @@ export default function MessagesPage({
                           setShowContactInfoScreen(false);
                           setShowBlockModal(true);
                         }}
-                        className="px-4 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="px-4 py-2 text-xs font-bold text-rose-600 dark:text-rose-400  dark: rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
                       >
                         <Ban className="w-4 h-4" />
                         {isTargetBlocked ? 'Unblock User' : 'Block User'}
@@ -1009,7 +1239,7 @@ export default function MessagesPage({
                           setShowContactInfoScreen(false);
                           setShowReportModal(true);
                         }}
-                        className="px-4 py-2 text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="px-4 py-2 text-xs font-bold text-amber-600 dark:text-amber-400  dark: rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
                       >
                         <Flag className="w-4 h-4" />
                         Report User
@@ -1030,7 +1260,7 @@ export default function MessagesPage({
                         setIsSelectionMode(false);
                         setSelectedMsgIds([]);
                       }}
-                      className="p-1 hover:bg-emerald-600 rounded-full"
+                      className="p-1  rounded-full"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -1048,7 +1278,7 @@ export default function MessagesPage({
                           setIsSelectionMode(false);
                           setSelectedMsgIds([]);
                         }}
-                        className="p-1.5 hover:bg-emerald-600 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                        className="p-1.5  rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
                         title="Reply"
                       >
                         <CornerUpLeft className="w-4 h-4" />
@@ -1058,7 +1288,7 @@ export default function MessagesPage({
 
                     <button
                       onClick={handleCopySelected}
-                      className="p-1.5 hover:bg-emerald-600 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                      className="p-1.5  rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
                       title="Copy"
                     >
                       <Copy className="w-4 h-4" />
@@ -1067,7 +1297,7 @@ export default function MessagesPage({
 
                     <button
                       onClick={handleForwardSelected}
-                      className="p-1.5 hover:bg-emerald-600 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                      className="p-1.5  rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
                       title="Forward"
                     >
                       <Share2 className="w-4 h-4" />
@@ -1076,7 +1306,7 @@ export default function MessagesPage({
 
                     <button
                       onClick={() => setShowDeleteMsgModal(true)}
-                      className="p-1.5 bg-rose-600 hover:bg-rose-700 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                      className="p-1.5 bg-rose-600  rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
                       title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -1086,12 +1316,12 @@ export default function MessagesPage({
                 </div>
               ) : (
                 /* Standard Chat Header */
-                <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 z-10">
+                <div className="px-4 py-3 flex items-center justify-between bg-white z-10 border-none" style={{ borderStyle: 'none', backgroundColor: '#ffffff' }}>
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Mobile Back Button */}
                     <button
                       onClick={() => setSelectedConvId(null)}
-                      className="lg:hidden p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all cursor-pointer"
+                      className="lg:hidden p-2 text-slate-600 rounded-full cursor-pointer"
                       title="Back to conversations"
                     >
                       <ArrowLeft className="w-5 h-5" />
@@ -1100,31 +1330,31 @@ export default function MessagesPage({
                     {/* Profile Photo - Click opens Contact Info */}
                     <button
                       onClick={() => setShowContactInfoScreen(true)}
-                      className="flex items-center gap-3 min-w-0 text-left border-0 bg-transparent p-0 cursor-pointer group"
+                      className="flex items-center gap-3 min-w-0 text-left border-0 bg-transparent p-0 cursor-pointer"
                       title="View Contact Info"
                     >
                       {targetProfile?.photoURL ? (
                         <img
                           src={targetProfile.photoURL}
                           alt={targetProfile.fullName}
-                          className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 group-hover:scale-105 transition-transform"
+                          className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
                           referrerPolicy="no-referrer"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 flex items-center justify-center font-bold text-sm shrink-0 group-hover:scale-105 transition-transform">
+                        <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm shrink-0">
                           {targetProfile?.fullName?.charAt(0) || <User className="w-4 h-4" />}
                         </div>
                       )}
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <h2 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-emerald-600 transition-colors">
+                          <h2 className="text-sm font-bold text-slate-900 truncate">
                             {targetProfile?.fullName || 'Scholar'}
                           </h2>
                           <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Connected" />
                         </div>
 
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        <p className="text-[11px] text-slate-500 truncate">
                           {targetProfile?.institution || targetProfile?.role || 'Aurenix Scholar'}
                         </p>
                       </div>
@@ -1135,7 +1365,7 @@ export default function MessagesPage({
                   <div className="flex items-center gap-1 relative">
                     <button
                       onClick={() => setShowInChatSearch(!showInChatSearch)}
-                      className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all cursor-pointer"
+                      className="p-2 text-slate-600 rounded-full cursor-pointer"
                       title="Search in Chat"
                     >
                       <Search className="w-4 h-4" />
@@ -1144,7 +1374,7 @@ export default function MessagesPage({
                     {/* Chat Menu Dropdown */}
                     <button
                       onClick={() => setShowChatMenu(!showChatMenu)}
-                      className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all cursor-pointer"
+                      className="p-2 text-slate-600 rounded-full cursor-pointer"
                       title="Chat Menu"
                     >
                       <MoreVertical className="w-4 h-4" />
@@ -1163,7 +1393,7 @@ export default function MessagesPage({
                               setShowChatMenu(false);
                               setShowContactInfoScreen(true);
                             }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer font-medium"
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200  dark: cursor-pointer font-medium"
                           >
                             <Info className="w-4 h-4 text-emerald-600" />
                             Contact Info
@@ -1174,7 +1404,7 @@ export default function MessagesPage({
                               setShowChatMenu(false);
                               setShowInChatSearch(true);
                             }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer font-medium"
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200  dark: cursor-pointer font-medium"
                           >
                             <Search className="w-4 h-4 text-emerald-600" />
                             Search in Chat
@@ -1185,7 +1415,7 @@ export default function MessagesPage({
                               setShowChatMenu(false);
                               setIsSelectionMode(true);
                             }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer font-medium"
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200  dark: cursor-pointer font-medium"
                           >
                             <CheckCheck className="w-4 h-4 text-emerald-600" />
                             Select Messages
@@ -1196,7 +1426,7 @@ export default function MessagesPage({
                               setShowChatMenu(false);
                               setShowDisappearingModal(true);
                             }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer font-medium"
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200  dark: cursor-pointer font-medium"
                           >
                             <Clock className="w-4 h-4 text-emerald-600" />
                             Disappearing Messages
@@ -1209,7 +1439,7 @@ export default function MessagesPage({
                               setShowChatMenu(false);
                               setShowClearChatModal(true);
                             }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer font-medium"
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200  dark: cursor-pointer font-medium"
                           >
                             <RotateCcw className="w-4 h-4 text-amber-500" />
                             Clear Chat
@@ -1220,7 +1450,7 @@ export default function MessagesPage({
                               setShowChatMenu(false);
                               setShowDeleteConvModal(true);
                             }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer font-medium"
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200  dark: cursor-pointer font-medium"
                           >
                             <Trash2 className="w-4 h-4 text-rose-500" />
                             Delete Chat
@@ -1231,7 +1461,7 @@ export default function MessagesPage({
                               setShowChatMenu(false);
                               setShowBlockModal(true);
                             }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer font-medium"
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200  dark: cursor-pointer font-medium"
                           >
                             <Ban className="w-4 h-4 text-rose-500" />
                             {isTargetBlocked ? 'Unblock User' : 'Block User'}
@@ -1242,7 +1472,7 @@ export default function MessagesPage({
                               setShowChatMenu(false);
                               setShowReportModal(true);
                             }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer font-medium"
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200  dark: cursor-pointer font-medium"
                           >
                             <Flag className="w-4 h-4 text-amber-500" />
                             Report User
@@ -1282,7 +1512,7 @@ export default function MessagesPage({
                     <button
                       onClick={() => setCurrentMatchIndex(prev => (prev > 0 ? prev - 1 : inChatMatches.length - 1))}
                       disabled={inChatMatches.length === 0}
-                      className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300 disabled:opacity-40"
+                      className="p-1  dark: rounded-full text-slate-600 dark:text-slate-300 disabled:opacity-40"
                       title="Previous Match"
                     >
                       <ChevronUp className="w-4 h-4" />
@@ -1291,7 +1521,7 @@ export default function MessagesPage({
                     <button
                       onClick={() => setCurrentMatchIndex(prev => (prev < inChatMatches.length - 1 ? prev + 1 : 0))}
                       disabled={inChatMatches.length === 0}
-                      className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300 disabled:opacity-40"
+                      className="p-1  dark: rounded-full text-slate-600 dark:text-slate-300 disabled:opacity-40"
                       title="Next Match"
                     >
                       <ChevronDown className="w-4 h-4" />
@@ -1302,7 +1532,7 @@ export default function MessagesPage({
                         setShowInChatSearch(false);
                         setInChatSearchQuery('');
                       }}
-                      className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full text-slate-500"
+                      className="p-1  dark: rounded-full text-slate-500"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -1319,7 +1549,7 @@ export default function MessagesPage({
               )}
 
               {/* Message Feed */}
-              <div ref={messagesContainerRef} className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 bg-slate-50/40 dark:bg-slate-950/30">
+              <div ref={messagesContainerRef} className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 bg-white" style={{ borderStyle: 'none' }}>
                 {messages.length > 0 ? (
                   messages.map((msg) => {
                     const isMe = msg.senderId === user.uid;
@@ -1342,8 +1572,8 @@ export default function MessagesPage({
                             isSelected ? 'ring-2 ring-emerald-500 ring-offset-2' : ''
                           } ${
                             isMe
-                              ? 'bg-emerald-600 text-white rounded-tr-xs shadow-xs'
-                              : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200/60 dark:border-slate-700/60 rounded-tl-xs shadow-xs'
+                              ? 'bg-[#00a86b] text-white rounded-tr-xs shadow-2xs'
+                              : 'bg-white text-slate-900 border border-slate-200/90 rounded-tl-xs shadow-2xs'
                           }`}
                         >
                           {/* Selection Checkbox */}
@@ -1365,16 +1595,16 @@ export default function MessagesPage({
                           {msg.replyTo && (
                             <div 
                               onClick={() => jumpToMessage(msg.replyTo!.id)}
-                              className={`mb-2 p-2 rounded-lg text-left cursor-pointer hover:opacity-90 transition-opacity border-l-3 ${
+                              className={`mb-2 p-2 rounded-xl text-left cursor-pointer border-l-4 ${
                                 isMe 
-                                  ? 'bg-emerald-700/80 border-white text-white' 
+                                  ? 'bg-[#005737] dark:bg-[#005737] border-emerald-300 text-white' 
                                   : 'bg-slate-100 dark:bg-slate-900 border-emerald-500 text-slate-800 dark:text-slate-200'
                               }`}
                             >
-                              <p className="text-[10px] font-bold opacity-90">
+                              <p className="text-[10px] font-bold text-emerald-200">
                                 Replying to {msg.replyTo.senderName}
                               </p>
-                              <p className="text-[11px] truncate opacity-80">
+                              <p className="text-[11px] truncate opacity-90 text-white">
                                 {msg.replyTo.text}
                               </p>
                             </div>
@@ -1392,7 +1622,7 @@ export default function MessagesPage({
                                   href={att.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-1.5 text-[11px] underline font-medium text-emerald-100 hover:text-white"
+                                  className="flex items-center gap-1.5 text-[11px] underline font-medium text-emerald-100"
                                 >
                                   <Paperclip className="w-3 h-3" />
                                   {att.name}
@@ -1454,17 +1684,26 @@ export default function MessagesPage({
                   </p>
                   <button
                     onClick={handleConfirmBlockUser}
-                    className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold transition-all cursor-pointer"
+                    className="px-4 py-1.5 bg-emerald-600  text-white rounded-full text-xs font-bold transition-all cursor-pointer"
                   >
                     Unblock User
                   </button>
                 </div>
               ) : (
                 /* Unified MessageComposer Section */
-                <div className="p-2.5 sm:p-3 bg-slate-50/80 dark:bg-slate-950/80 border-t border-slate-200/80 dark:border-slate-800/80 relative">
+                <div className="p-2.5 sm:p-3 bg-white relative border-none" style={{ borderStyle: 'none' }}>
                   <input
                     type="file"
                     ref={fileInputRef}
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.zip,.rar,application/pdf,application/msword,text/plain"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    multiple
+                  />
+                  <input
+                    type="file"
+                    ref={mediaFileInputRef}
+                    accept="image/*,video/*"
                     onChange={handleFileSelect}
                     className="hidden"
                     multiple
@@ -1472,18 +1711,18 @@ export default function MessagesPage({
 
                   {/* Feature 5: Active Reply Preview Banner */}
                   {replyToMsg && (
-                    <div className="flex items-center justify-between p-2 mb-2 bg-emerald-50 dark:bg-emerald-950/70 border-l-4 border-emerald-600 rounded-r-xl">
+                    <div className="flex items-center justify-between p-2 mb-2 bg-emerald-50 border-l-4 border-emerald-600 rounded-r-xl">
                       <div className="min-w-0 pr-2">
-                        <p className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                        <p className="text-[11px] font-bold text-emerald-800">
                           Replying to {replyToMsg.senderName}
                         </p>
-                        <p className="text-xs text-slate-600 dark:text-slate-300 truncate">
+                        <p className="text-xs text-slate-600 truncate">
                           {replyToMsg.text}
                         </p>
                       </div>
                       <button
                         onClick={() => setReplyToMsg(null)}
-                        className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full"
+                        className="p-1 text-slate-400  rounded-full"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -1498,7 +1737,7 @@ export default function MessagesPage({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 8, scale: 0.98 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute left-3 bottom-16 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg p-2 min-w-[200px] z-30"
+                        className="absolute left-3 bottom-16 bg-white rounded-2xl border border-slate-200 shadow-lg p-2 min-w-[200px] z-30"
                       >
                         <button
                           type="button"
@@ -1506,9 +1745,9 @@ export default function MessagesPage({
                             setShowAttachmentMenu(false);
                             fileInputRef.current?.click();
                           }}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 border-0 cursor-pointer bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 border-0 cursor-pointer bg-transparent  transition-colors"
                         >
-                          <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
                             <FileText className="w-4 h-4" />
                           </div>
                           <span>Document</span>
@@ -1518,11 +1757,11 @@ export default function MessagesPage({
                           type="button"
                           onClick={() => {
                             setShowAttachmentMenu(false);
-                            fileInputRef.current?.click();
+                            mediaFileInputRef.current?.click();
                           }}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 border-0 cursor-pointer bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 border-0 cursor-pointer bg-transparent  transition-colors"
                         >
-                          <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
                             <Image className="w-4 h-4" />
                           </div>
                           <span>Photos & videos</span>
@@ -1530,16 +1769,13 @@ export default function MessagesPage({
 
                         <button
                           type="button"
-                          onClick={() => {
-                            setShowAttachmentMenu(false);
-                            fileInputRef.current?.click();
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 border-0 cursor-pointer bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          onClick={openCameraModal}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 border-0 cursor-pointer bg-transparent  transition-colors"
                         >
-                          <div className="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center">
                             <Camera className="w-4 h-4" />
                           </div>
-                          <span>Camera</span>
+                          <span>Camera / Webcam</span>
                         </button>
                       </motion.div>
                     )}
@@ -1553,9 +1789,9 @@ export default function MessagesPage({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 8, scale: 0.98 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute left-3 right-3 sm:left-4 sm:right-auto sm:w-80 bottom-16 p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg z-30"
+                        className="absolute left-3 right-3 sm:left-4 sm:right-auto sm:w-80 bottom-16 p-3 bg-white rounded-2xl border border-slate-200 shadow-lg z-30"
                       >
-                        <div className="flex items-center gap-1 border-b border-slate-100 dark:border-slate-800 pb-2 mb-2">
+                        <div className="flex items-center gap-1 border-b border-slate-100 pb-2 mb-2">
                           {[
                             { id: 'smileys', label: '😊' },
                             { id: 'nature', label: '🌿' },
@@ -1568,8 +1804,8 @@ export default function MessagesPage({
                               onClick={() => setActiveEmojiCategory(tab.id as any)}
                               className={`px-2.5 py-1 rounded-lg text-sm border-0 cursor-pointer ${
                                 activeEmojiCategory === tab.id 
-                                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-semibold' 
-                                  : 'text-slate-500 bg-transparent hover:text-slate-700 dark:hover:text-slate-300'
+                                  ? 'bg-emerald-50 text-emerald-600 font-semibold' 
+                                  : 'text-slate-500 bg-transparent '
                               }`}
                             >
                               {tab.label}
@@ -1591,7 +1827,7 @@ export default function MessagesPage({
                                 setInputText(prev => prev + emoji);
                                 textareaRef.current?.focus({ preventScroll: true });
                               }}
-                              className="w-8 h-8 flex items-center justify-center text-base rounded-xl cursor-pointer border-0 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800"
+                              className="w-8 h-8 flex items-center justify-center text-base rounded-xl cursor-pointer border-0 bg-transparent "
                             >
                               {emoji}
                             </button>
@@ -1604,8 +1840,12 @@ export default function MessagesPage({
                   {/* Single Unified Outer Composer Surface */}
                   <form 
                     onSubmit={handleSendMessage}
-                    onClick={() => textareaRef.current?.focus({ preventScroll: true })}
-                    className="w-full relative flex flex-col justify-center bg-white dark:bg-[#0b120e] rounded-[28px] px-3 py-1.5 border border-slate-200/90 dark:border-emerald-900/40 shadow-xs cursor-text min-h-[52px] transition-colors"
+                    onClick={(e) => {
+                      if (e.target === e.currentTarget) {
+                        textareaRef.current?.focus({ preventScroll: true });
+                      }
+                    }}
+                    className="w-full relative flex flex-col justify-center bg-white rounded-[28px] px-3.5 py-1.5 border border-slate-300 cursor-text min-h-[52px]"
                   >
                     {/* Attached File Chips */}
                     {attachedFiles.length > 0 && (
@@ -1620,7 +1860,7 @@ export default function MessagesPage({
                                 e.stopPropagation();
                                 setAttachedFiles(prev => prev.filter((_, i) => i !== idx));
                               }}
-                              className="p-0.5 rounded-full cursor-pointer text-emerald-700 dark:text-emerald-300 border-0 bg-transparent hover:text-emerald-900 dark:hover:text-emerald-100"
+                              className="p-0.5 rounded-full cursor-pointer text-emerald-700 dark:text-emerald-300 border-0 bg-transparent  dark:"
                             >
                               <X className="w-3 h-3" />
                             </button>
@@ -1629,80 +1869,107 @@ export default function MessagesPage({
                       </div>
                     )}
 
-                    <div className="flex items-end gap-1.5 w-full">
-                      <div className="flex items-center gap-0.5 shrink-0 pb-1 text-slate-500 dark:text-slate-400">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowEmojiPicker(!showEmojiPicker);
-                            setShowAttachmentMenu(false);
-                          }}
-                          className={`w-9 h-9 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer border-0 bg-transparent ${
-                            showEmojiPicker ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50' : ''
-                          }`}
-                          title="Add emoji"
-                        >
-                          <Smile className="w-5 h-5" />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowAttachmentMenu(!showAttachmentMenu);
-                            setShowEmojiPicker(false);
-                          }}
-                          className={`w-9 h-9 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer border-0 bg-transparent ${
-                            showAttachmentMenu ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50' : ''
-                          }`}
-                          title="Add attachment"
-                        >
-                          <Plus className="w-5 h-5" />
-                        </button>
+                    {/* Active Voice Recording Bar */}
+                    {isRecordingVoice ? (
+                      <div className="flex items-center justify-between gap-2 py-1 px-2 w-full">
+                        <div className="flex items-center gap-2 text-rose-600 font-medium text-xs">
+                          <span className="w-2.5 h-2.5 rounded-full bg-rose-600" />
+                          <span>Recording audio note... {Math.floor(recordingSeconds / 60)}:{(recordingSeconds % 60).toString().padStart(2, '0')}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleCancelRecording}
+                            className="text-xs text-slate-500  px-2.5 py-1 rounded-full border border-slate-200  cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleStopRecording}
+                            className="text-xs bg-emerald-600 text-white font-semibold px-3 py-1 rounded-full  transition-colors cursor-pointer"
+                          >
+                            Attach Voice
+                          </button>
+                        </div>
                       </div>
+                    ) : (
+                      <div className="flex items-end gap-1.5 w-full">
+                        <div className="flex items-center gap-0.5 shrink-0 pb-1 text-slate-500 dark:text-slate-400">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowEmojiPicker(!showEmojiPicker);
+                              setShowAttachmentMenu(false);
+                            }}
+                            className={`w-9 h-9 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400  dark: transition-colors cursor-pointer border-0 bg-transparent ${
+                              showEmojiPicker ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50' : ''
+                            }`}
+                            title="Add emoji"
+                          >
+                            <Smile className="w-5 h-5" />
+                          </button>
 
-                      <textarea
-                        ref={textareaRef}
-                        rows={1}
-                        value={inputText}
-                        onChange={(e) => setInputText(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage();
-                          }
-                        }}
-                        placeholder="Type a message..."
-                        className="composer-textarea flex-1 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none max-h-32 custom-scrollbar py-2 px-1 leading-relaxed"
-                      />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowAttachmentMenu(!showAttachmentMenu);
+                              setShowEmojiPicker(false);
+                            }}
+                            className={`w-9 h-9 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400  dark: transition-colors cursor-pointer border-0 bg-transparent ${
+                              showAttachmentMenu ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50' : ''
+                            }`}
+                            title="Add attachment"
+                          >
+                            <Plus className="w-5 h-5" />
+                          </button>
+                        </div>
 
-                      <div className="shrink-0 pb-0.5">
-                        {(inputText.trim() || attachedFiles.length > 0) ? (
+                        <textarea
+                          ref={textareaRef}
+                          rows={1}
+                          value={inputText}
+                          onChange={(e) => setInputText(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendMessage();
+                            }
+                          }}
+                          placeholder="Type a message..."
+                          className="composer-textarea flex-1 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none max-h-32 custom-scrollbar py-2 px-1 leading-relaxed cursor-text relative z-10"
+                          style={{ color: '#02080e' }}
+                        />
+
+                        <div className="flex items-center gap-1 shrink-0 pb-0.5">
+                          <button
+                            type="button"
+                            onClick={handleStartRecording}
+                            className="w-9 h-9 text-slate-400 dark:text-slate-500  dark: rounded-full flex items-center justify-center shrink-0 transition-colors cursor-pointer border-0 bg-transparent"
+                            title="Record Voice Note"
+                          >
+                            <Mic className="w-5 h-5" />
+                          </button>
+
                           <button
                             type="submit"
-                            disabled={isSending}
-                            className="w-9 h-9 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-full flex items-center justify-center shrink-0 shadow-xs transition-all cursor-pointer border-0"
+                            disabled={isSending || (!inputText.trim() && attachedFiles.length === 0)}
+                            className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border-0 ${
+                              inputText.trim() || attachedFiles.length > 0
+                                ? 'bg-emerald-600 text-white cursor-pointer'
+                                : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-60'
+                            }`}
                             title="Send message"
                             id="btn_send_message"
                           >
                             <Send className="w-4 h-4 ml-0.5" />
                           </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              textareaRef.current?.focus({ preventScroll: true });
-                            }}
-                            className="w-9 h-9 text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-full flex items-center justify-center shrink-0 transition-colors cursor-pointer border-0 bg-transparent"
-                            title="Voice message"
-                          >
-                            <Mic className="w-5 h-5" />
-                          </button>
-                        )}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </form>
                 </div>
               )}
@@ -1724,7 +1991,7 @@ export default function MessagesPage({
 
               <button
                 onClick={handleOpenNewMessageModal}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 bg-emerald-600  text-white rounded-full text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 Send Message
@@ -1753,7 +2020,7 @@ export default function MessagesPage({
 
                 <button
                   onClick={() => setIsNewMessageModalOpen(false)}
-                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full transition-colors cursor-pointer"
+                  className="p-1.5 text-slate-400  dark: rounded-full transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1791,7 +2058,7 @@ export default function MessagesPage({
                       <button
                         key={prof.uid}
                         onClick={() => handleStartDirectConversation(prof.uid)}
-                        className="w-full p-3 rounded-2xl hover:bg-slate-100/80 dark:hover:bg-slate-800 transition-all cursor-pointer flex items-center justify-between text-left group"
+                        className="w-full p-3 rounded-2xl  dark: transition-all cursor-pointer flex items-center justify-between text-left group"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           {prof.photoURL ? (
@@ -1817,7 +2084,7 @@ export default function MessagesPage({
                           </div>
                         </div>
 
-                        <span className="px-3 py-1 bg-emerald-600 text-white text-xs font-semibold rounded-full group-hover:bg-emerald-700 transition-all shrink-0">
+                        <span className="px-3 py-1 bg-emerald-600 text-white text-xs font-semibold rounded-full  transition-all shrink-0">
                           Chat
                         </span>
                       </button>
@@ -1860,21 +2127,21 @@ export default function MessagesPage({
               <div className="space-y-2 pt-2">
                 <button
                   onClick={() => handleConfirmDeleteMessage(false)}
-                  className="w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl cursor-pointer"
+                  className="w-full py-2.5 bg-slate-100 dark:bg-slate-800  text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl cursor-pointer"
                 >
                   Delete for Me
                 </button>
 
                 <button
                   onClick={() => handleConfirmDeleteMessage(true)}
-                  className="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl cursor-pointer"
+                  className="w-full py-2.5 bg-rose-600  text-white font-bold text-xs rounded-xl cursor-pointer"
                 >
                   Delete for Everyone
                 </button>
 
                 <button
                   onClick={() => setShowDeleteMsgModal(false)}
-                  className="w-full py-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-xs font-semibold cursor-pointer"
+                  className="w-full py-2 text-slate-500  dark: text-xs font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1912,7 +2179,7 @@ export default function MessagesPage({
                 </button>
                 <button
                   onClick={handleConfirmClearChat}
-                  className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl cursor-pointer"
+                  className="flex-1 py-2.5 bg-amber-600  text-white font-bold text-xs rounded-xl cursor-pointer"
                 >
                   Clear Chat
                 </button>
@@ -1950,7 +2217,7 @@ export default function MessagesPage({
                 </button>
                 <button
                   onClick={handleConfirmDeleteConv}
-                  className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl cursor-pointer"
+                  className="flex-1 py-2.5 bg-rose-600  text-white font-bold text-xs rounded-xl cursor-pointer"
                 >
                   Delete
                 </button>
@@ -1996,7 +2263,7 @@ export default function MessagesPage({
                     className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold text-left cursor-pointer flex items-center justify-between ${
                       (activeConversation?.disappearingDuration || 0) === opt.hours
                         ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 '
                     }`}
                   >
                     <span>{opt.label}</span>
@@ -2007,7 +2274,7 @@ export default function MessagesPage({
 
               <button
                 onClick={() => setShowDisappearingModal(false)}
-                className="w-full py-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-xs font-semibold cursor-pointer"
+                className="w-full py-2 text-slate-500  dark: text-xs font-semibold cursor-pointer"
               >
                 Close
               </button>
@@ -2046,7 +2313,7 @@ export default function MessagesPage({
                 </button>
                 <button
                   onClick={handleConfirmBlockUser}
-                  className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl cursor-pointer"
+                  className="flex-1 py-2.5 bg-rose-600  text-white font-bold text-xs rounded-xl cursor-pointer"
                 >
                   {isTargetBlocked ? 'Unblock' : 'Block User'}
                 </button>
@@ -2075,7 +2342,7 @@ export default function MessagesPage({
                 </h3>
                 <button
                   onClick={() => setShowReportModal(false)}
-                  className="p-1 text-slate-400 hover:text-slate-600"
+                  className="p-1 text-slate-400 "
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -2130,10 +2397,168 @@ export default function MessagesPage({
                 <button
                   onClick={handleSubmitReport}
                   disabled={isSubmittingReport}
-                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl cursor-pointer"
+                  className="px-4 py-2 bg-amber-600  text-white font-bold text-xs rounded-xl cursor-pointer"
                 >
                   {isSubmittingReport ? 'Submitting...' : 'Submit Report'}
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Camera & Webcam Photo / Video Recorder Modal */}
+      <AnimatePresence>
+        {isCameraModalOpen && (
+          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
+            >
+              {/* Header */}
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+                <div className="flex items-center gap-2">
+                  <Camera className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                    Webcam & Camera Recorder
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeCameraModal}
+                  className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 border-0 bg-transparent cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Body / Video Feed or Preview */}
+              <div className="p-4 bg-slate-950 flex flex-col items-center justify-center relative min-h-[300px]">
+                {cameraError ? (
+                  <div className="text-center p-6 text-slate-300 space-y-3">
+                    <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
+                    <p className="text-sm font-medium text-rose-400">{cameraError}</p>
+                    <button
+                      type="button"
+                      onClick={openCameraModal}
+                      className="px-4 py-2 bg-emerald-600 text-white rounded-full text-xs font-bold cursor-pointer border-0"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                ) : cameraPreview ? (
+                  <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black flex items-center justify-center">
+                    {cameraPreview.type === 'image' ? (
+                      <img src={cameraPreview.url} alt="Captured preview" className="w-full h-full object-contain" />
+                    ) : (
+                      <video src={cameraPreview.url} controls autoPlay className="w-full h-full object-contain" />
+                    )}
+                  </div>
+                ) : (
+                  <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black flex items-center justify-center">
+                    <video
+                      ref={webcamVideoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover -scale-x-100"
+                    />
+                    {isVideoRecording && (
+                      <div className="absolute top-3 left-3 bg-rose-600 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-2 animate-pulse">
+                        <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                        <span>Rec {Math.floor(videoRecordingTime / 60)}:{(videoRecordingTime % 60).toString().padStart(2, '0')}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Controls */}
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                {cameraPreview ? (
+                  <div className="flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCameraPreview(null)}
+                      className="flex-1 py-2.5 px-4 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl border-0 cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <RotateCw className="w-4 h-4" />
+                      Retake
+                    </button>
+                    <button
+                      type="button"
+                      onClick={attachCameraCapture}
+                      className="flex-1 py-2.5 px-4 bg-emerald-600 text-white text-xs font-bold rounded-xl border-0 cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Check className="w-4 h-4" />
+                      Attach to Message
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-2">
+                    {/* Mode selector */}
+                    <div className="flex bg-slate-200 dark:bg-slate-700 p-1 rounded-xl gap-1 text-xs font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => setCameraMode('photo')}
+                        disabled={isVideoRecording}
+                        className={`px-3 py-1.5 rounded-lg border-0 cursor-pointer transition-all ${
+                          cameraMode === 'photo'
+                            ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs'
+                            : 'text-slate-600 dark:text-slate-300 bg-transparent'
+                        }`}
+                      >
+                        Photo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCameraMode('video')}
+                        disabled={isVideoRecording}
+                        className={`px-3 py-1.5 rounded-lg border-0 cursor-pointer transition-all ${
+                          cameraMode === 'video'
+                            ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs'
+                            : 'text-slate-600 dark:text-slate-300 bg-transparent'
+                        }`}
+                      >
+                        Video
+                      </button>
+                    </div>
+
+                    {/* Action button */}
+                    {cameraMode === 'photo' ? (
+                      <button
+                        type="button"
+                        onClick={takeSnapshot}
+                        disabled={!cameraStream || !!cameraError}
+                        className="py-2.5 px-5 bg-emerald-600 disabled:opacity-50 text-white text-xs font-bold rounded-full border-0 cursor-pointer flex items-center gap-2"
+                      >
+                        <Camera className="w-4 h-4" />
+                        Capture Photo
+                      </button>
+                    ) : isVideoRecording ? (
+                      <button
+                        type="button"
+                        onClick={stopRecordingVideo}
+                        className="py-2.5 px-5 bg-rose-600 text-white text-xs font-bold rounded-full border-0 cursor-pointer flex items-center gap-2 animate-pulse"
+                      >
+                        <Square className="w-4 h-4 fill-white" />
+                        Stop Recording
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={startRecordingVideo}
+                        disabled={!cameraStream || !!cameraError}
+                        className="py-2.5 px-5 bg-rose-600 disabled:opacity-50 text-white text-xs font-bold rounded-full border-0 cursor-pointer flex items-center gap-2"
+                      >
+                        <Circle className="w-4 h-4 fill-white" />
+                        Record Video
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>

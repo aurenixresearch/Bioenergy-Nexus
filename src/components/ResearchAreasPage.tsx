@@ -38,8 +38,8 @@ export default function ResearchAreasPage({
   if (activeArea) {
     // Related papers
     const relatedPapers = RESEARCH_PAPERS.filter(p => 
-      p.category.toLowerCase().includes(activeArea.slug.replace('-', ' ')) ||
-      activeArea.searchKeywords.some(kw => p.title.toLowerCase().includes(kw) || p.abstract.toLowerCase().includes(kw))
+      (p?.category || '').toLowerCase().includes((activeArea.slug || '').replace('-', ' ')) ||
+      (activeArea.searchKeywords || []).some(kw => (p?.title || '').toLowerCase().includes((kw || '').toLowerCase()) || (p?.abstract || '').toLowerCase().includes((kw || '').toLowerCase()))
     );
 
     // Related articles
@@ -250,10 +250,6 @@ export default function ResearchAreasPage({
 
         {/* Hero Header */}
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 rounded-full text-emerald-700 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider">
-            <Layers className="w-3.5 h-3.5" />
-            <span>Key Scientific Domains</span>
-          </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white font-display">
             Aurenix Research Areas
           </h1>

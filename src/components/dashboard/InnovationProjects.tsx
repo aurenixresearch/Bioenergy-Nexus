@@ -147,46 +147,46 @@ export default function InnovationProjects({
 
       {projects.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {projects.map((proj) => (
+          {projects.map((proj, index) => (
             <motion.div
               key={proj.id}
               whileHover={{ y: -3 }}
-              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between text-left relative overflow-hidden"
+              className="bg-white border border-slate-200/90 hover:border-emerald-300 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all duration-300 flex flex-col justify-between text-left relative overflow-hidden group"
             >
               {/* Top Banner accent */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-600"></div>
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600"></div>
               
               <div className="space-y-3.5">
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2 pt-1">
-                  <div className="space-y-1">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 rounded-md text-[9px] font-mono font-bold uppercase tracking-wider">
-                      <Gauge className="w-2.5 h-2.5" />
+                  <div className="space-y-1.5">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-md text-[9px] font-mono font-black uppercase tracking-wider shadow-2xs">
+                      <Gauge className="w-2.5 h-2.5 text-emerald-600" />
                       TRL {proj.trl}
                     </span>
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 line-clamp-2 leading-snug">
+                    <h4 className="text-sm font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-emerald-950 transition-colors">
                       {proj.title}
                     </h4>
                   </div>
 
                   <div className="flex flex-col gap-1.5 shrink-0 text-right">
-                    <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
+                    <span className={`px-2 py-0.5 rounded-md text-[8px] font-extrabold uppercase tracking-wide border ${
                       proj.status === 'Completed' 
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' 
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80' 
                         : proj.status === 'Draft'
-                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-400'
+                        ? 'bg-amber-50 text-amber-700 border-amber-200/80'
                         : proj.status === 'Archived'
-                        ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                        : 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-400'
+                        ? 'bg-slate-100 text-slate-600 border-slate-200/80'
+                        : 'bg-blue-50 text-blue-700 border-blue-200/80'
                     }`}>
                       {proj.status}
                     </span>
-                    <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
+                    <span className={`px-2 py-0.5 rounded-md text-[8px] font-extrabold uppercase tracking-wide border ${
                       proj.fundingStatus === 'Funded' 
-                        ? 'bg-teal-100 text-teal-800 dark:bg-teal-950/50 dark:text-teal-400' 
+                        ? 'bg-teal-50 text-teal-700 border-teal-200/80' 
                         : proj.fundingStatus === 'Approved'
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400'
-                        : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+                        : 'bg-slate-50 text-slate-500 border-slate-200/80'
                     }`}>
                       {proj.fundingStatus}
                     </span>
@@ -237,7 +237,14 @@ export default function InnovationProjects({
                     window.history.pushState(null, '', `/projects/${proj.id}`);
                     window.dispatchEvent(new Event('popstate'));
                   }}
-                  className="px-2.5 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                  style={
+                    index === 0
+                      ? { backgroundColor: '#3e3e3e', color: '#ffffff' }
+                      : index === 1
+                      ? { backgroundColor: '#2d2d2d', color: '#ffffff' }
+                      : { backgroundColor: 'transparent' }
+                  }
                 >
                   View Details
                 </button>
@@ -247,7 +254,12 @@ export default function InnovationProjects({
                       window.history.pushState(null, '', `/projects/${proj.id}`);
                       window.dispatchEvent(new Event('popstate'));
                     }}
-                    className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
+                    className="px-2.5 py-1.5 text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
+                    style={
+                      index === 0
+                        ? { backgroundColor: '#049e05', color: '#ffffff' }
+                        : { backgroundColor: '#10b981', color: '#ffffff' }
+                    }
                   >
                     Continue Draft
                   </button>
@@ -257,7 +269,12 @@ export default function InnovationProjects({
                       window.history.pushState(null, '', `/projects/${proj.id}`);
                       window.dispatchEvent(new Event('popstate'));
                     }}
-                    className="px-2.5 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                    className="px-2.5 py-1.5 text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
+                    style={
+                      index === 0
+                        ? { backgroundColor: '#049e05', color: '#ffffff' }
+                        : {}
+                    }
                   >
                     Edit
                   </button>

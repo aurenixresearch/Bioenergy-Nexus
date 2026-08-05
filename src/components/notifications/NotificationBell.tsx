@@ -35,20 +35,20 @@ interface NotificationBellProps {
 export const getNotificationIcon = (type: NotificationType) => {
   switch (type) {
     case 'research':
-      return { Icon: FileText, bgClass: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border-emerald-200/50' };
+      return { Icon: FileText, bgClass: 'bg-emerald-50 text-emerald-600 border-emerald-200/60' };
     case 'messaging':
-      return { Icon: MessageSquare, bgClass: 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border-blue-200/50' };
+      return { Icon: MessageSquare, bgClass: 'bg-blue-50 text-blue-600 border-blue-200/60' };
     case 'followers':
-      return { Icon: Users, bgClass: 'bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 border-purple-200/50' };
+      return { Icon: Users, bgClass: 'bg-purple-50 text-purple-600 border-purple-200/60' };
     case 'collaboration':
-      return { Icon: Handshake, bgClass: 'bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 border-teal-200/50' };
+      return { Icon: Handshake, bgClass: 'bg-teal-50 text-teal-600 border-teal-200/60' };
     case 'funding':
-      return { Icon: Coins, bgClass: 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border-amber-200/50' };
+      return { Icon: Coins, bgClass: 'bg-amber-50 text-amber-600 border-amber-200/60' };
     case 'challenge':
-      return { Icon: Sparkles, bgClass: 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border-indigo-200/50' };
+      return { Icon: Sparkles, bgClass: 'bg-indigo-50 text-indigo-600 border-indigo-200/60' };
     case 'admin':
     default:
-      return { Icon: ShieldCheck, bgClass: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/50' };
+      return { Icon: ShieldCheck, bgClass: 'bg-slate-100 text-slate-700 border-slate-200/60' };
   }
 };
 
@@ -136,12 +136,12 @@ export default function NotificationBell({ user, setView }: NotificationBellProp
       {/* Bell trigger button */}
       <button
         onClick={() => setIsOpen(prev => !prev)}
-        className="relative p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/60 dark:hover:bg-slate-800 transition-all duration-200 cursor-pointer flex items-center justify-center border border-slate-200/60 dark:border-slate-800 focus:outline-none"
+        className="relative p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/60 dark:hover:bg-slate-800 transition-all duration-200 cursor-pointer flex items-center justify-center focus:outline-none"
         title="Notifications"
         aria-label="Toggle notifications dropdown"
         id="notification_bell_button"
       >
-        <Bell className="w-5 h-5 shrink-0" />
+        <Bell className="w-5 h-5 shrink-0 text-[#5d7682]" style={{ color: '#5d7682' }} />
 
         {/* Real-time Unread Badge */}
         {unreadCount > 0 && (
@@ -159,15 +159,19 @@ export default function NotificationBell({ user, setView }: NotificationBellProp
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 overflow-hidden text-left"
+            className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200/90 rounded-2xl shadow-2xl z-50 overflow-hidden text-left"
+            style={{ backgroundColor: '#ffffff' }}
             id="notification_dropdown_panel"
           >
             {/* Header */}
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/60 dark:bg-slate-850">
+            <div 
+              className="p-4 border-b border-slate-100 flex items-center justify-between bg-white"
+              style={{ backgroundColor: '#ffffff' }}
+            >
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display">Notifications</h3>
+                <h3 className="text-sm font-bold font-display text-slate-900" style={{ color: '#000000' }}>Notifications</h3>
                 {unreadCount > 0 && (
-                  <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold rounded-full">
+                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-mono text-[10px] font-bold rounded-full">
                     {unreadCount} new
                   </span>
                 )}
@@ -176,7 +180,7 @@ export default function NotificationBell({ user, setView }: NotificationBellProp
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllRead}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 cursor-pointer transition-colors"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 cursor-pointer transition-colors"
                   title="Mark all notifications as read"
                   id="notif_mark_all_read_btn"
                 >
@@ -187,14 +191,17 @@ export default function NotificationBell({ user, setView }: NotificationBellProp
             </div>
 
             {/* Notification Scrollable List */}
-            <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+            <div 
+              className="max-h-[380px] overflow-y-auto divide-y divide-slate-100"
+              style={{ backgroundColor: '#ffffff' }}
+            >
               {notifications.length === 0 ? (
-                <div className="p-8 text-center space-y-2">
-                  <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full flex items-center justify-center mx-auto">
+                <div className="p-8 text-center space-y-2" style={{ backgroundColor: '#ffffff' }}>
+                  <div className="w-10 h-10 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
                     <Bell className="w-5 h-5 opacity-50" />
                   </div>
-                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No Notifications Yet</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Activity and platform alerts will appear here in real time.</p>
+                  <p className="text-xs font-bold text-slate-700">No Notifications Yet</p>
+                  <p className="text-[11px] text-slate-500">Activity and platform alerts will appear here in real time.</p>
                 </div>
               ) : (
                 notifications.slice(0, 8).map((notif) => {
@@ -203,9 +210,8 @@ export default function NotificationBell({ user, setView }: NotificationBellProp
                     <div
                       key={notif.id}
                       onClick={() => handleNotificationClick(notif)}
-                      className={`p-3.5 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors cursor-pointer relative group flex items-start gap-3 ${
-                        !notif.isRead ? 'bg-emerald-50/30 dark:bg-emerald-950/20' : ''
-                      }`}
+                      className="p-3.5 hover:bg-slate-50/80 transition-colors cursor-pointer relative group flex items-start gap-3"
+                      style={{ backgroundColor: notif.isRead ? '#ffffff' : '#f0fdf4' }}
                     >
                       {/* Read status indicator bar */}
                       {!notif.isRead && (
@@ -220,21 +226,21 @@ export default function NotificationBell({ user, setView }: NotificationBellProp
                       {/* Content */}
                       <div className="flex-1 min-w-0 pr-4">
                         <div className="flex items-center justify-between gap-2 mb-0.5">
-                          <p className={`text-xs truncate ${!notif.isRead ? 'font-bold text-slate-900 dark:text-white' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>
+                          <p className={`text-xs truncate ${!notif.isRead ? 'font-bold text-slate-900' : 'font-semibold text-slate-800'}`}>
                             {notif.title}
                           </p>
                         </div>
 
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-1.5">
+                        <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed mb-1.5">
                           {notif.description}
                         </p>
 
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
+                          <span className="text-[10px] font-mono text-slate-400 font-medium">
                             {formatRelativeTime(notif.createdAt)}
                           </span>
 
-                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 font-semibold">
+                          <span className="text-[10px] text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 font-semibold">
                             <span>Open</span>
                             <ExternalLink className="w-2.5 h-2.5" />
                           </span>
@@ -244,7 +250,7 @@ export default function NotificationBell({ user, setView }: NotificationBellProp
                       {/* Delete on hover */}
                       <button
                         onClick={(e) => handleDeleteItem(e, notif.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-md transition-all cursor-pointer self-center"
+                        className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-600 rounded-md transition-all cursor-pointer self-center"
                         title="Delete notification"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -256,13 +262,17 @@ export default function NotificationBell({ user, setView }: NotificationBellProp
             </div>
 
             {/* Footer Action */}
-            <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-850 text-center">
+            <div 
+              className="p-3 border-t border-slate-100 text-center"
+              style={{ backgroundColor: '#f2fff2' }}
+            >
               <button
                 onClick={() => {
                   setIsOpen(false);
                   setView('notifications');
                 }}
-                className="w-full py-2 px-3 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                className="w-full py-2.5 px-3 bg-white hover:bg-emerald-50 text-emerald-700 hover:text-emerald-800 border border-slate-200/90 hover:border-emerald-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                style={{ backgroundColor: '#ffffff' }}
                 id="view_all_notifications_btn"
               >
                 <span>View All Notifications</span>
