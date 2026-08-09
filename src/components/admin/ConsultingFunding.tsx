@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { AdminThemeVars } from './AdminPortal';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   HeartHandshake, 
@@ -30,6 +31,7 @@ interface ConsultingFundingProps {
   onUpdateConsulting: (updated: AdminConsulting[]) => void;
   onUpdateFunding: (updated: AdminFunding[]) => void;
   theme: 'light' | 'dark';
+  tv?: AdminThemeVars;
 }
 
 export default function ConsultingFunding({

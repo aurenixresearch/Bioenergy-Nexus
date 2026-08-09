@@ -14,27 +14,34 @@ export interface SeoProps {
   jsonLd?: Record<string, any> | Array<Record<string, any>>;
 }
 
-const DEFAULT_TITLE = 'Aurenix — Connecting Energy and Climate Research, Innovation, and Global Collaboration';
-const DEFAULT_DESC = 'Aurenix connects African researchers, students, universities, innovators, and energy & climate stakeholders with global partners to advance clean energy research, technology, funding, and sustainable development.';
+const DEFAULT_TITLE = 'Aurenix Research | Nigeria\'s Bioenergy, Waste-to-Energy & Circular Economy Research Hub';
+const DEFAULT_DESC = 'Aurenix Research is Nigeria\'s dedicated research, training, and consulting hub for waste-to-energy technologies, bioenergy systems, biomass assessments, and circular economy research across Sub-Saharan Africa. We provide scientists, policymakers, and developers with verified environmental studies and sustainable feasibility reports.';
 const DEFAULT_IMAGE = 'https://lh3.googleusercontent.com/d/1t_ZlrLjmjasOCDhzkwmIohFTqC8ux0oZ';
 const DEFAULT_DOMAIN = 'https://aurenix-research.org';
 
 const DEFAULT_KEYWORDS = [
-  'Energy research',
-  'Renewable energy',
-  'Clean energy innovation',
-  'Climate technology',
-  'Energy technology',
-  'Sustainable development',
-  'Energy storage',
-  'Climate research',
-  'Energy policy',
-  'African energy innovation',
-  'African climate technology',
-  'Global research collaboration',
-  'Solar energy',
-  'Bioenergy',
-  'Smart grids'
+  'bioenergy research Nigeria',
+  'waste-to-energy Africa',
+  'circular economy research',
+  'biomass feasibility study Nigeria',
+  'anaerobic digestion West Africa',
+  'biogas technology Sub-Saharan Africa',
+  'organic waste management Africa',
+  'renewable energy research hub',
+  'clean energy innovation Africa',
+  'environmental sustainability research',
+  'energy transition Nigeria',
+  'climate technology Africa',
+  'bioenergy consulting Nigeria',
+  'research documentation platform',
+  'African clean energy collaboration',
+  'waste biomass energy conversion',
+  'energy policy Africa',
+  'solar energy Africa',
+  'Aurenix Research',
+  'smart grids Africa',
+  'sustainable development goals Africa',
+  'carbon neutrality Africa'
 ];
 
 export default function SeoManager({

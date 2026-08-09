@@ -95,7 +95,7 @@ async function testConnection() {
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => {
       reject(new Error('connection-timeout'));
-    }, 1500);
+    }, 8000);
   });
 
   try {

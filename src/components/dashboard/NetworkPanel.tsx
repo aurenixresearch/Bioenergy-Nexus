@@ -270,8 +270,8 @@ export default function NetworkPanel({
               </h3>
               <p className="text-xs text-slate-500 font-sans font-medium mt-0.5">
                 {activeModal === 'followers' 
-                  ? '142 global experts and scholars following your research'
-                  : `Active connections and updates from ${followingIds.length + 18} scholars`}
+                  ? 'Global experts and scholars following your research'
+                  : `Active connections and updates from ${followingIds.length} scholars`}
               </p>
             </div>
             <button 
@@ -287,7 +287,10 @@ export default function NetworkPanel({
             {activeModal === 'followers' ? (
               /* Followers List */
               researchers.length === 0 ? (
-                <p className="text-xs text-slate-400 font-mono text-center py-8">Loading followers...</p>
+                <div className="text-center py-8 space-y-2">
+                  <p className="text-xs text-slate-500 font-sans font-bold">No followers yet.</p>
+                  <p className="text-[10px] text-slate-400 font-mono">Connect with peers across the platform to build your network.</p>
+                </div>
               ) : (
                 researchers.map((res) => {
                   const isFollowing = followingIds.includes(res.id);

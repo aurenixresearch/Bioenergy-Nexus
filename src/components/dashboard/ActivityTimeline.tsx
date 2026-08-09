@@ -27,58 +27,7 @@ interface ActivityTimelineProps {
 }
 
 export default function ActivityTimeline({ customActivities }: ActivityTimelineProps) {
-  const defaultActivities: ActivityItem[] = [
-    {
-      id: 'act_1',
-      type: 'publish',
-      title: 'Published New Feasibility Brief',
-      description: 'You uploaded a custom paper: "Sub-Saharan Agro-Waste Biomass Optimization Metrics (2026)".',
-      time: '1 hour ago',
-      detail: 'This study outlines structural metrics for dry-fermentation biowaste digestion. It was successfully uploaded to Aurenix custom repositories and synced across ECOWAS index systems.'
-    },
-    {
-      id: 'act_2',
-      type: 'alliance',
-      title: 'Applied for Alliance',
-      description: 'Submitted an affiliation application to "Sustainable Solar Irrigation Workgroup".',
-      time: '3 hours ago',
-      detail: 'Request submitted to ECOWAS Sustainable Energy ECREEE. Verification is currently active based on scholar credentials check.'
-    },
-    {
-      id: 'act_3',
-      type: 'follower',
-      title: 'New Scholar Follower',
-      description: 'Dr. Sarah Adebayo started following your academic research profile.',
-      time: '1 day ago',
-      detail: 'Sarah is a professor in Chemical Engineering at the University of Lagos. Her team is active in high-temperature composting models.'
-    },
-    {
-      id: 'act_4',
-      type: 'funding',
-      title: 'Grant Funding Approved',
-      description: 'UNEP approved stage-2 development budget of $12,500 USD for Cashew Waste Optimization.',
-      time: '2 days ago',
-      detail: 'Funds have been released to the UNILAG Renewable Energy Laboratory account. Progress tracking and report deliverables are due by November 30th.'
-    },
-    {
-      id: 'act_5',
-      type: 'workspace',
-      title: 'Workspace Synchronized',
-      description: 'Bio-waste Digester workspace synced with git repositories and team datasets.',
-      time: '3 days ago',
-      detail: 'Coordinated co-author review processes. 3 files were uploaded to the collaborative research terminal.'
-    },
-    {
-      id: 'act_6',
-      type: 'consulting',
-      title: 'Consulting Advisory Submitted',
-      description: 'Raised a specialized consulting request for waste-to-energy regulatory frameworks.',
-      time: '4 days ago',
-      detail: 'The Advisory board at Aurenix is checking relevant ECOWAS policy drafts. Under review timeline updated.'
-    }
-  ];
-
-  const activities = customActivities && customActivities.length > 0 ? customActivities : defaultActivities;
+  const activities = customActivities || [];
 
   const [selectedActivity, setSelectedActivity] = useState<ActivityItem | null>(null);
 
@@ -104,7 +53,13 @@ export default function ActivityTimeline({ customActivities }: ActivityTimelineP
         </p>
       </div>
 
-      <div className="relative border-l border-slate-100 dark:border-slate-800 ml-3.5 pl-6 space-y-6">
+      {activities.length === 0 ? (
+        <div className="py-12 text-center text-slate-400 space-y-2">
+          <Clock className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600" />
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">No recent activity to display.</p>
+        </div>
+      ) : (
+        <div className="relative border-l border-slate-100 dark:border-slate-800 ml-3.5 pl-6 space-y-6">
         {activities.map((act, index) => {
           const config = icons[act.type] || icons.publish;
           const markerStyle = index === 0 
@@ -162,6 +117,7 @@ export default function ActivityTimeline({ customActivities }: ActivityTimelineP
           );
         })}
       </div>
+      )}
 
       {/* Activity Details Modal */}
       <AnimatePresence>

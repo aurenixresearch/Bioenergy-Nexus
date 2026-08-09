@@ -1,28 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { 
-  Users, 
-  BookOpen, 
-  Award, 
-  Briefcase, 
-  Globe, 
-  Activity, 
-  AlertTriangle, 
-  CheckCircle2, 
-  TrendingUp, 
-  Search, 
-  Filter, 
-  ArrowUpRight, 
-  ChevronRight, 
-  Sparkles, 
-  Clock, 
-  TrendingDown, 
-  MapPin, 
-  CornerDownRight, 
-  Building, 
-  FileText 
+import {
+  Users, BookOpen, Award, Briefcase, Globe, Activity, TrendingUp, TrendingDown,
+  Sparkles, Clock, MapPin, ArrowUpRight, AlertTriangle, CheckCircle2, HeartHandshake,
+  Minus, BarChart3
 } from 'lucide-react';
-import { AdminUser, AdminResearch, AdminProject, AdminAlliance, AdminOrganization, AdminConsulting, AdminChallenge, AdminReportedItem } from './AdminMockData';
+import type { AdminThemeVars } from './AdminPortal';
+import {
+  AdminUser, AdminResearch, AdminProject, AdminAlliance, AdminOrganization,
+  AdminConsulting, AdminChallenge, AdminReportedItem, AdminFunding
+} from './AdminMockData';
+import { getGA4RealtimeAnalytics, GA4_API_SECRET, GA4_MEASUREMENT_ID } from '../../services/ga4Analytics';
 
 interface DashboardOverviewProps {
   users: AdminUser[];
@@ -33,426 +21,803 @@ interface DashboardOverviewProps {
   consulting: AdminConsulting[];
   challenges: AdminChallenge[];
   reports: AdminReportedItem[];
+  funding?: AdminFunding[];
+  onNavigateTab?: (tab: any) => void;
   theme: 'light' | 'dark';
+  tv: AdminThemeVars;
 }
 
-type DateFilter = 'today' | '7days' | '30days' | '12months' | 'custom';
+type DateFilter = 'today' | '7days' | '30days' | '12months';
 
-export default function DashboardOverview({
-  users,
-  research,
-  projects,
-  alliances,
-  organizations,
-  consulting,
-  challenges,
-  reports,
-  theme
-}: DashboardOverviewProps) {
-  const [filter, setFilter] = useState<DateFilter>('30days');
-  const [customRange, setCustomRange] = useState({ start: '2026-06-01', end: '2026-07-17' });
-  const [showCustomPicker, setShowCustomPicker] = useState(false);
+// ─── Country → flag emoji map ────────────────────────────────────────────────
+const COUNTRY_FLAGS: Record<string, string> = {
+  'Nigeria': '🇳🇬', 'Kenya': '🇰🇪', 'Ghana': '🇬🇭', 'Senegal': '🇸🇳',
+  'South Africa': '🇿🇦', 'Ethiopia': '🇪🇹', 'Tanzania': '🇹🇿', 'Uganda': '🇺🇬',
+  'Cameroon': '🇨🇲', 'Rwanda': '🇷🇼', 'Côte d\'Ivoire': '🇨🇮', 'Egypt': '🇪🇬',
+  'Morocco': '🇲🇦', 'Zambia': '🇿🇲', 'Zimbabwe': '🇿🇼', 'Mozambique': '🇲🇿',
+  'Malawi': '🇲🇼', 'Botswana': '🇧🇼', 'Namibia': '🇳🇦', 'Togo': '🇹🇬',
+  'Benin': '🇧🇯', 'Mali': '🇲🇱', 'Niger': '🇳🇪', 'Burkina Faso': '🇧🇫',
+  'Sierra Leone': '🇸🇱', 'Liberia': '🇱🇷', 'Guinea': '🇬🇳', 'Gambia': '🇬🇲',
+  'United Kingdom': '🇬🇧', 'United States': '🇺🇸', 'Germany': '🇩🇪',
+  'France': '🇫🇷', 'Canada': '🇨🇦', 'Other': '🌍',
+};
+const getFlag = (country: string) => COUNTRY_FLAGS[country] || '🌍';
 
-  // Statistics summaries based on filter
-  const verifiedResearchers = users.filter(u => u.role === 'Researcher' && u.verified).length;
-  const verifiedOrgs = organizations.filter(o => o.verified).length;
-  const pendingReviews = research.filter(r => r.status === 'Pending').length + reports.filter(rep => rep.status === 'Pending').length;
-  const activeMatchesCount = Math.floor(users.length * 1.5) + projects.length; 
-  const unreadReportsCount = reports.filter(r => r.status === 'Pending').length;
+// ─── Research category color map ─────────────────────────────────────────────
+const CATEGORY_COLORS: Record<string, string> = {
+  'Waste-to-Energy': '#10b981',
+  'Bioenergy Technology': '#3b82f6',
+  'Climate & Energy Policy': '#f59e0b',
+  'Environmental Sustainability': '#8b5cf6',
+  'Other': '#64748b',
+};
 
-  const kpis = [
-    { label: 'Total Users', val: users.length * 12 + 140, icon: Users, diff: '+12%', trend: 'up', desc: 'Registered platform accounts' },
-    { label: 'Published Research', val: research.length * 6 + 45, icon: BookOpen, diff: '+8%', trend: 'up', desc: 'Validated research papers' },
-    { label: 'Innovation Projects', val: projects.length * 3 + 12, icon: Briefcase, diff: '+15%', trend: 'up', desc: 'TRL 1-9 technological projects' },
-    { label: 'Active Alliances', val: alliances.length * 4 + 8, icon: Award, diff: '+4%', trend: 'up', desc: 'Active institutional covenants' },
-    { label: 'Funding Opportunities', val: 12, icon: Award, diff: '+18%', trend: 'up', desc: 'Grants & investment lines' },
-    { label: 'Innovation Challenges', val: challenges.length + 3, icon: Sparkles, diff: '+25%', trend: 'up', desc: 'Corporate & NGO incentives' },
-    { label: 'Consulting Requests', val: consulting.length * 5 + 18, icon: Activity, diff: '-3%', trend: 'down', desc: 'Advisory panel requests' },
-    { label: 'Total Countries', val: 14, icon: Globe, diff: 'Stable', trend: 'neutral', desc: 'Active African representation' }
-  ];
+// ─── Relative time formatter ─────────────────────────────────────────────────
+function relativeTime(dateStr: string): string {
+  if (!dateStr) return 'recently';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return 'recently';
+  const diffMs = Date.now() - d.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  const hours = Math.floor(diffMs / 3600000);
+  const days = Math.floor(diffMs / 86400000);
+  if (mins < 2) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+}
 
-  const secondaryStats = [
-    { label: 'Verified Researchers', val: verifiedResearchers + 18, color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 dark:text-emerald-400' },
-    { label: 'Verified Organizations', val: verifiedOrgs + 8, color: 'text-teal-600 bg-teal-50 dark:bg-teal-950/20 dark:text-teal-400' },
-    { label: 'Pending Reviews', val: pendingReviews, color: 'text-amber-600 bg-amber-50 dark:bg-amber-950/20 dark:text-amber-400' },
-    { label: 'Active AI Matches', val: activeMatchesCount, color: 'text-purple-600 bg-purple-50 dark:bg-purple-950/20 dark:text-purple-400' },
-    { label: 'Unread Reports', val: unreadReportsCount, color: 'text-red-600 bg-red-50 dark:bg-red-950/20 dark:text-red-400' }
-  ];
-
-  // Simulated chart data generator based on filter
-  const getChartData = () => {
-    switch (filter) {
-      case 'today':
-        return {
-          labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '23:59'],
-          userGrowth: [4, 5, 8, 15, 24, 28, 32],
-          uploads: [1, 1, 3, 4, 8, 9, 11],
-          projects: [0, 1, 1, 2, 4, 4, 5]
-        };
-      case '7days':
-        return {
-          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-          userGrowth: [40, 48, 55, 68, 80, 85, 92],
-          uploads: [12, 18, 22, 28, 35, 38, 44],
-          projects: [3, 4, 6, 8, 11, 12, 14]
-        };
-      case '12months':
-        return {
-          labels: ['Aug 25', 'Oct 25', 'Dec 25', 'Feb 26', 'Apr 26', 'Jun 26', 'Jul 26'],
-          userGrowth: [320, 450, 580, 710, 890, 1050, 1192],
-          uploads: [110, 145, 180, 210, 260, 310, 382],
-          projects: [14, 22, 28, 34, 42, 55, 68]
-        };
-      case '30days':
-      default:
-        return {
-          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-          userGrowth: [140, 180, 220, 280],
-          uploads: [42, 58, 72, 94],
-          projects: [8, 12, 15, 21]
-        };
-    }
-  };
-
-  const chartData = getChartData();
-
-  // Categories Distribution data
-  const categories = [
-    { name: 'Waste-to-Energy', count: 42, percentage: 38, color: 'bg-emerald-500' },
-    { name: 'Bioenergy Technology', count: 34, percentage: 31, color: 'bg-teal-500' },
-    { name: 'Climate & Energy Policy', count: 22, percentage: 20, color: 'bg-amber-500' },
-    { name: 'Environmental Sustainability', count: 12, percentage: 11, color: 'bg-slate-400' }
-  ];
-
-  const countries = [
-    { name: 'Nigeria', users: 312, percentage: 42, flag: '🇳🇬' },
-    { name: 'Kenya', users: 184, percentage: 25, flag: '🇰🇪' },
-    { name: 'Ghana', users: 120, percentage: 16, flag: '🇬🇭' },
-    { name: 'Senegal', users: 64, percentage: 9, flag: '🇸🇳' },
-    { name: 'South Africa', users: 42, percentage: 8, flag: '🇿🇦' }
-  ];
+// ─── SVG Donut Chart ─────────────────────────────────────────────────────────
+function DonutChart({ segments, total }: { segments: { value: number; color: string }[]; total: number }) {
+  const R = 46, size = 140;
+  const cx = size / 2, cy = size / 2;
+  const circ = 2 * Math.PI * R;
+  let cumRatio = 0;
 
   return (
-    <div className="space-y-8" id="admin_dashboard_root">
-      {/* Date Range Selection Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xs" id="dashboard_filter_toolbar">
-        <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
-          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 font-display">
-            Real-Time Analytical Framework
-          </h3>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle cx={cx} cy={cy} r={R} fill="none" stroke="rgba(148,163,184,0.08)" strokeWidth={18} />
+      {segments.map((seg, i) => {
+        const ratio = total > 0 ? seg.value / total : 0;
+        const dash = ratio * circ;
+        const gap = circ - dash;
+        const offset = -(cumRatio * circ) - circ * 0.25;
+        cumRatio += ratio;
+        return (
+          <motion.circle key={i} cx={cx} cy={cy} r={R} fill="none"
+            stroke={seg.color} strokeWidth={18} strokeLinecap="round"
+            strokeDasharray={`${dash} ${gap}`} strokeDashoffset={offset}
+            initial={{ strokeDasharray: `0 ${circ}` }}
+            animate={{ strokeDasharray: `${dash} ${gap}` }}
+            transition={{ duration: 0.8, delay: i * 0.1, ease: 'easeOut' }}
+          />
+        );
+      })}
+      <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="middle"
+        fontSize="18" fontWeight="900" fill="currentColor">{total}</text>
+      <text x={cx} y={cy + 14} textAnchor="middle" dominantBaseline="middle"
+        fontSize="7" fill="rgba(148,163,184,0.7)" fontFamily="monospace" letterSpacing="1">PAPERS</text>
+    </svg>
+  );
+}
+
+// ─── Mini Sparkline ───────────────────────────────────────────────────────────
+function Sparkline({ data, color }: { data: number[]; color: string }) {
+  if (!data || data.length < 2) return <span style={{ width:56, height:24, display:'inline-block' }} />;
+  const max = Math.max(...data); const min = Math.min(...data);
+  const range = max - min || 1;
+  const w = 56, h = 24;
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * (h - 2) + 1}`).join(' ');
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5"
+        strokeLinecap="round" strokeLinejoin="round" opacity={0.75} />
+    </svg>
+  );
+}
+
+// ─── Time-series builder from real data ──────────────────────────────────────
+function buildTimeSeries(
+  filter: DateFilter,
+  users: AdminUser[],
+  research: AdminResearch[]
+): { labels: string[]; users: number[]; uploads: number[] } {
+  const now = new Date();
+
+  if (filter === 'today') {
+    // Group by 4-hour blocks of today
+    const blocks = [0, 4, 8, 12, 16, 20];
+    const today = now.toDateString();
+    return {
+      labels: blocks.map(h => `${String(h).padStart(2, '0')}:00`),
+      users: blocks.map(h => users.filter(u => {
+        const d = new Date(u.joinedDate || '');
+        return d.toDateString() === today && d.getHours() >= h && d.getHours() < h + 4;
+      }).length),
+      uploads: blocks.map(h => research.filter(r => {
+        const d = new Date(r.date || '');
+        return d.toDateString() === today && d.getHours() >= h && d.getHours() < h + 4;
+      }).length),
+    };
+  }
+
+  if (filter === '7days') {
+    const days: string[] = [];
+    const ud: number[] = [];
+    const rd: number[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const ds = d.toISOString().substring(0, 10);
+      days.push(['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]);
+      ud.push(users.filter(u => (u.joinedDate || '').substring(0, 10) === ds).length);
+      rd.push(research.filter(r => (r.date || '').substring(0, 10) === ds).length);
+    }
+    return { labels: days, users: ud, uploads: rd };
+  }
+
+  if (filter === '30days') {
+    // 4 weekly buckets
+    const labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+    const ud = [0, 0, 0, 0];
+    const rd = [0, 0, 0, 0];
+    users.forEach(u => {
+      const d = new Date(u.joinedDate || '');
+      const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
+      if (diff >= 0 && diff < 28) ud[3 - Math.min(3, Math.floor(diff / 7))]++;
+    });
+    research.forEach(r => {
+      const d = new Date(r.date || '');
+      const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
+      if (diff >= 0 && diff < 28) rd[3 - Math.min(3, Math.floor(diff / 7))]++;
+    });
+    return { labels, users: ud, uploads: rd };
+  }
+
+  // 12 months
+  const labels: string[] = [];
+  const ud: number[] = [];
+  const rd: number[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const yr = d.getFullYear(), mo = d.getMonth();
+    labels.push(d.toLocaleString('default', { month: 'short' }));
+    ud.push(users.filter(u => { const ux = new Date(u.joinedDate || ''); return ux.getFullYear() === yr && ux.getMonth() === mo; }).length);
+    rd.push(research.filter(r => { const rx = new Date(r.date || ''); return rx.getFullYear() === yr && rx.getMonth() === mo; }).length);
+  }
+  return { labels, users: ud, uploads: rd };
+}
+
+// ─── Trend percentage between last two periods ────────────────────────────────
+function trendPct(data: number[]): { label: string; dir: 'up' | 'down' | 'neutral' } {
+  if (data.length < 2) return { label: '—', dir: 'neutral' };
+  const prev = data[data.length - 2] || 0;
+  const curr = data[data.length - 1] || 0;
+  if (prev === 0 && curr === 0) return { label: '—', dir: 'neutral' };
+  if (prev === 0) return { label: `+${curr * 100}%`, dir: 'up' };
+  const pct = ((curr - prev) / prev) * 100;
+  if (Math.abs(pct) < 0.5) return { label: '±0%', dir: 'neutral' };
+  return { label: `${pct > 0 ? '+' : ''}${pct.toFixed(1)}%`, dir: pct > 0 ? 'up' : 'down' };
+}
+
+// ─── Weekly cumulative spark for overall KPI cards ────────────────────────────
+function buildCumulativeSpark7(items: any[], dateKey: string): number[] {
+  const now = new Date();
+  return Array.from({ length: 7 }, (_, i) => {
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() - (6 - i) * 7);
+    return items.filter(item => {
+      const d = new Date(item[dateKey] || '');
+      return !isNaN(d.getTime()) && d <= cutoff;
+    }).length;
+  });
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+export default function DashboardOverview({
+  users, research, projects, alliances, organizations,
+  consulting, challenges, reports, funding = [], onNavigateTab, theme, tv
+}: DashboardOverviewProps) {
+  const [filter, setFilter] = useState<DateFilter>('30days');
+  const [cardView, setCardView] = useState<'growth' | 'analytics'>('growth');
+
+  // ── Real computed stats ────────────────────────────────────────────────────
+  const stats = useMemo(() => {
+    const totalUsers          = users.length;
+    const approvedResearch    = research.filter(r => r.status === 'Approved').length;
+    const activeProjects      = projects.filter(p => p.status === 'Active').length;
+    const activeAlliances     = alliances.filter(a => a.status === 'Active').length;
+    const openFunding         = funding.filter(f => f.status === 'Open').length;
+    const activeChallenges    = challenges.filter(c => c.status === 'Active').length;
+    const pendingConsulting   = consulting.filter(c => c.status === 'Pending').length;
+    const verifiedUsers       = users.filter(u => u.verified).length;
+    const verifiedOrgs        = organizations.filter(o => o.verified).length;
+    const pendingReviews      = research.filter(r => r.status === 'Pending').length
+                              + reports.filter(r => r.status === 'Pending').length;
+    const activeAIMatches     = Math.min(
+      consulting.filter(c => c.status === 'Pending').length + projects.filter(p => p.status === 'Active').length,
+      999
+    );
+    const unreadReports       = reports.filter(r => r.status === 'Pending').length;
+    const uniqueCountries     = new Set(users.map(u => u.country).filter(Boolean)).size;
+
+    // Weekly cumulative sparklines from real joinedDate / date fields
+    const userSpark     = buildCumulativeSpark7(users, 'joinedDate');
+    const researchSpark = buildCumulativeSpark7(research, 'date');
+    const projectSpark  = buildCumulativeSpark7(projects, 'createdAt');
+    const allianceSpark = buildCumulativeSpark7(alliances, 'createdAt');
+    const fundingSpark  = buildCumulativeSpark7(funding, 'createdAt');
+    const challengeSpark= buildCumulativeSpark7(challenges, 'createdAt');
+    // For consulting + countries — weekly new items
+    const consultSpark  = Array.from({ length: 7 }, (_, i) => {
+      const now = new Date();
+      const weekStart = new Date(now); weekStart.setDate(weekStart.getDate() - (6 - i) * 7);
+      const weekEnd   = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+      return consulting.filter(c => { const d = new Date(c.date || ''); return d >= weekStart && d < weekEnd; }).length;
+    });
+    const countrySpark  = Array.from({ length: 7 }, (_, i) => {
+      const now = new Date();
+      const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - (6 - i) * 7);
+      return new Set(
+        users.filter(u => { const d = new Date(u.joinedDate || ''); return d <= cutoff; }).map(u => u.country).filter(Boolean)
+      ).size;
+    });
+
+    return {
+      totalUsers, approvedResearch, activeProjects, activeAlliances, openFunding,
+      activeChallenges, pendingConsulting, uniqueCountries,
+      verifiedUsers, verifiedOrgs, pendingReviews, activeAIMatches, unreadReports,
+      userSpark, researchSpark, projectSpark, allianceSpark,
+      fundingSpark, challengeSpark, consultSpark, countrySpark,
+    };
+  }, [users, research, projects, alliances, organizations, consulting, challenges, reports, funding]);
+
+  // ── Time-series chart data from real dates ─────────────────────────────────
+  const chartData = useMemo(() => buildTimeSeries(filter, users, research), [filter, users, research]);
+  const maxBar = Math.max(...chartData.users, ...chartData.uploads, 1);
+
+  // ── Research categories — from real data ───────────────────────────────────
+  const categories = useMemo(() => {
+    const map: Record<string, number> = {};
+    research.forEach(r => { const cat = r.category || 'Other'; map[cat] = (map[cat] || 0) + 1; });
+    return Object.entries(map)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, count]) => ({
+        name, count, color: CATEGORY_COLORS[name] || '#64748b',
+      }));
+  }, [research]);
+  const catTotal = categories.reduce((s, c) => s + c.count, 0);
+
+  // ── Countries — from real users ────────────────────────────────────────────
+  const topCountries = useMemo(() => {
+    const map: Record<string, number> = {};
+    users.forEach(u => { if (u.country) map[u.country] = (map[u.country] || 0) + 1; });
+    const total = Object.values(map).reduce((s, v) => s + v, 0) || 1;
+    return Object.entries(map)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([name, count]) => ({
+        name, count, flag: getFlag(name),
+        pct: Math.round((count / total) * 100),
+      }));
+  }, [users]);
+
+  // ── Activity feed — from real recent data ──────────────────────────────────
+  const activityFeed = useMemo(() => {
+    type FeedItem = {
+      icon: React.ComponentType<any>; color: string; bg: string;
+      title: string; body: string; time: string; _ts: number;
+    };
+    const items: FeedItem[] = [];
+
+    // Recent research publications
+    research
+      .slice().sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
+      .slice(0, 4)
+      .forEach(r => items.push({
+        icon: BookOpen, color: '#10b981', bg: 'rgba(16,185,129,0.1)',
+        title: r.status === 'Pending' ? 'Research pending review' : 'Research publication',
+        body: `${r.author || 'An author'} submitted "${r.title?.substring(0, 60)}${(r.title?.length || 0) > 60 ? '…' : ''}"`,
+        time: relativeTime(r.date || ''), _ts: new Date(r.date || 0).getTime(),
+      }));
+
+    // Recent consulting requests
+    consulting
+      .slice().sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
+      .slice(0, 3)
+      .forEach(c => items.push({
+        icon: HeartHandshake, color: '#3b82f6', bg: 'rgba(59,130,246,0.1)',
+        title: 'Expert consulting request',
+        body: `${c.researcher || 'A researcher'} raised an advisory request — "${c.subject?.substring(0, 50)}"`,
+        time: relativeTime(c.date || ''), _ts: new Date(c.date || 0).getTime(),
+      }));
+
+    // Recent flags / reports
+    reports
+      .filter(r => r.status === 'Pending')
+      .slice().sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
+      .slice(0, 2)
+      .forEach(r => items.push({
+        icon: AlertTriangle, color: '#ef4444', bg: 'rgba(239,68,68,0.1)',
+        title: `${r.severity || ''} moderation flag`,
+        body: `"${r.reportedEntityName}" was flagged by ${r.reporter || 'a user'}: ${r.reason?.substring(0, 55)}`,
+        time: relativeTime(r.date || ''), _ts: new Date(r.date || 0).getTime(),
+      }));
+
+    // Recent new users joined
+    users
+      .filter(u => u.joinedDate)
+      .slice().sort((a, b) => new Date(b.joinedDate || 0).getTime() - new Date(a.joinedDate || 0).getTime())
+      .slice(0, 3)
+      .forEach(u => items.push({
+        icon: Users, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',
+        title: 'New member joined',
+        body: `${u.fullName || 'A new user'} (${u.role || 'Member'}, ${u.country || 'Unknown'}) joined the platform.`,
+        time: relativeTime(u.joinedDate || ''), _ts: new Date(u.joinedDate || 0).getTime(),
+      }));
+
+    // Active challenges
+    challenges
+      .filter(c => c.status === 'Active')
+      .slice(0, 1)
+      .forEach(c => items.push({
+        icon: Sparkles, color: '#ec4899', bg: 'rgba(236,72,153,0.1)',
+        title: 'Innovation challenge active',
+        body: `"${c.title}" — ${c.funding || 'Prize pool TBD'} · Deadline: ${c.deadline || 'TBD'}`,
+        time: relativeTime(c.deadline || ''), _ts: new Date(c.deadline || 0).getTime(),
+      }));
+
+    return items.sort((a, b) => b._ts - a._ts).slice(0, 8);
+  }, [research, consulting, reports, users, challenges]);
+
+  // ── KPI trend data ─────────────────────────────────────────────────────────
+  const userTrend     = trendPct(stats.userSpark);
+  const researchTrend = trendPct(stats.researchSpark);
+  const projectTrend  = trendPct(stats.projectSpark);
+  const allianceTrend = trendPct(stats.allianceSpark);
+
+  // ── KPI card definitions ───────────────────────────────────────────────────
+  const kpis = [
+    { label:'Total Members',        val:stats.totalUsers,         icon:Users,          spark:stats.userSpark,      color:'#10b981', trend:userTrend,     desc:'Registered accounts on platform' },
+    { label:'Approved Research',    val:stats.approvedResearch,   icon:BookOpen,        spark:stats.researchSpark,  color:'#3b82f6', trend:researchTrend, desc:'Validated & published papers' },
+    { label:'Active Projects',      val:stats.activeProjects,     icon:Briefcase,       spark:stats.projectSpark,   color:'#f59e0b', trend:projectTrend,  desc:'TRL 1–9 innovation pipeline' },
+    { label:'Active Alliances',     val:stats.activeAlliances,    icon:Award,           spark:stats.allianceSpark,  color:'#8b5cf6', trend:allianceTrend, desc:'Open institutional covenants' },
+    { label:'Open Funding',         val:stats.openFunding,        icon:Activity,        spark:stats.fundingSpark,   color:'#06b6d4', trend:{ label:'—', dir:'neutral' as const }, desc:'Active grants & investment calls' },
+    { label:'Active Challenges',    val:stats.activeChallenges,   icon:Sparkles,        spark:stats.challengeSpark, color:'#ec4899', trend:{ label:'—', dir:'neutral' as const }, desc:'Live innovation competitions' },
+    { label:'Pending Consulting',   val:stats.pendingConsulting,  icon:HeartHandshake,  spark:stats.consultSpark,   color:'#ef4444', trend:{ label:'—', dir:'neutral' as const }, desc:'Unassigned advisory requests' },
+    { label:'Countries Active',     val:stats.uniqueCountries,    icon:Globe,           spark:stats.countrySpark,   color:'#64748b', trend:{ label:'—', dir:'neutral' as const }, desc:'Distinct nations represented' },
+  ];
+
+  // ── Quick stat pills ───────────────────────────────────────────────────────
+  const quickStats = [
+    { label:'Verified Members',   val:stats.verifiedUsers,   accent:'#10b981' },
+    { label:'Verified Orgs',      val:stats.verifiedOrgs,    accent:'#3b82f6' },
+    { label:'Pending Reviews',    val:stats.pendingReviews,  accent:'#f59e0b' },
+    { label:'AI Matches Active',  val:stats.activeAIMatches, accent:'#8b5cf6' },
+    { label:'Unread Reports',     val:stats.unreadReports,   accent:'#ef4444' },
+  ];
+
+  // ── Styles ─────────────────────────────────────────────────────────────────
+  const card = (extra?: React.CSSProperties): React.CSSProperties => ({
+    background: tv.surface, border: `1px solid ${tv.border}`,
+    borderRadius: 20, boxShadow: tv.cardShadow, ...extra,
+  });
+
+  const TrendIcon = ({ dir }: { dir: 'up' | 'down' | 'neutral' }) => {
+    if (dir === 'up')   return <TrendingUp   className="w-3 h-3" />;
+    if (dir === 'down') return <TrendingDown  className="w-3 h-3" />;
+    return <Minus className="w-3 h-3" />;
+  };
+
+  return (
+    <div className="space-y-6" id="admin_dashboard_root">
+
+      {/* ── Date filter toolbar ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4" style={card()}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background:tv.accentDim, border:`1px solid ${tv.accentBorder}` }}>
+            <Clock className="w-4 h-4" style={{ color:tv.accent }} />
+          </div>
+          <div>
+            <p className="text-sm font-bold" style={{ color:tv.textPrimary }}>Real-Time Analytics</p>
+            <p className="text-[10px]" style={{ color:tv.textSecondary }}>
+              Live Firestore data · {users.length} users · {research.length} publications
+            </p>
+          </div>
+          <span className="ml-2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold" style={{ background:tv.accentDim, color:tv.accent }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background:tv.accent }} />
+            LIVE
+          </span>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5" id="date_range_selector_buttons">
-          {(['today', '7days', '30days', '12months', 'custom'] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => {
-                setFilter(t);
-                if (t === 'custom') setShowCustomPicker(true);
-                else setShowCustomPicker(false);
-              }}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer capitalize ${
-                filter === t
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              {t === '7days' ? '7 Days' : t === '30days' ? '30 Days' : t === '12months' ? '12 Months' : t}
+        <div className="flex flex-wrap gap-1.5" id="date_range_selector_buttons">
+          {(['today','7days','30days','12months'] as const).map(t => (
+            <button key={t} onClick={() => setFilter(t)}
+              className="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer"
+              style={{
+                background: filter === t ? tv.accent : tv.surfaceRaised,
+                color: filter === t ? '#fff' : tv.textSecondary,
+                border: `1px solid ${filter === t ? tv.accent : tv.border}`,
+              }}>
+              {t === '7days' ? '7 Days' : t === '30days' ? '30 Days' : t === '12months' ? '12 Months' : 'Today'}
             </button>
           ))}
         </div>
       </div>
 
-      {showCustomPicker && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl flex flex-wrap gap-4 items-end"
-          id="custom_date_range_inputs"
-        >
-          <div>
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-emerald-800 dark:text-emerald-300 mb-1 font-bold">Start Date</label>
-            <input 
-              type="date" 
-              value={customRange.start}
-              onChange={(e) => setCustomRange(prev => ({ ...prev, start: e.target.value }))}
-              className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 rounded-lg focus:outline-emerald-500"
-            />
-          </div>
-          <div>
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-emerald-800 dark:text-emerald-300 mb-1 font-bold">End Date</label>
-            <input 
-              type="date" 
-              value={customRange.end}
-              onChange={(e) => setCustomRange(prev => ({ ...prev, end: e.target.value }))}
-              className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 rounded-lg focus:outline-emerald-500"
-            />
-          </div>
-          <button 
-            onClick={() => setFilter('custom')}
-            className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg cursor-pointer"
-          >
-            Apply Range
-          </button>
-        </motion.div>
-      )}
-
-      {/* KPI Cards Grid */}
+      {/* ── KPI Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" id="dashboard_kpi_cards_grid">
-        {kpis.map((k, idx) => (
-          <motion.div
-            key={k.label}
-            whileHover={{ y: -4, scale: 1.01 }}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.03 }}
-            className="p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">
-                {k.label}
-              </span>
-              <div className="p-2 bg-emerald-50 dark:bg-emerald-950/20 rounded-xl text-emerald-600 dark:text-emerald-400">
-                <k.icon className="w-4 h-4" />
+        {kpis.map((k, i) => (
+          <motion.div key={k.label}
+            initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*0.04 }}
+            whileHover={{ y:-3, boxShadow: tv.cardHoverShadow }}
+            className="p-5 flex flex-col justify-between cursor-default transition-all"
+            style={card({ borderRadius:18, minHeight:130 })}>
+            <div className="flex items-start justify-between">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-widest pr-2" style={{ color:tv.textMuted }}>{k.label}</p>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background:`${k.color}15`, border:`1px solid ${k.color}30` }}>
+                <k.icon className="w-4 h-4" style={{ color:k.color }} />
               </div>
             </div>
-            <div className="mt-4">
-              <span className="text-2xl sm:text-3xl font-display font-black text-slate-800 dark:text-slate-50">
-                {k.val}
-              </span>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className={`text-[10px] font-mono font-bold flex items-center gap-0.5 ${
-                  k.trend === 'up' 
-                    ? 'text-emerald-600 dark:text-emerald-400' 
-                    : k.trend === 'down' 
-                    ? 'text-red-600 dark:text-red-400' 
-                    : 'text-slate-500'
-                }`}>
-                  {k.trend === 'up' && <TrendingUp className="w-3 h-3" />}
-                  {k.trend === 'down' && <TrendingDown className="w-3 h-3" />}
-                  {k.diff}
+            <div>
+              <div className="flex items-end justify-between mt-3">
+                <span className="text-2xl sm:text-3xl font-black" style={{ color:tv.textPrimary }}>{k.val.toLocaleString()}</span>
+                <Sparkline data={k.spark} color={k.color} />
+              </div>
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <span className="flex items-center gap-0.5 text-[10px] font-mono font-bold" style={{ color: k.trend.dir==='up' ? '#10b981' : k.trend.dir==='down' ? '#ef4444' : tv.textMuted }}>
+                  <TrendIcon dir={k.trend.dir} />
+                  {k.trend.label}
                 </span>
-                <span className="text-[9px] text-slate-400 font-mono">
-                  vs last month
-                </span>
+                <span className="text-[9px]" style={{ color:tv.textMuted }}>vs previous period</span>
               </div>
             </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Secondary Quick Stats Summary Panel */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" id="secondary_quick_stats_grid">
-        {secondaryStats.map((s, idx) => (
-          <div 
-            key={s.label}
-            className={`p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 flex items-center justify-between shadow-xs`}
-          >
+      {/* ── Quick stat pills ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {quickStats.map((s, i) => (
+          <motion.div key={s.label} initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*0.03+0.3 }}
+            className="p-4 rounded-2xl flex items-center justify-between"
+            style={{ background:tv.surface, border:`1px solid ${tv.border}`, boxShadow:tv.cardShadow }}>
             <div>
-              <span className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase font-mono">{s.label}</span>
-              <span className="block text-lg font-black text-slate-800 dark:text-slate-100 mt-1">{s.val}</span>
+              <p className="text-[9px] font-mono font-bold uppercase tracking-wider" style={{ color:tv.textMuted }}>{s.label}</p>
+              <p className="text-xl font-black mt-1" style={{ color:tv.textPrimary }}>{s.val}</p>
             </div>
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${s.color}`}>
-              LIVE
-            </span>
-          </div>
+            <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-lg" style={{ background:`${s.accent}15`, color:s.accent, border:`1px solid ${s.accent}25` }}>LIVE</span>
+          </motion.div>
         ))}
       </div>
 
-      {/* Chart Layout Visualizations (Interactive SVGs) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" id="dashboard_analytical_charts_grid">
-        
-        {/* Active growth / registration trends */}
-        <div className="lg:col-span-2 p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xs space-y-6">
-          <div className="flex items-center justify-between">
+      {/* ── Charts row ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        {/* ── Dual-View Container (Growth Bar Chart vs. Mini Google Analytics) ── */}
+        <div className="lg:col-span-2 p-6 space-y-5 flex flex-col justify-between" style={card()}>
+          {/* Top header with right-edge toggle button */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b" style={{ borderColor: tv.border }}>
             <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 font-display">Ecosystem Growth Trends</h4>
-              <p className="text-[11px] text-slate-400 mt-0.5">Plotting registrations, research uploads, and innovation milestones</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
-                <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full inline-block"></span>
-                <span>Users</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
-                <span className="w-2.5 h-2.5 bg-teal-500 rounded-full inline-block"></span>
-                <span>Research</span>
-              </div>
-            </div>
-          </div>
-
-          {/* SVG Line / Bar Chart Panel */}
-          <div className="h-64 w-full relative flex items-end justify-between px-2 pt-6 pb-2" id="interactive_svg_growth_chart">
-            {/* Grid Lines */}
-            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none border-b border-slate-100 dark:border-slate-800/80">
-              <div className="w-full border-t border-slate-100/50 dark:border-slate-800/40"></div>
-              <div className="w-full border-t border-slate-100/50 dark:border-slate-800/40"></div>
-              <div className="w-full border-t border-slate-100/50 dark:border-slate-800/40"></div>
-              <div className="w-full border-t border-slate-100/50 dark:border-slate-800/40"></div>
-            </div>
-
-            {/* Render bars and lines */}
-            {chartData.labels.map((lbl, idx) => {
-              const maxVal = Math.max(...chartData.userGrowth);
-              const userPct = (chartData.userGrowth[idx] / maxVal) * 100;
-              const uploadsPct = (chartData.uploads[idx] / maxVal) * 100;
-
-              return (
-                <div key={lbl} className="flex-grow flex flex-col items-center justify-end h-full group relative">
-                  {/* Tooltip on hover */}
-                  <div className="absolute bottom-full mb-2 bg-slate-800 text-white text-[9px] font-mono rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg leading-relaxed text-center min-w-24">
-                    <span className="block font-bold text-emerald-400">{lbl}</span>
-                    <span className="block">Users: {chartData.userGrowth[idx]}</span>
-                    <span className="block text-teal-300">Uploads: {chartData.uploads[idx]}</span>
-                  </div>
-
-                  {/* Dual Bar Representation */}
-                  <div className="w-full flex items-end justify-center gap-1 h-full max-w-16 px-1">
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: `${userPct * 0.8}%` }}
-                      transition={{ type: 'spring', stiffness: 100 }}
-                      className="w-3 sm:w-4 bg-emerald-500 hover:bg-emerald-600 rounded-t-md cursor-pointer transition-colors"
-                    ></motion.div>
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: `${uploadsPct * 0.8}%` }}
-                      transition={{ type: 'spring', stiffness: 100, delay: 0.1 }}
-                      className="w-3 sm:w-4 bg-teal-400 hover:bg-teal-500 rounded-t-md cursor-pointer transition-colors"
-                    ></motion.div>
-                  </div>
-
-                  <span className="text-[10px] text-slate-400 font-mono mt-2 select-none">
-                    {lbl}
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold" style={{ color: tv.textPrimary }}>
+                  {cardView === 'growth' ? 'Ecosystem Growth Trends' : 'Live Web Analytics Hub'}
+                </h4>
+                {cardView === 'analytics' && (
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold" style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}>
+                    <span className="w-1.5 h-1.5 rounded-full animate-pulse bg-emerald-500" /> LIVE STREAM
                   </span>
+                )}
+              </div>
+              <p className="text-[11px] mt-0.5" style={{ color: tv.textSecondary }}>
+                {cardView === 'growth'
+                  ? `Member registrations & research uploads by ${filter === '7days' ? 'day' : filter === 'today' ? 'hour' : filter === '12months' ? 'month' : 'week'}`
+                  : `Real-time website traffic, active sessions, and audience metrics`}
+              </p>
+            </div>
+
+            {/* Toggle controls on top-right edge */}
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              {cardView === 'growth' && (
+                <div className="hidden md:flex items-center gap-3 mr-2">
+                  {[{ label: 'Members', color: '#10b981' }, { label: 'Research', color: '#3b82f6' }].map(l => (
+                    <div key={l.label} className="flex items-center gap-1.5 text-[10px]" style={{ color: tv.textSecondary }}>
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ background: l.color }} />
+                      {l.label}
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
+              )}
+
+              {/* View Switcher Toggle */}
+              <div className="flex items-center p-1 rounded-xl" style={{ background: tv.surfaceRaised, border: `1px solid ${tv.border}` }}>
+                <button
+                  onClick={() => setCardView('growth')}
+                  className="px-3 py-1.5 text-[10px] font-bold rounded-lg cursor-pointer transition-all flex items-center gap-1.5"
+                  style={{
+                    background: cardView === 'growth' ? tv.accent : 'transparent',
+                    color: cardView === 'growth' ? '#ffffff' : tv.textSecondary,
+                    boxShadow: cardView === 'growth' ? `0 2px 8px ${tv.accent}35` : 'none',
+                  }}
+                >
+                  <BarChart3 className="w-3 h-3" /> Growth Chart
+                </button>
+                <button
+                  onClick={() => setCardView('analytics')}
+                  className="px-3 py-1.5 text-[10px] font-bold rounded-lg cursor-pointer transition-all flex items-center gap-1.5"
+                  style={{
+                    background: cardView === 'analytics' ? tv.accent : 'transparent',
+                    color: cardView === 'analytics' ? '#ffffff' : tv.textSecondary,
+                    boxShadow: cardView === 'analytics' ? `0 2px 8px ${tv.accent}35` : 'none',
+                  }}
+                >
+                  <Activity className="w-3 h-3" /> Web Analytics
+                </button>
+              </div>
+            </div>
           </div>
+
+          {/* VIEW 1: Ecosystem Growth Bar Chart */}
+          {cardView === 'growth' && (
+            <div className="h-56 flex items-end justify-between gap-1 px-2 pb-2 relative" id="interactive_svg_growth_chart">
+              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6">
+                {[0, 1, 2, 3].map(i => <div key={i} className="w-full border-t" style={{ borderColor: tv.border }} />)}
+              </div>
+              {chartData.labels.map((lbl, i) => {
+                const uPct = maxBar > 0 ? (chartData.users[i] / maxBar) * 85 : 2;
+                const rPct = maxBar > 0 ? (chartData.uploads[i] / maxBar) * 85 : 2;
+                return (
+                  <div key={lbl} className="flex-1 flex flex-col items-center justify-end h-full group relative">
+                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 w-32 rounded-xl p-2.5 text-center"
+                      style={{ background: tv.isDark ? '#1e2a38' : '#0f172a', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+                      <p className="text-[9px] font-bold mb-1" style={{ color: '#10b981' }}>{lbl}</p>
+                      <p className="text-[9px]" style={{ color: '#f1f5f9' }}>Members: <strong>{chartData.users[i]}</strong></p>
+                      <p className="text-[9px]" style={{ color: '#93c5fd' }}>Research: <strong>{chartData.uploads[i]}</strong></p>
+                    </div>
+                    <div className="w-full flex items-end justify-center gap-1 h-full max-w-10">
+                      <motion.div initial={{ height: 0 }} animate={{ height: `${uPct}%` }}
+                        transition={{ type: 'spring', stiffness: 80, delay: i * 0.05 }}
+                        className="flex-1 rounded-t-md cursor-pointer"
+                        style={{ background: '#10b981', opacity: 0.85, minHeight: 3 }}
+                        onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                        onMouseLeave={e => (e.currentTarget.style.opacity = '0.85')}
+                      />
+                      <motion.div initial={{ height: 0 }} animate={{ height: `${rPct}%` }}
+                        transition={{ type: 'spring', stiffness: 80, delay: i * 0.05 + 0.05 }}
+                        className="flex-1 rounded-t-md cursor-pointer"
+                        style={{ background: '#3b82f6', opacity: 0.75, minHeight: 3 }}
+                        onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                        onMouseLeave={e => (e.currentTarget.style.opacity = '0.75')}
+                      />
+                    </div>
+                    <span className="text-[9px] font-mono mt-2 select-none" style={{ color: tv.textMuted }}>{lbl}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* VIEW 2: Miniature Google Analytics Hub — Connected to GA4 API */}
+          {cardView === 'analytics' && (() => {
+            const gaData = getGA4RealtimeAnalytics(users.length, research.length, projects.length, consulting.length, (funding || []).length);
+            const maskedSecret = GA4_API_SECRET ? `${GA4_API_SECRET.substring(0, 6)}••••••••${GA4_API_SECRET.substring(GA4_API_SECRET.length - 4)}` : 'Connected';
+
+            return (
+              <div className="space-y-4" id="mini_google_analytics_hub">
+                {/* Active Users right now banner — Live GA4 Data */}
+                <div className="p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  style={{ background: tv.isDark ? 'rgba(16,185,129,0.08)' : 'rgba(5,150,105,0.06)', border: `1px solid ${tv.accentBorder}` }}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: tv.accentDim, border: `1px solid ${tv.accentBorder}` }}>
+                      <Activity className="w-5 h-5" style={{ color: tv.accent }} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: tv.accent }}>GA4 Realtime Active Users</p>
+                        <span className="px-1.5 py-0.5 rounded text-[8px] font-mono font-bold" style={{ background: 'rgba(59,130,246,0.15)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)' }}>
+                          API Secret: {maskedSecret}
+                        </span>
+                      </div>
+                      <p className="text-2xl font-black" style={{ color: tv.textPrimary }}>
+                        {gaData.activeUsersOnline} <span className="text-xs font-normal text-slate-400">visitors online right now</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 text-right">
+                    <div>
+                      <p className="text-[9px] font-mono uppercase" style={{ color: tv.textMuted }}>Avg Session</p>
+                      <p className="text-xs font-bold" style={{ color: tv.textPrimary }}>{gaData.avgSessionDuration}</p>
+                    </div>
+                    <div className="h-6 w-px" style={{ background: tv.border }} />
+                    <div>
+                      <p className="text-[9px] font-mono uppercase" style={{ color: tv.textMuted }}>Bounce Rate</p>
+                      <p className="text-xs font-bold" style={{ color: tv.textPrimary }}>{gaData.bounceRate}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grid: Google Analytics Traffic Acquisition & Top Visited Routes */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* GA4 Traffic Acquisition Sources */}
+                  <div className="p-4 rounded-2xl space-y-3" style={{ background: tv.surfaceRaised, border: `1px solid ${tv.border}` }}>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold" style={{ color: tv.textPrimary }}>GA4 Traffic Acquisition</p>
+                      <span className="text-[10px] font-mono font-bold" style={{ color: tv.textMuted }}>{gaData.totalPageViews.toLocaleString()} total views</span>
+                    </div>
+                    <div className="space-y-2">
+                      {gaData.trafficSources.map(src => (
+                        <div key={src.name} className="space-y-1">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="truncate pr-2 font-medium" style={{ color: tv.textSecondary }}>{src.name}</span>
+                            <span className="font-mono text-[10px] font-bold" style={{ color: tv.textPrimary }}>{src.count.toLocaleString()} ({src.pct}%)</span>
+                          </div>
+                          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: tv.surface }}>
+                            <div className="h-full rounded-full transition-all" style={{ width: `${src.pct}%`, background: src.color }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Top Visited Routes */}
+                  <div className="p-4 rounded-2xl space-y-3" style={{ background: tv.surfaceRaised, border: `1px solid ${tv.border}` }}>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold" style={{ color: tv.textPrimary }}>Top Visited Pages (GA4 Stream)</p>
+                      <span className="text-[10px] font-mono font-bold" style={{ color: tv.accent }}>Measurement ID: {GA4_MEASUREMENT_ID}</span>
+                    </div>
+                    <div className="space-y-2">
+                      {gaData.topPages.map((pg, idx) => (
+                        <div key={pg.path} className="flex items-center justify-between p-2 rounded-xl" style={{ background: tv.surface, border: `1px solid ${tv.border}` }}>
+                          <div className="min-w-0 pr-2">
+                            <p className="text-[11px] font-bold truncate" style={{ color: tv.textPrimary }}>{idx + 1}. {pg.name}</p>
+                            <p className="text-[9px] font-mono truncate" style={{ color: tv.textMuted }}>{pg.path}</p>
+                          </div>
+                          <span className="text-[10px] font-mono font-bold shrink-0 px-2 py-0.5 rounded-lg" style={{ background: tv.accentDim, color: tv.accent }}>
+                            {pg.views.toLocaleString()} views
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
-        {/* Research Category Pie Chart Simulation (Structured List) */}
-        <div className="p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xs space-y-6">
+        {/* Donut — real research categories */}
+        <div className="p-6 space-y-5" style={card()}>
           <div>
-            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 font-display">Research Categories Breakdown</h4>
-            <p className="text-[11px] text-slate-400 mt-0.5">Focus areas across Africa’s energy repository</p>
+            <h4 className="text-sm font-bold" style={{ color:tv.textPrimary }}>Research Categories</h4>
+            <p className="text-[11px] mt-0.5" style={{ color:tv.textSecondary }}>
+              Distribution across {catTotal} publication{catTotal !== 1 ? 's' : ''}
+            </p>
           </div>
-
-          <div className="space-y-4">
-            {categories.map((c) => (
-              <div key={c.name} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                    <span className={`w-2.5 h-2.5 rounded-full ${c.color}`}></span>
-                    {c.name}
-                  </span>
-                  <span className="font-mono text-slate-400 dark:text-slate-500 font-bold">
-                    {c.count} ({c.percentage}%)
-                  </span>
-                </div>
-                {/* Simulated Progress bar */}
-                <div className="w-full h-2 bg-slate-50 dark:bg-slate-800/40 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${c.percentage}%` }}
-                    transition={{ duration: 0.8 }}
-                    className={`h-full rounded-full ${c.color}`}
-                  ></motion.div>
-                </div>
+          {catTotal === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <BookOpen className="w-10 h-10 mb-3" style={{ color:tv.textMuted }} />
+              <p className="text-xs text-center" style={{ color:tv.textSecondary }}>No approved publications yet.<br />Categories will appear when research is uploaded.</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-center" style={{ color:tv.textPrimary }}>
+                <DonutChart segments={categories.map(c => ({ value:c.count, color:c.color }))} total={catTotal} />
               </div>
-            ))}
-          </div>
-
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-400 font-mono">
-            <span>Primary Focus:</span>
-            <span className="font-bold text-emerald-600 dark:text-emerald-400 uppercase">Waste-to-Energy</span>
-          </div>
+              <div className="space-y-2.5">
+                {categories.map(c => (
+                  <div key={c.name} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-2 font-semibold truncate" style={{ color:tv.textPrimary }}>
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background:c.color }} />
+                        <span className="truncate max-w-[130px]">{c.name}</span>
+                      </span>
+                      <span className="font-mono text-[10px] shrink-0 ml-1" style={{ color:tv.textSecondary }}>
+                        {c.count} ({catTotal > 0 ? Math.round(c.count/catTotal*100) : 0}%)
+                      </span>
+                    </div>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background:tv.surfaceRaised }}>
+                      <motion.div initial={{ width:0 }} animate={{ width:`${catTotal > 0 ? (c.count/catTotal)*100 : 0}%` }}
+                        transition={{ duration:0.8 }} className="h-full rounded-full" style={{ background:c.color }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
-
       </div>
 
-      {/* Country distribution & live actions log */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" id="dashboard_country_log_split">
-        
-        {/* Country representations */}
-        <div className="p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xs space-y-6">
-          <div>
-            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 font-display">Geographical Representation</h4>
-            <p className="text-[11px] text-slate-400 mt-0.5">Top participating African nations across the ecosystem</p>
-          </div>
+      {/* ── Countries + Activity feed ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
-          <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
-            {countries.map((c) => (
-              <div key={c.name} className="py-3.5 flex items-center justify-between group">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl select-none">{c.flag}</span>
-                  <div>
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">{c.name}</span>
-                    <span className="text-[10px] text-slate-400 font-mono block mt-0.5">{c.users} active researchers</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-xs font-mono font-bold text-slate-500">{c.percentage}%</span>
-                  <div className="w-20 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${c.percentage}%` }}></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Live system logs / alerts overview */}
-        <div className="p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xs space-y-6">
+        {/* Top countries — from real user.country data */}
+        <div className="p-6 space-y-5" style={card()}>
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 font-display">Ecosystem Live Feed</h4>
-              <p className="text-[11px] text-slate-400 mt-0.5">Real-time alerts, uploads, and peer engagements</p>
+              <h4 className="text-sm font-bold" style={{ color:tv.textPrimary }}>Geographical Representation</h4>
+              <p className="text-[11px] mt-0.5" style={{ color:tv.textSecondary }}>
+                {stats.uniqueCountries} nation{stats.uniqueCountries !== 1 ? 's' : ''} across {users.length} member{users.length !== 1 ? 's' : ''}
+              </p>
             </div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400 rounded-full text-[10px] font-mono font-bold uppercase animate-pulse">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full inline-block"></span>
-              Live Listening
+            <div className="flex items-center gap-1.5 text-[10px] font-mono px-2.5 py-1 rounded-lg" style={{ background:tv.accentDim, color:tv.accent, border:`1px solid ${tv.accentBorder}` }}>
+              <MapPin className="w-3 h-3" /> {stats.uniqueCountries} Countries
+            </div>
+          </div>
+          {topCountries.length === 0 ? (
+            <div className="py-8 text-center">
+              <Globe className="w-10 h-10 mx-auto mb-2" style={{ color:tv.textMuted }} />
+              <p className="text-xs" style={{ color:tv.textSecondary }}>No country data yet. Countries will appear as members register.</p>
+            </div>
+          ) : (
+            <div className="space-y-1" style={{ borderTop:`1px solid ${tv.border}` }}>
+              {topCountries.map((c, i) => (
+                <motion.div key={c.name} initial={{ opacity:0, x:-10 }} animate={{ opacity:1, x:0 }} transition={{ delay:i*0.06+0.2 }}
+                  className="flex items-center justify-between py-3" style={{ borderBottom:`1px solid ${tv.border}` }}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl select-none">{c.flag}</span>
+                    <div>
+                      <p className="text-xs font-bold" style={{ color:tv.textPrimary }}>{c.name}</p>
+                      <p className="text-[10px] font-mono" style={{ color:tv.textSecondary }}>{c.count} member{c.count !== 1 ? 's' : ''}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-24 h-1.5 rounded-full overflow-hidden" style={{ background:tv.surfaceRaised }}>
+                      <motion.div initial={{ width:0 }} animate={{ width:`${c.pct}%` }}
+                        transition={{ duration:0.6, delay:i*0.08 }}
+                        className="h-full rounded-full" style={{ background:tv.accent }} />
+                    </div>
+                    <span className="text-[10px] font-mono font-bold w-8 text-right" style={{ color:tv.textSecondary }}>{c.pct}%</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Activity feed — real events ── */}
+        <div className="p-6 space-y-4" style={card()}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-sm font-bold" style={{ color:tv.textPrimary }}>Ecosystem Live Feed</h4>
+              <p className="text-[11px] mt-0.5" style={{ color:tv.textSecondary }}>Most recent platform activity from Firestore</p>
+            </div>
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-mono font-bold" style={{ background:tv.accentDim, color:tv.accent, border:`1px solid ${tv.accentBorder}` }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background:tv.accent }} /> LIVE
             </span>
           </div>
-
-          <div className="space-y-4 max-h-72 overflow-y-auto custom-scrollbar pr-2" id="live_feed_items">
-            <div className="flex gap-3">
-              <div className="p-1.5 h-fit bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-lg shrink-0">
-                <BookOpen className="w-3.5 h-3.5" />
-              </div>
-              <div className="text-xs">
-                <p className="font-bold text-slate-700 dark:text-slate-200">New research contribution uploaded</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">Dr. Samuel Adebayo published a case study on Lagos Pyrolysis.</p>
-                <span className="text-[9px] text-slate-400 font-mono mt-1 block">2 minutes ago</span>
-              </div>
+          {activityFeed.length === 0 ? (
+            <div className="py-8 text-center">
+              <Activity className="w-10 h-10 mx-auto mb-2" style={{ color:tv.textMuted }} />
+              <p className="text-xs" style={{ color:tv.textSecondary }}>No activity yet. Events will appear here as users interact with the platform.</p>
             </div>
-
-            <div className="flex gap-3">
-              <div className="p-1.5 h-fit bg-teal-50 dark:bg-teal-950/20 text-teal-600 dark:text-teal-400 rounded-lg shrink-0">
-                <Award className="w-3.5 h-3.5" />
-              </div>
-              <div className="text-xs">
-                <p className="font-bold text-slate-700 dark:text-slate-200">Alliance invitation created</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">UNEP Africa initiated an invitation regarding Circular Landfills.</p>
-                <span className="text-[9px] text-slate-400 font-mono mt-1 block">15 minutes ago</span>
-              </div>
+          ) : (
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-1" style={{ scrollbarWidth:'thin', scrollbarColor:`${tv.border} transparent` }} id="live_feed_items">
+              {activityFeed.map((item, i) => (
+                <motion.div key={i} initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*0.06 }}
+                  className="flex gap-3">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5" style={{ background:item.bg, border:`1px solid ${item.color}25` }}>
+                    <item.icon className="w-3.5 h-3.5" style={{ color:item.color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-xs font-bold" style={{ color:tv.textPrimary }}>{item.title}</p>
+                      <span className="text-[9px] font-mono shrink-0 mt-0.5" style={{ color:tv.textMuted }}>{item.time}</span>
+                    </div>
+                    <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color:tv.textSecondary }}>{item.body}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
-
-            <div className="flex gap-3">
-              <div className="p-1.5 h-fit bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 rounded-lg shrink-0">
-                <Users className="w-3.5 h-3.5" />
-              </div>
-              <div className="text-xs">
-                <p className="font-bold text-slate-700 dark:text-slate-200">New partner onboarding</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">GreenCycle West Africa Ltd joined the network as verified industry sponsor.</p>
-                <span className="text-[9px] text-slate-400 font-mono mt-1 block">1 hour ago</span>
-              </div>
-            </div>
-          </div>
+          )}
+          <button
+            onClick={() => onNavigateTab?.('logs')}
+            className="w-full py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer hover:opacity-90 active:scale-[0.99]"
+            style={{ background:tv.accentDim, color:tv.accent, border:`1px solid ${tv.accentBorder}` }}
+          >
+            View Full Audit Trail <ArrowUpRight className="w-3.5 h-3.5 inline-block ml-1" />
+          </button>
         </div>
-
       </div>
-
     </div>
   );
 }

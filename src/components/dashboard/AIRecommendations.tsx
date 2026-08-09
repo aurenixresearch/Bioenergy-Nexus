@@ -42,69 +42,7 @@ export default function AIRecommendations({
   const userCountry = userProfile?.country || 'Nigeria';
   const userAffiliation = userProfile?.institution || 'University of Ibadan';
 
-  // Seed raw database of matching items
-  const database: Recommendation[] = [
-    {
-      id: 'rec_1',
-      category: 'Funding',
-      title: 'Sub-Saharan Agri-Tech Solar-Bio Hybridization Grant',
-      source: 'African Development Bank & UNEP',
-      compatibility: 96,
-      description: `Funding of up to $75,000 to scale physical circular validation prototypes from TRL-4 up to TRL-6. Focuses heavily on agro-processors in ${userCountry}.`,
-      actionLabel: 'Apply for Grant',
-      meta: 'Budget: $75,000 USD • Closes in 12 days'
-    },
-    {
-      id: 'rec_2',
-      category: 'Alliance',
-      title: 'West African Sustainable Energy Storage Syndicate',
-      source: 'ECOWAS Center for Renewable Energy (ECREEE)',
-      compatibility: 91,
-      description: `Collaborative multi-state research syndicate linking academic researchers from ${userAffiliation} with industrial battery storage manufacturers.`,
-      actionLabel: 'Join Syndicate',
-      meta: '8 Core Institutional Members active'
-    },
-    {
-      id: 'rec_3',
-      category: 'Researcher',
-      title: 'Dr. Yusuf Bello, Assoc. Prof. of Biomass Systems',
-      source: 'Ahmadu Bello University',
-      compatibility: 88,
-      description: `Highly cited pioneer in biochemical methane extraction and multi-stage anaerobic digestion filters. Matches your expertise in ${userInterests[1] || 'Bioenergy'}.`,
-      actionLabel: 'Invite Lead',
-      meta: '18 Publications • 3 Shared Connections'
-    },
-    {
-      id: 'rec_4',
-      category: 'Laboratory',
-      title: 'Industrial Organic Recycled Polymer Processing Center',
-      source: 'Council for Scientific and Industrial Research (CSIR)',
-      compatibility: 85,
-      description: 'Advanced testing infrastructure for evaluating chemical purity and thermal parameters of agro-waste biocomposites.',
-      actionLabel: 'Request Lab',
-      meta: 'Located in Pretoria • Fully Funded Access for West African Scholars'
-    },
-    {
-      id: 'rec_5',
-      category: 'Industry',
-      title: 'NexaPower Agritech Grid Co.',
-      source: 'NexaPower Industries Ltd',
-      compatibility: 89,
-      description: `Seeking an academic research lead to write regulatory policy briefs and validate localized battery storage microgrid load algorithms.`,
-      actionLabel: 'Partner Up',
-      meta: 'Active commercial pipeline'
-    },
-    {
-      id: 'rec_6',
-      category: 'Challenge',
-      title: 'Zero-Waste Agricultural Feasibility Hackathon',
-      source: 'Safaricom Climate Fund',
-      compatibility: 84,
-      description: `A 48-hour commercialization challenge with a $15,000 seed prize. Build or adapt localized TRL-3 bio-refinery calculators.`,
-      actionLabel: 'Enter Challenge',
-      meta: 'First prize: $15,000 USD + Mentorship'
-    }
-  ];
+  const database: Recommendation[] = [];
 
   // Adjust scores dynamically based on matching interests
   const recommendations = database.map(rec => {
@@ -218,9 +156,9 @@ export default function AIRecommendations({
         <div className="py-12 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl text-center space-y-3">
           <Lightbulb className="w-10 h-10 text-slate-300 mx-auto" />
           <div>
-            <h4 className="text-sm font-bold text-slate-700">All Recommendations Reviewed</h4>
+            <h4 className="text-sm font-bold text-slate-700">No recommendations available yet</h4>
             <p className="text-xs text-slate-400 max-w-xs mt-1 mx-auto">
-              Check back later as Aurenix analyzes more publications and circular technology projects in Africa.
+              As you publish papers, register projects, and set your collaboration interests, AI match algorithms will generate targeted opportunities here.
             </p>
           </div>
         </div>

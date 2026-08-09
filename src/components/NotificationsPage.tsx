@@ -271,9 +271,11 @@ export default function NotificationsPage({ user, onNavigateToView }: Notificati
               <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
                 <Bell className="w-6 h-6 opacity-40" />
               </div>
-              <h3 className="text-sm font-bold text-slate-800">No Notifications Found</h3>
+              <h3 className="text-sm font-bold text-slate-800">
+                {searchQuery ? 'No Notifications Found' : "You're all caught up."}
+              </h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                {searchQuery ? 'No results matched your search query.' : 'You have no notifications in this category.'}
+                {searchQuery ? 'No results matched your search query.' : 'No new notifications to report at this time.'}
               </p>
             </div>
           ) : (

@@ -73,103 +73,9 @@ function saveLocalNotifications(userId: string, notifications: AppNotification[]
   }
 }
 
-// Realistic seed data covering all required notification types
+// Seed notifications (returns empty array to avoid rendering fake notifications)
 export function getSeedNotifications(userId: string, userName?: string): AppNotification[] {
-  const now = new Date();
-  const minutesAgo = (m: number) => new Date(now.getTime() - m * 60 * 1000).toISOString();
-  const hoursAgo = (h: number) => new Date(now.getTime() - h * 60 * 60 * 1000).toISOString();
-  const daysAgo = (d: number) => new Date(now.getTime() - d * 24 * 60 * 60 * 1000).toISOString();
-
-  return [
-    {
-      id: `seed-1-${userId}`,
-      userId,
-      type: 'research',
-      title: 'Research Paper Approved',
-      description: 'Your manuscript "Biochemical Process Optimization of Tropical Agricultural Biomass" has passed peer review and is now live.',
-      isRead: false,
-      createdAt: minutesAgo(12),
-      relatedResourceId: 'rp-101',
-      relatedResourceType: 'paper',
-      actionUrl: '/research'
-    },
-    {
-      id: `seed-2-${userId}`,
-      userId,
-      type: 'messaging',
-      title: 'New Message from Dr. Samuel Adebayo',
-      description: '"We reviewed your waste-to-energy yield data for Lagos suburbs. Let\'s discuss the digester metrics tomorrow."',
-      isRead: false,
-      createdAt: minutesAgo(45),
-      senderId: 'res-adebayo',
-      senderName: 'Dr. Samuel Adebayo',
-      senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
-      relatedResourceId: 'res-adebayo',
-      relatedResourceType: 'message',
-      actionUrl: '/messages'
-    },
-    {
-      id: `seed-3-${userId}`,
-      userId,
-      type: 'collaboration',
-      title: 'Alliance Invitation',
-      description: 'The West African Bioenergy Consortium invited you to join the "Sub-Saharan Municipal Solid Waste Feasibility" alliance.',
-      isRead: false,
-      createdAt: hoursAgo(2),
-      relatedResourceId: 'all-201',
-      relatedResourceType: 'alliance',
-      actionUrl: '/collaboration'
-    },
-    {
-      id: `seed-4-${userId}`,
-      userId,
-      type: 'funding',
-      title: 'Funding Opportunity Matched',
-      description: 'New $250,000 Grant: "Sub-Saharan Clean Tech & Circular Bioeconomy Initiative 2026" matches your research profile.',
-      isRead: true,
-      createdAt: hoursAgo(5),
-      relatedResourceId: 'fund-301',
-      relatedResourceType: 'funding',
-      actionUrl: '/collaboration'
-    },
-    {
-      id: `seed-5-${userId}`,
-      userId,
-      type: 'followers',
-      title: 'New Follower',
-      description: 'Engr. Chidi Okafor (Clean Tech Operations Consultant) is now following your research updates.',
-      isRead: true,
-      createdAt: daysAgo(1),
-      senderId: 'res-okafor',
-      senderName: 'Engr. Chidi Okafor',
-      relatedResourceId: 'res-okafor',
-      relatedResourceType: 'profile',
-      actionUrl: '/researchers'
-    },
-    {
-      id: `seed-6-${userId}`,
-      userId,
-      type: 'challenge',
-      title: 'Innovation Challenge Update',
-      description: 'Registration is now open for the 2026 African Bio-Refinery Scale-Up Competition. $50,000 seed stage awards.',
-      isRead: true,
-      createdAt: daysAgo(2),
-      relatedResourceId: 'chal-401',
-      relatedResourceType: 'challenge',
-      actionUrl: '/collaboration'
-    },
-    {
-      id: `seed-7-${userId}`,
-      userId,
-      type: 'admin',
-      title: 'Profile Verification Granted',
-      description: 'Your academic affiliation with Aurenix Research Hub has been officially verified by platform administrators.',
-      isRead: true,
-      createdAt: daysAgo(3),
-      relatedResourceType: 'account',
-      actionUrl: '/profile'
-    }
-  ];
+  return [];
 }
 
 // Subscribe to real-time notifications for a user
@@ -184,13 +90,7 @@ export function subscribeNotifications(
 
   // Handle Demo / Sandbox mode
   if (isDemoUser(userId)) {
-    let local = getLocalNotifications(userId);
-    if (local.length === 0) {
-      local = getSeedNotifications(userId);
-      saveLocalNotifications(userId, local);
-    }
-    
-    // Initial emission
+    const local = getLocalNotifications(userId);
     callback([...local].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
 
     const handleLocalUpdate = (e: Event) => {
@@ -215,18 +115,6 @@ export function subscribeNotifications(
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        if (snapshot.empty) {
-          // Seed initial notifications in Firestore if doc list is empty
-          seedFirestoreNotifications(userId).then((seeded) => {
-            if (seeded && seeded.length > 0) {
-              callback([...seeded].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-            } else {
-              callback([]);
-            }
-          });
-          return;
-        }
-
         const items: AppNotification[] = [];
         snapshot.forEach((docSnap) => {
           const data = docSnap.data();

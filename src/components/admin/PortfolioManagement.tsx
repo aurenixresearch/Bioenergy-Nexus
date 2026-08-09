@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { AdminThemeVars } from './AdminPortal';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   FileText, 
@@ -39,6 +40,7 @@ interface PortfolioManagementProps {
   onUpdateOrganizations: (updated: AdminOrganization[]) => void;
   onUpdateChallenges: (updated: AdminChallenge[]) => void;
   theme: 'light' | 'dark';
+  tv?: AdminThemeVars;
 }
 
 export default function PortfolioManagement({

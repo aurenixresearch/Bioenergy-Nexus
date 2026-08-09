@@ -52,44 +52,7 @@ const TRENDING_TOPICS = [
   'Sustainable agriculture'
 ];
 
-const UPCOMING_EVENTS = [
-  {
-    id: 'ev-1',
-    title: 'West African Bioenergy Webinar 2026',
-    date: 'Aug 24, 2026',
-    time: '10:00 AM UTC',
-    type: 'Webinar',
-    organizer: 'Aurenix Advisory & UNILAG',
-    link: 'https://aurenix-research.org/events/webinar-2026'
-  },
-  {
-    id: 'ev-2',
-    title: 'International Circular Economy Conference',
-    date: 'Sep 12-14, 2026',
-    time: 'All Day',
-    type: 'Conference',
-    organizer: 'African Union CleanTech Initiative',
-    link: 'https://aurenix-research.org/events/circular-economy-conf'
-  },
-  {
-    id: 'ev-3',
-    title: 'Hands-on Biogas Gasifier Workshop',
-    date: 'Oct 05, 2026',
-    time: '09:00 AM UTC',
-    type: 'Workshop',
-    organizer: 'Université Cheikh Anta Diop',
-    link: 'https://aurenix-research.org/events/gasifier-workshop'
-  },
-  {
-    id: 'ev-4',
-    title: 'Sub-Saharan Clean Energy Funding Call',
-    date: 'Deadline: Nov 30, 2026',
-    time: 'Midnight EST',
-    type: 'Funding Opportunity',
-    organizer: 'Global Climate Technology Fund',
-    link: 'https://aurenix-research.org/events/funding-call'
-  }
-];
+const UPCOMING_EVENTS: any[] = [];
 
 export default function CommunityPage({ user, userProfile }: CommunityPageProps) {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -728,16 +691,20 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
           ) : filteredPosts.length === 0 ? (
             <div className="bg-white border border-slate-100 rounded-3xl p-16 text-center space-y-4 shadow-xs">
               <Globe className="w-12 h-12 text-slate-300 mx-auto" />
-              <h3 className="text-lg font-bold text-slate-800">No updates matching your filter</h3>
+              <h3 className="text-lg font-bold text-slate-800">
+                {feedFilter ? 'No updates matching your filter' : 'No community activity yet.'}
+              </h3>
               <p className="text-xs text-slate-500 max-w-md mx-auto">
-                Be the first to share research or clear active filters to view other scholarly discussions.
+                {feedFilter ? 'Clear active filters to view other scholarly discussions.' : 'Be the first researcher, institution, or industry partner to post on the network feed.'}
               </p>
-              <button
-                onClick={() => setFeedFilter(null)}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl"
-              >
-                Reset Filter
-              </button>
+              {feedFilter && (
+                <button
+                  onClick={() => setFeedFilter(null)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl"
+                >
+                  Reset Filter
+                </button>
+              )}
             </div>
           ) : (
             <div className="space-y-6">
@@ -1192,37 +1159,41 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
               Suggested Connections
             </h3>
             <div className="space-y-4">
-              {suggestedConnections.map((res) => {
-                const followed = followedResearchers.includes(res.id);
-                return (
-                  <div key={res.id} className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <img 
-                        src={res.profilePhoto} 
-                        alt={res.fullName} 
-                        className="w-9 h-9 rounded-full object-cover border border-slate-100"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="min-w-0">
-                        <h4 className="text-xs font-bold text-slate-900 truncate">{res.fullName}</h4>
-                        <p className="text-[10px] text-slate-500 truncate">
-                          {res.researchInterests.slice(0, 2).join(' • ')}
-                        </p>
+              {suggestedConnections.length === 0 ? (
+                <p className="text-xs text-slate-500 italic py-2">No researchers in network yet.</p>
+              ) : (
+                suggestedConnections.map((res) => {
+                  const followed = followedResearchers.includes(res.id);
+                  return (
+                    <div key={res.id} className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <img 
+                          src={res.profilePhoto} 
+                          alt={res.fullName} 
+                          className="w-9 h-9 rounded-full object-cover border border-slate-100"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-bold text-slate-900 truncate">{res.fullName}</h4>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {res.researchInterests.slice(0, 2).join(' • ')}
+                          </p>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => toggleFollow(res.id)}
+                        className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition duration-150 ${
+                          followed 
+                            ? 'bg-emerald-50 text-emerald-700' 
+                            : 'bg-slate-900 text-white hover:bg-emerald-600'
+                        }`}
+                      >
+                        {followed ? 'Connected' : 'Connect'}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => toggleFollow(res.id)}
-                      className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition duration-150 ${
-                        followed 
-                          ? 'bg-emerald-50 text-emerald-700' 
-                          : 'bg-slate-900 text-white hover:bg-emerald-600'
-                      }`}
-                    >
-                      {followed ? 'Connected' : 'Connect'}
-                    </button>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -1233,21 +1204,25 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
               Upcoming Events
             </h3>
             <div className="space-y-4">
-              {UPCOMING_EVENTS.map((ev) => (
-                <div key={ev.id} className="p-3 bg-slate-50 rounded-2xl space-y-1.5 text-left border border-slate-100">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold uppercase tracking-wider rounded-md">
-                      {ev.type}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-medium">{ev.date}</span>
+              {UPCOMING_EVENTS.length === 0 ? (
+                <p className="text-xs text-slate-500 italic py-2">No upcoming events scheduled.</p>
+              ) : (
+                UPCOMING_EVENTS.map((ev) => (
+                  <div key={ev.id} className="p-3 bg-slate-50 rounded-2xl space-y-1.5 text-left border border-slate-100">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold uppercase tracking-wider rounded-md">
+                        {ev.type}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-medium">{ev.date}</span>
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-800 leading-snug">{ev.title}</h4>
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-100/60 text-[10px] text-slate-500">
+                      <span className="truncate max-w-[150px]">{ev.organizer}</span>
+                      <span className="font-semibold text-emerald-700">{ev.time}</span>
+                    </div>
                   </div>
-                  <h4 className="text-xs font-bold text-slate-800 leading-snug">{ev.title}</h4>
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-100/60 text-[10px] text-slate-500">
-                    <span className="truncate max-w-[150px]">{ev.organizer}</span>
-                    <span className="font-semibold text-emerald-700">{ev.time}</span>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 

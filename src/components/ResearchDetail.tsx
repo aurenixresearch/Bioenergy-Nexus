@@ -76,16 +76,7 @@ export default function ResearchDetail({
   const [contributions, setContributions] = useState<ResearchContribution[]>(paper.contributions || []);
 
   // Load comments
-  const [comments, setComments] = useState<ResearchComment[]>(paper.comments || [
-    {
-      id: 'comment-1',
-      userId: 'scholar-1',
-      userEmail: 'adebayo@unilag.edu.ng',
-      userName: 'Dr. Samuel Adebayo',
-      content: 'Remarkably rigorous chemical parameters for the anaerobic mesophilic reactors. Our UNILAG research team verified the co-digestion carbon-to-nitrogen ratios in local conditions and achieved matching volatile acid stabilities.',
-      createdAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString()
-    }
-  ]);
+  const [comments, setComments] = useState<ResearchComment[]>(paper.comments || []);
 
   // Track comments form inputs
   const [newCommentText, setNewCommentText] = useState('');

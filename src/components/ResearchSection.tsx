@@ -649,9 +649,11 @@ export default function ResearchSection({
                 <FileText className="w-8 h-8" />
               </div>
               <div>
-                <h4 className="text-base font-bold text-slate-800">No matching studies found</h4>
+                <h4 className="text-base font-bold text-slate-800">
+                  {allPapers.length === 0 ? "No research has been published yet." : "No matching studies found"}
+                </h4>
                 <p className="text-xs text-slate-500 max-w-sm mt-1">
-                  We couldn't find any documents matching your criteria. Try altering your keyword filter or categories.
+                  {allPapers.length === 0 ? "Be the first scholar or institution to publish a study to the Aurenix Repository." : "We couldn't find any documents matching your criteria. Try altering your keyword filter or categories."}
                 </p>
               </div>
             </div>

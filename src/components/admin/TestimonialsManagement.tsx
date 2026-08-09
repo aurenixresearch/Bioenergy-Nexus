@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import type { AdminThemeVars } from './AdminPortal';
 import {
   Star,
   Search,
@@ -26,6 +27,7 @@ import {
 
 interface TestimonialsManagementProps {
   theme?: 'light' | 'dark';
+  tv?: AdminThemeVars;
 }
 
 export default function TestimonialsManagement({ theme = 'light' }: TestimonialsManagementProps) {

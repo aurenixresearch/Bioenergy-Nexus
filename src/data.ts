@@ -1,52 +1,6 @@
 import { ResearchPaper } from './types';
 
-export const RESEARCH_PAPERS: ResearchPaper[] = [
-  {
-    id: 'paper-1',
-    title: 'Biogas as an Alternate Source of Energy',
-    author: 'Aurenix Research Research Group',
-    category: 'Bioenergy Technology',
-    abstract: 'This technical paper examines the feasibility, design parameters, and operational dynamics of residential and commercial biodigester systems. It covers the biochemical pathways of anaerobic digestion, methane yield optimization from agricultural and municipal solid wastes, and safety protocols for gas collection and distribution.',
-    downloadUrl: '#',
-    publishedYear: 2024,
-  },
-  {
-    id: 'paper-2',
-    title: 'Better Use of Biomass for Energy - Background Report',
-    author: 'International Energy Agency (IEA) & Aurenix Research',
-    category: 'Climate & Energy Policy',
-    abstract: 'An in-depth policy and technical background report detailing the strategic pathways for modern biomass energy. The paper outlines carbon balance assessments, ecological thresholds for wood and crop waste harvesting, and frameworks for matching biomass resource profiles to optimal thermal or chemical conversion pathways.',
-    downloadUrl: '#',
-    publishedYear: 2023,
-  },
-  {
-    id: 'paper-3',
-    title: "How Bioenergy can Solve Africa's Energy Crisis",
-    author: 'Filani Olalekan Theophilus',
-    category: 'Environmental Sustainability',
-    abstract: "Africa's energy crisis remains a major barrier to economic growth and development, with millions lacking access to reliable electricity. This landmark research presents a sustainable and practical solution by converting organic waste into usable energy forms such as biogas, biofuels, and biomass energy. It explores municipal biodigesters and decentralized clean energy grids.",
-    downloadUrl: '#',
-    publishedYear: 2025,
-  },
-  {
-    id: 'paper-4',
-    title: 'Waste-to-Energy Conversion Feasibility in Metropolitan Lagos',
-    author: 'Filani Olalekan Theophilus & Partners',
-    category: 'Waste-to-Energy',
-    abstract: 'A rigorous feasibility study assessing the daily municipal solid waste (MSW) profile of Lagos, Nigeria. The research evaluates thermochemical conversion (incineration, gasification) vs. biochemical conversion (anaerobic digestion) options, presenting economic viability models, environmental impact constraints, and local grid integration pathways.',
-    downloadUrl: '#',
-    publishedYear: 2024,
-  },
-  {
-    id: 'paper-5',
-    title: 'Policy Roadmaps for Sustainable Biofuels in West Africa',
-    author: 'Aurenix Research Policy Group',
-    category: 'Climate & Energy Policy',
-    abstract: 'Analyzing the regulatory frameworks, land-use policies, and investment incentives required to transition from traditional biomass combustion to modern, sustainable liquid and gaseous biofuel production. This paper offers actionable recommendations for ECOWAS policy alignment.',
-    downloadUrl: '#',
-    publishedYear: 2025,
-  }
-];
+export const RESEARCH_PAPERS: ResearchPaper[] = [];
 
 export interface ServiceDetail {
   id: string;

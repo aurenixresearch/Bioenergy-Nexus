@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  LayoutDashboard, 
-  MessageSquare, 
-  Users, 
-  BookOpen, 
-  Bookmark, 
-  HeartHandshake, 
-  Handshake, 
-  Activity, 
-  Info, 
-  Mail, 
-  Shield, 
-  Settings, 
-  LogOut, 
-  Sun, 
-  Moon, 
+import {
+  LayoutDashboard,
+  MessageSquare,
+  Users,
+  BookOpen,
+  Bookmark,
+  HeartHandshake,
+  Handshake,
+  Activity,
+  Info,
+  Mail,
+  Shield,
+  Settings,
+  LogOut,
+  Sun,
+  Moon,
   Sparkles,
   Menu,
   X,
@@ -24,8 +24,7 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
-  Globe,
-  Wrench
+  Globe
 } from 'lucide-react';
 import { subscribeToUnreadCount } from '../services/messagingDb';
 
@@ -56,11 +55,11 @@ export default function FloatingAside({
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   const effectiveUser = user;
-  const userDisplayName = userProfile?.username || userProfile?.fullName || userProfile?.displayName || user?.displayName || (user?.email ? user.email.split('@')[0] : 'Adeyemi Bolanle');
-  const userEmail = user?.email || userProfile?.email || 'adeyemibola2569@gmail.com';
+  const userEmail = (userProfile?.email || user?.email || '').trim();
+  const userDisplayName = userProfile?.username || userProfile?.fullName || userProfile?.displayName || user?.displayName || (userEmail ? userEmail.split('@')[0] : 'Scholar Member');
   const userAvatarUrl = userProfile?.profilePicture || user?.photoURL || (userEmail ? `https://unavatar.io/google/${userEmail}` : '');
 
-  const isPro = 
+  const isPro =
     userProfile?.isPro === true ||
     userProfile?.isPaid === true ||
     userProfile?.tier?.toLowerCase() === 'pro' ||
@@ -70,9 +69,30 @@ export default function FloatingAside({
     userProfile?.role?.toLowerCase() === 'paid' ||
     userProfile?.role?.toLowerCase() === 'super_admin' ||
     userProfile?.role?.toLowerCase() === 'admin' ||
-    userProfile?.email === 'bola.adeyemi@aurenix-research.org';
+    userEmail.toLowerCase() === 'bola.adeyemi@aurenix-research.org';
 
   const tierBadge = isPro ? 'PRO' : 'FREE';
+
+  const userRoleStr = (userProfile?.role || '').trim().toLowerCase();
+  const userEmailStr = userEmail.toLowerCase();
+
+  const ADMIN_EMAILS = [
+    'bola.adeyemi@aurenix-research.org',
+    'adeyemibola2569@gmail.com',
+    'egburedipraise@gmail.com'
+  ];
+
+  const isAdmin = Boolean(
+    userEmailStr && (
+      ADMIN_EMAILS.includes(userEmailStr) ||
+      userProfile?.isAdmin === true ||
+      userProfile?.admin === true ||
+      userRoleStr === 'admin' ||
+      userRoleStr === 'super_admin' ||
+      userRoleStr === 'platform super admin' ||
+      userRoleStr === 'platform admin'
+    )
+  );
 
   // Real-time listener for unread messages count
   useEffect(() => {
@@ -85,7 +105,6 @@ export default function FloatingAside({
 
   const navItems = [
     { label: 'User Dashboard', id: 'dashboard', icon: LayoutDashboard },
-    { label: 'Utility', id: 'utility', icon: Wrench },
     { label: 'Messages', id: 'messages', icon: MessageSquare, badge: unreadMessages },
     { label: 'Community', id: 'community', icon: Globe },
     { label: 'Explore Researchers', id: 'researchers', icon: Users },
@@ -119,24 +138,22 @@ export default function FloatingAside({
     return (
       <div className="flex flex-col h-full w-full overflow-hidden bg-white">
         {/* User Profile Summary */}
-        <div className={`py-3 shrink-0 transition-all duration-300 ${
-          collapsed ? 'px-2' : 'px-3'
-        }`}>
-          <div 
-            className={`rounded-2xl border transition-all duration-300 flex items-center min-w-0 overflow-hidden cursor-pointer ${
-              collapsed
-                ? 'p-2 justify-center border-emerald-800/60 bg-gradient-to-b from-emerald-950 via-emerald-900 to-slate-950 shadow-md hover:border-emerald-500/50'
-                : 'p-3 justify-between border-emerald-800/60 bg-gradient-to-r from-emerald-950 via-emerald-900 to-slate-950 text-white shadow-md hover:border-emerald-500/50 hover:shadow-lg'
-            }`}
+        <div className={`py-3 shrink-0 transition-all duration-300 ${collapsed ? 'px-2' : 'px-3'
+          }`}>
+          <div
+            className={`rounded-2xl border transition-all duration-300 flex items-center min-w-0 overflow-hidden cursor-pointer ${collapsed
+              ? 'p-2 justify-center border-emerald-800/60 bg-gradient-to-b from-emerald-950 via-emerald-900 to-slate-950 shadow-md hover:border-emerald-500/50'
+              : 'p-3 justify-between border-emerald-800/60 bg-gradient-to-r from-emerald-950 via-emerald-900 to-slate-950 text-white shadow-md hover:border-emerald-500/50 hover:shadow-lg'
+              }`}
             onClick={() => handleNavClick('settings')}
             title={`${userDisplayName} (${userEmail})`}
           >
             <div className={`flex items-center min-w-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
               <div className="relative shrink-0 flex items-center justify-center w-10 h-10 aspect-square">
                 {userAvatarUrl ? (
-                  <img 
-                    src={userAvatarUrl} 
-                    alt="Profile" 
+                  <img
+                    src={userAvatarUrl}
+                    alt="Profile"
                     className="w-10 h-10 min-w-[40px] min-h-[40px] aspect-square shrink-0 rounded-full object-cover border-2 border-emerald-400/80 shadow-xs ring-2 ring-emerald-500/30 overflow-hidden"
                     referrerPolicy="no-referrer"
                   />
@@ -145,15 +162,13 @@ export default function FloatingAside({
                     {userDisplayName ? userDisplayName[0] : 'A'}
                   </div>
                 )}
-                <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-700 text-[9px] text-white font-black flex items-center justify-center border border-white transition-all duration-300 ${
-                  collapsed ? 'opacity-100 scale-100' : 'opacity-0 scale-0 pointer-events-none'
-                }`}>
+                <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-700 text-[9px] text-white font-black flex items-center justify-center border border-white transition-all duration-300 ${collapsed ? 'opacity-100 scale-100' : 'opacity-0 scale-0 pointer-events-none'
+                  }`}>
                   {tierBadge[0]}
                 </span>
               </div>
-              <div className={`min-w-0 flex flex-col justify-center overflow-hidden transition-all duration-300 ease-out ${
-                collapsed ? 'opacity-0 w-0 pointer-events-none hidden' : 'opacity-100 w-auto'
-              }`}>
+              <div className={`min-w-0 flex flex-col justify-center overflow-hidden transition-all duration-300 ease-out ${collapsed ? 'opacity-0 w-0 pointer-events-none hidden' : 'opacity-100 w-auto'
+                }`}>
                 <p className="text-sm font-extrabold truncate leading-tight text-white whitespace-nowrap">
                   {userDisplayName}
                 </p>
@@ -163,9 +178,8 @@ export default function FloatingAside({
               </div>
             </div>
 
-            <span className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-lg uppercase tracking-wider shrink-0 text-emerald-300 bg-emerald-950/80 border border-emerald-500/30 shadow-xs transition-all duration-300 ease-out ${
-              collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
-            }`}>
+            <span className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-lg uppercase tracking-wider shrink-0 text-emerald-300 bg-emerald-950/80 border border-emerald-500/30 shadow-xs transition-all duration-300 ease-out ${collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
+              }`}>
               {tierBadge}
             </span>
 
@@ -183,12 +197,10 @@ export default function FloatingAside({
         </div>
 
         {/* Navigation links */}
-        <div className={`flex-1 overflow-y-auto py-2 space-y-2 custom-scrollbar transition-all duration-300 ${
-          collapsed ? 'px-2' : 'px-3'
-        }`}>
-          <div className={`px-3 pt-1 pb-1.5 text-xs font-black uppercase tracking-wider text-[#045627] whitespace-nowrap transition-all duration-300 ease-out overflow-hidden ${
-            collapsed ? 'opacity-0 h-0 py-0 hidden' : 'opacity-100 h-auto'
+        <div className={`flex-1 overflow-y-auto py-2 space-y-2 custom-scrollbar transition-all duration-300 ${collapsed ? 'px-2' : 'px-3'
           }`}>
+          <div className={`px-3 pt-1 pb-1.5 text-xs font-black uppercase tracking-wider text-[#045627] whitespace-nowrap transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'opacity-0 h-0 py-0 hidden' : 'opacity-100 h-auto'
+            }`}>
             Main Workspace
           </div>
 
@@ -201,42 +213,34 @@ export default function FloatingAside({
                 type="button"
                 onClick={() => handleNavClick(item.id)}
                 title={collapsed ? item.label : undefined}
-                className={`w-full flex items-center transition-colors duration-200 cursor-pointer text-left rounded-xl overflow-hidden border-0 ${
-                  collapsed ? 'px-2 py-3 justify-center' : 'px-3.5 py-3.5'
-                } ${
-                  isActive
+                className={`w-full flex items-center transition-colors duration-200 cursor-pointer text-left rounded-xl overflow-hidden border-0 ${collapsed ? 'px-2 py-3 justify-center' : 'px-3.5 py-3.5'
+                  } ${isActive
                     ? 'bg-emerald-700 text-white font-black shadow-md'
                     : 'text-[#045627] hover:text-[#002b11] hover:bg-emerald-100/90 font-extrabold bg-transparent'
-                }`}
+                  }`}
               >
                 <div className={`flex items-center gap-3.5 min-w-0 ${collapsed ? 'justify-center' : 'w-full'}`}>
-                  <div className={`relative shrink-0 flex items-center justify-center transition-colors ${
-                    isActive ? 'text-white' : 'text-[#045627]'
-                  }`}>
+                  <div className={`relative shrink-0 flex items-center justify-center transition-colors ${isActive ? 'text-white' : 'text-[#045627]'
+                    }`}>
                     <Icon className="w-6 h-6 shrink-0" />
                     {item.badge && item.badge > 0 ? (
-                      <span className={`absolute -top-1.5 -right-2 w-4.5 h-4.5 text-[10px] font-black rounded-full bg-rose-500 text-white flex items-center justify-center shadow-xs transition-all duration-300 ${
-                        collapsed ? 'opacity-100 scale-100' : 'opacity-0 scale-0 pointer-events-none hidden'
-                      }`}>
+                      <span className={`absolute -top-1.5 -right-2 w-4.5 h-4.5 text-[10px] font-black rounded-full bg-rose-500 text-white flex items-center justify-center shadow-xs transition-all duration-300 ${collapsed ? 'opacity-100 scale-100' : 'opacity-0 scale-0 pointer-events-none hidden'
+                        }`}>
                         {item.badge > 9 ? '9+' : item.badge}
                       </span>
                     ) : null}
                   </div>
 
-                  <span className={`text-[15px] font-black tracking-tight truncate whitespace-nowrap flex-1 transition-all duration-300 ease-out ${
-                    isActive ? 'text-white' : 'text-[#045627]'
-                  } ${
-                    collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
-                  }`}>
+                  <span className={`text-[15px] font-black tracking-tight truncate whitespace-nowrap flex-1 transition-all duration-300 ease-out ${isActive ? 'text-white' : 'text-[#045627]'
+                    } ${collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
+                    }`}>
                     {item.label}
                   </span>
 
                   {item.badge && item.badge > 0 ? (
-                    <span className={`px-2.5 py-0.5 text-xs font-black rounded-full shadow-2xs shrink-0 transition-all duration-300 ease-out ${
-                      isActive ? 'bg-white text-emerald-800' : 'bg-emerald-700 text-white'
-                    } ${
-                      collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
-                    }`}>
+                    <span className={`px-2.5 py-0.5 text-xs font-black rounded-full shadow-2xs shrink-0 transition-all duration-300 ease-out ${isActive ? 'bg-white text-emerald-800' : 'bg-emerald-700 text-white'
+                      } ${collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
+                      }`}>
                       {item.badge}
                     </span>
                   ) : null}
@@ -247,65 +251,56 @@ export default function FloatingAside({
 
           <div className="my-3 border-t border-emerald-100" />
 
-          <div className={`px-3 pt-1 pb-1.5 text-xs font-black uppercase tracking-wider text-[#045627] whitespace-nowrap transition-all duration-300 ease-out overflow-hidden ${
-            collapsed ? 'opacity-0 h-0 py-0 hidden' : 'opacity-100 h-auto'
-          }`}>
+          <div className={`px-3 pt-1 pb-1.5 text-xs font-black uppercase tracking-wider text-[#045627] whitespace-nowrap transition-all duration-300 ease-out overflow-hidden ${collapsed ? 'opacity-0 h-0 py-0 hidden' : 'opacity-100 h-auto'
+            }`}>
             Management & Settings
           </div>
 
-          {/* Admin Portal */}
-          <button
-            type="button"
-            onClick={() => handleNavClick('admin')}
-            title={collapsed ? "Admin Portal" : undefined}
-            className={`w-full flex items-center transition-colors duration-200 cursor-pointer text-left rounded-xl overflow-hidden border-0 ${
-              collapsed ? 'px-2 py-3 justify-center' : 'px-3.5 py-3.5'
-            } ${
-              currentView === 'admin'
-                ? 'bg-emerald-800 text-white font-black shadow-md'
-                : 'text-[#045627] hover:text-[#002b11] hover:bg-emerald-100/90 font-extrabold bg-transparent'
-            }`}
-          >
-            <div className={`flex items-center gap-3.5 min-w-0 ${collapsed ? 'justify-center' : 'w-full'}`}>
-              <div className={`shrink-0 flex items-center justify-center ${
-                currentView === 'admin' ? 'text-white' : 'text-[#045627]'
-              }`}>
-                <Shield className="w-6 h-6 shrink-0" />
+          {/* Admin Portal - Only visible to users who are admins or made admin */}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => handleNavClick('admin')}
+              title={collapsed ? "Admin Portal" : undefined}
+              className={`w-full flex items-center transition-colors duration-200 cursor-pointer text-left rounded-xl overflow-hidden border-0 ${collapsed ? 'px-2 py-3 justify-center' : 'px-3.5 py-3.5'
+                } ${currentView === 'admin'
+                  ? 'bg-emerald-800 text-white font-black shadow-md'
+                  : 'text-[#045627] hover:text-[#002b11] hover:bg-emerald-100/90 font-extrabold bg-transparent'
+                }`}
+            >
+              <div className={`flex items-center gap-3.5 min-w-0 ${collapsed ? 'justify-center' : 'w-full'}`}>
+                <div className={`shrink-0 flex items-center justify-center ${currentView === 'admin' ? 'text-white' : 'text-[#045627]'
+                  }`}>
+                  <Shield className="w-6 h-6 shrink-0" />
+                </div>
+                <span className={`text-[15px] font-black tracking-tight truncate whitespace-nowrap flex-1 transition-all duration-300 ease-out ${currentView === 'admin' ? 'text-white' : 'text-[#045627]'
+                  } ${collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
+                  }`}>
+                  Admin Portal
+                </span>
               </div>
-              <span className={`text-[15px] font-black tracking-tight truncate whitespace-nowrap flex-1 transition-all duration-300 ease-out ${
-                currentView === 'admin' ? 'text-white' : 'text-[#045627]'
-              } ${
-                collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
-              }`}>
-                Admin Portal
-              </span>
-            </div>
-          </button>
+            </button>
+          )}
 
           {/* Settings & Profile */}
           <button
             type="button"
             onClick={() => handleNavClick('settings')}
             title={collapsed ? "Settings & Profile" : undefined}
-            className={`w-full flex items-center transition-colors duration-200 cursor-pointer text-left rounded-xl overflow-hidden border-0 ${
-              collapsed ? 'px-2 py-3 justify-center' : 'px-3.5 py-3.5'
-            } ${
-              currentView === 'settings'
+            className={`w-full flex items-center transition-colors duration-200 cursor-pointer text-left rounded-xl overflow-hidden border-0 ${collapsed ? 'px-2 py-3 justify-center' : 'px-3.5 py-3.5'
+              } ${currentView === 'settings'
                 ? 'bg-emerald-700 text-white font-black shadow-md'
                 : 'text-[#045627] hover:text-[#002b11] hover:bg-emerald-100/90 font-extrabold bg-transparent'
-            }`}
+              }`}
           >
             <div className={`flex items-center gap-3.5 min-w-0 ${collapsed ? 'justify-center' : 'w-full'}`}>
-              <div className={`shrink-0 flex items-center justify-center ${
-                currentView === 'settings' ? 'text-white' : 'text-[#045627]'
-              }`}>
+              <div className={`shrink-0 flex items-center justify-center ${currentView === 'settings' ? 'text-white' : 'text-[#045627]'
+                }`}>
                 <Settings className="w-6 h-6 shrink-0" />
               </div>
-              <span className={`text-[15px] font-black tracking-tight truncate whitespace-nowrap flex-1 transition-all duration-300 ease-out ${
-                currentView === 'settings' ? 'text-white' : 'text-[#045627]'
-              } ${
-                collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
-              }`}>
+              <span className={`text-[15px] font-black tracking-tight truncate whitespace-nowrap flex-1 transition-all duration-300 ease-out ${currentView === 'settings' ? 'text-white' : 'text-[#045627]'
+                } ${collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
+                }`}>
                 Settings & Profile
               </span>
             </div>
@@ -332,17 +327,15 @@ export default function FloatingAside({
                 onSignOut();
               }}
               title={collapsed ? "Sign Out" : undefined}
-              className={`w-full flex items-center transition-colors duration-200 cursor-pointer text-left text-[#d70e35] hover:bg-rose-100/90 font-black rounded-xl mt-1 overflow-hidden border-0 bg-transparent ${
-                collapsed ? 'px-2 py-3 justify-center' : 'px-3.5 py-3.5'
-              }`}
+              className={`w-full flex items-center transition-colors duration-200 cursor-pointer text-left text-[#d70e35] hover:bg-rose-100/90 font-black rounded-xl mt-1 overflow-hidden border-0 bg-transparent ${collapsed ? 'px-2 py-3 justify-center' : 'px-3.5 py-3.5'
+                }`}
             >
               <div className={`flex items-center gap-3.5 min-w-0 ${collapsed ? 'justify-center' : 'w-full'}`}>
                 <div className="shrink-0 flex items-center justify-center text-[#d70e35]">
                   <LogOut className="w-6 h-6" />
                 </div>
-                <span className={`text-[15px] font-black tracking-tight truncate whitespace-nowrap flex-1 text-[#d70e35] transition-all duration-300 ease-out ${
-                  collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
-                }`}>
+                <span className={`text-[15px] font-black tracking-tight truncate whitespace-nowrap flex-1 text-[#d70e35] transition-all duration-300 ease-out ${collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
+                  }`}>
                   Sign Out
                 </span>
               </div>
@@ -352,21 +345,18 @@ export default function FloatingAside({
 
         {/* Bottom Sidebar Collapse Footer */}
         {isDesktop && setIsCollapsed && (
-          <div className={`shrink-0 flex items-center justify-center transition-all duration-300 ${
-            collapsed ? 'p-2' : 'p-3'
-          }`}>
+          <div className={`shrink-0 flex items-center justify-center transition-all duration-300 ${collapsed ? 'p-2' : 'p-3'
+            }`}>
             <button
               type="button"
               onClick={toggleCollapse}
-              className={`w-full py-3 rounded-xl text-white bg-[#115f1f] hover:bg-[#0d4a18] transition-colors cursor-pointer border border-emerald-800 shadow-2xs flex items-center min-w-0 overflow-hidden ${
-                collapsed ? 'px-2 justify-center' : 'px-3.5 justify-between'
-              }`}
+              className={`w-full py-3 rounded-xl text-white bg-[#115f1f] hover:bg-[#0d4a18] transition-colors cursor-pointer border border-emerald-800 shadow-2xs flex items-center min-w-0 overflow-hidden ${collapsed ? 'px-2 justify-center' : 'px-3.5 justify-between'
+                }`}
               title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
               id="aside_collapse_btn"
             >
-              <span className={`text-sm font-black tracking-wide uppercase text-white whitespace-nowrap truncate transition-all duration-300 ease-out ${
-                collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
-              }`}>
+              <span className={`text-sm font-black tracking-wide uppercase text-white whitespace-nowrap truncate transition-all duration-300 ease-out ${collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
+                }`}>
                 Collapse Sidebar
               </span>
               <div className="shrink-0 flex items-center justify-center text-white">
@@ -450,4 +440,3 @@ export default function FloatingAside({
     </>
   );
 }
-

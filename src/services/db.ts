@@ -75,8 +75,11 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
     operationType,
     path
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  console.error('Firestore Error Diagnostic Log:', JSON.stringify(errInfo));
+  if (errMsg.includes('permission') || errMsg.includes('Missing or insufficient permissions')) {
+    throw new Error('Database access restriction encountered. Operation processed in local mode.');
+  }
+  throw new Error(errMsg || 'Database request could not be completed. Please try again.');
 }
 
 // SANITIZE PAYLOADS FOR FIRESTORE (REMOVES UNDEFINED VALUES RECURSIVELY)
@@ -556,11 +559,21 @@ export async function createUserProfile(userId: string, profile: any): Promise<v
       window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId, profile: sanitizedProfile } }));
     }
   } catch (error) {
+    console.warn('Firestore user profile cloud save notice, falling back to local session profile:', error);
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
-      return createUserProfile(userId, profile);
     }
-    handleFirestoreError(error, OperationType.WRITE, `${path}/${userId}`);
+    const updated = {
+      ...sanitizedProfile,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    try {
+      localStorage.setItem(`nexus_demo_profile_${userId}`, JSON.stringify(updated));
+    } catch {}
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId, profile: updated } }));
+    }
   }
 }
 
@@ -786,8 +799,7 @@ export async function approveVerification(userId: string, userProfile: any): Pro
 function getLocalResearchers(): Researcher[] {
   const data = localStorage.getItem('nexus_demo_researchers');
   if (!data) {
-    localStorage.setItem('nexus_demo_researchers', JSON.stringify(SEED_RESEARCHERS));
-    return SEED_RESEARCHERS;
+    return [];
   }
   return JSON.parse(data);
 }
@@ -799,8 +811,7 @@ function setLocalResearchers(researchers: Researcher[]) {
 function getLocalPublications(): Publication[] {
   const data = localStorage.getItem('nexus_demo_publications');
   if (!data) {
-    localStorage.setItem('nexus_demo_publications', JSON.stringify(SEED_PUBLICATIONS));
-    return SEED_PUBLICATIONS;
+    return [];
   }
   return JSON.parse(data);
 }
@@ -849,30 +860,13 @@ export async function getResearchers(): Promise<Researcher[]> {
       });
     });
 
-    if (list.length === 0) {
-      // Try to seed Firestore if empty
-      try {
-        for (const res of SEED_RESEARCHERS) {
-          const docRef = doc(db, 'researchers', res.id);
-          await setDoc(docRef, res);
-        }
-        return SEED_RESEARCHERS;
-      } catch (seedErr) {
-        if (isOfflineError(seedErr)) {
-          setFirestoreOffline(true);
-          return getResearchers();
-        }
-        console.warn('Could not seed Firestore researchers, returning static seed data:', seedErr);
-        return SEED_RESEARCHERS;
-      }
-    }
     return list;
   } catch (error) {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
       return getResearchers();
     }
-    console.warn('Error fetching researchers from Firestore, falling back to local seed:', error);
+    console.warn('Error fetching researchers from Firestore, falling back to local storage:', error);
     return getLocalResearchers();
   }
 }
@@ -911,30 +905,13 @@ export async function getPublications(): Promise<Publication[]> {
       });
     });
 
-    if (list.length === 0) {
-      // Try to seed Firestore if empty
-      try {
-        for (const pub of SEED_PUBLICATIONS) {
-          const docRef = doc(db, 'publications', pub.id);
-          await setDoc(docRef, pub);
-        }
-        return SEED_PUBLICATIONS;
-      } catch (seedErr) {
-        if (isOfflineError(seedErr)) {
-          setFirestoreOffline(true);
-          return getPublications();
-        }
-        console.warn('Could not seed Firestore publications, returning static seed data:', seedErr);
-        return SEED_PUBLICATIONS;
-      }
-    }
     return list;
   } catch (error) {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
       return getPublications();
     }
-    console.warn('Error fetching publications from Firestore, falling back to local seed:', error);
+    console.warn('Error fetching publications from Firestore, falling back to local storage:', error);
     return getLocalPublications();
   }
 }
@@ -1115,38 +1092,7 @@ export interface InnovationProject {
 function getLocalProjects(userId: string): InnovationProject[] {
   const data = localStorage.getItem(`nexus_demo_projects_${userId}`);
   if (data) return JSON.parse(data);
-  
-  // Default seed projects
-  const defaults: InnovationProject[] = [
-    {
-      id: 'proj_1',
-      userId,
-      title: 'Solar-Powered Bio-waste Digester for Off-grid Agro-processors',
-      trl: 6,
-      status: 'Active',
-      fundingStatus: 'Funded',
-      progress: 75,
-      industryPartner: 'GreenCycle West Africa Ltd',
-      laboratoryPartner: 'Renewable Energy Lab, UNILAG',
-      description: 'Developing an automated, off-grid digester combining waste heat from solar panels to accelerate organic solid waste degradation into high-yield methane.',
-      lastUpdated: new Date().toISOString()
-    },
-    {
-      id: 'proj_2',
-      userId,
-      title: 'Decentralized Microgrid Controller with Smart Contract Load-Shedding',
-      trl: 4,
-      status: 'Draft',
-      fundingStatus: 'Pending',
-      progress: 35,
-      industryPartner: 'NexaPower Grid Solutions',
-      laboratoryPartner: 'Smart Power Systems Center, ABU',
-      description: 'A hardware-in-the-loop microgrid controller using decentralized logic to coordinate agricultural processing loads based on localized battery states.',
-      lastUpdated: new Date().toISOString()
-    }
-  ];
-  localStorage.setItem(`nexus_demo_projects_${userId}`, JSON.stringify(defaults));
-  return defaults;
+  return [];
 }
 
 function setLocalProjects(userId: string, projects: InnovationProject[]) {
@@ -1168,14 +1114,6 @@ export async function getInnovationProjects(userId: string): Promise<InnovationP
       projects.push({ id: doc.id, ...doc.data() } as InnovationProject);
     });
 
-    if (projects.length === 0) {
-      // Seed initial projects to firestore
-      const defaults = getLocalProjects(userId);
-      for (const p of defaults) {
-        await setDoc(doc(db, path, p.id), p);
-      }
-      return defaults;
-    }
     return projects;
   } catch (error) {
     if (isOfflineError(error)) {
@@ -1281,47 +1219,7 @@ export interface UserNotification {
 function getLocalNotifications(userId: string): UserNotification[] {
   const data = localStorage.getItem(`nexus_demo_notifications_${userId}`);
   if (data) return JSON.parse(data);
-
-  const defaults: UserNotification[] = [
-    {
-      id: 'notif_1',
-      userId,
-      type: 'follower',
-      title: 'New Follower Joined',
-      message: 'Dr. Sarah Adebayo, Lab Director at UNILAG, started following your profile.',
-      isRead: false,
-      createdAt: new Date(Date.now() - 30 * 60000).toISOString() // 30 mins ago
-    },
-    {
-      id: 'notif_2',
-      userId,
-      type: 'alliance',
-      title: 'Alliance Invitation Received',
-      message: 'EcoEnergy Alliance Nigeria invited you to join the Solar-Bioenergy Integration Workgroup.',
-      isRead: false,
-      createdAt: new Date(Date.now() - 3 * 3600000).toISOString() // 3 hours ago
-    },
-    {
-      id: 'notif_3',
-      userId,
-      type: 'grant',
-      title: 'New Funding Opportunity Match',
-      message: 'The African Climate Foundation launched a $50k grant for Off-grid Agricultural Digitization.',
-      isRead: false,
-      createdAt: new Date(Date.now() - 24 * 3600000).toISOString() // 1 day ago
-    },
-    {
-      id: 'notif_4',
-      userId,
-      type: 'citation',
-      title: 'Research Citation Identified',
-      message: 'Your research paper on "Off-Grid Bio-waste Conversions" was cited in Journal of African Circular Science.',
-      isRead: true,
-      createdAt: new Date(Date.now() - 48 * 3600000).toISOString() // 2 days ago
-    }
-  ];
-  localStorage.setItem(`nexus_demo_notifications_${userId}`, JSON.stringify(defaults));
-  return defaults;
+  return [];
 }
 
 function setLocalNotifications(userId: string, notifications: UserNotification[]) {
@@ -1343,14 +1241,6 @@ export async function getUserNotifications(userId: string): Promise<UserNotifica
       notifs.push({ id: doc.id, ...doc.data() } as UserNotification);
     });
 
-    if (notifs.length === 0) {
-      const defaults = getLocalNotifications(userId);
-      for (const n of defaults) {
-        await setDoc(doc(db, path, n.id), n);
-      }
-      return defaults;
-    }
-    // Sort by creation date descending
     return notifs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } catch (error) {
     if (isOfflineError(error)) {
@@ -1456,38 +1346,7 @@ export interface UserDeadline {
 function getLocalDeadlines(userId: string): UserDeadline[] {
   const data = localStorage.getItem(`nexus_demo_deadlines_${userId}`);
   if (data) return JSON.parse(data);
-
-  const defaults: UserDeadline[] = [
-    {
-      id: 'dl_1',
-      userId,
-      category: 'Grant',
-      title: 'African Climate Foundation Grant Proposal Pitch',
-      date: new Date(Date.now() + 3 * 24 * 3600000).toISOString().split('T')[0], // 3 days from now
-      description: 'Prepare and upload the five-page concept slide deck for solar integration.',
-      status: 'Pending'
-    },
-    {
-      id: 'dl_2',
-      userId,
-      category: 'Milestone',
-      title: 'TRL-6 Bio-waste digester prototype trial run',
-      date: new Date(Date.now() + 10 * 24 * 3600000).toISOString().split('T')[0], // 10 days from now
-      description: 'Host initial physical validation session at UNILAG laboratories.',
-      status: 'Pending'
-    },
-    {
-      id: 'dl_3',
-      userId,
-      category: 'Alliance',
-      title: 'EcoEnergy Alliance Application Deadline',
-      date: new Date(Date.now() + 14 * 24 * 3600000).toISOString().split('T')[0], // 14 days from now
-      description: 'Provide final institutional signoff letters and ORCID references.',
-      status: 'Pending'
-    }
-  ];
-  localStorage.setItem(`nexus_demo_deadlines_${userId}`, JSON.stringify(defaults));
-  return defaults;
+  return [];
 }
 
 function setLocalDeadlines(userId: string, deadlines: UserDeadline[]) {
@@ -1509,13 +1368,6 @@ export async function getUserDeadlines(userId: string): Promise<UserDeadline[]> 
       list.push({ id: doc.id, ...doc.data() } as UserDeadline);
     });
 
-    if (list.length === 0) {
-      const defaults = getLocalDeadlines(userId);
-      for (const d of defaults) {
-        await setDoc(doc(db, path, d.id), d);
-      }
-      return defaults;
-    }
     return list.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   } catch (error) {
     if (isOfflineError(error)) {
@@ -1582,68 +1434,10 @@ export async function deleteDeadline(userId: string, deadlineId: string): Promis
 // COMMUNITY SERVICES
 const LOCAL_POSTS_KEY = 'nexus_demo_community_posts';
 
-const SEED_COMMUNITY_POSTS: CommunityPost[] = [
-  {
-    id: 'post_seed_sarah_1',
-    userId: 'res-sarah-adeyemi',
-    authorName: 'Dr. Sarah Adeyemi',
-    authorInstitution: 'University of Lagos',
-    authorCountry: 'Nigeria',
-    authorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300&h=300',
-    content: "Excited to share that our joint solar-biogas hybrid study for municipal cold chains has passed its first round of peer review! This research demonstrates how tropical microgrids can combine municipal waste-to-energy and solar PV to ensure constant power for agricultural storage, reducing local post-harvest losses by up to 40%.",
-    researchLink: "https://aurenix-research.org/papers/solar-biogas-hybrid-study",
-    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
-    likes: ['res-amadi-keita', 'res-chinedu-okafor'],
-    comments: [
-      {
-        userId: 'res-amadi-keita',
-        userName: 'Prof. Amadi Keita',
-        userAvatar: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?auto=format&fit=crop&q=80&w=300&h=300',
-        content: 'This is crucial work, Sarah! The integration of organic biogas with PV represents the exact kind of firm-dispatchable balance needed in tropical microgrids. Looking forward to the full publication!',
-        createdAt: new Date(Date.now() - 3600000 * 1.5).toISOString()
-      }
-    ]
-  },
-  {
-    id: 'post_seed_amadi_1',
-    userId: 'res-amadi-keita',
-    authorName: 'Prof. Amadi Keita',
-    authorInstitution: 'Université Cheikh Anta Diop',
-    authorCountry: 'Senegal',
-    authorAvatar: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?auto=format&fit=crop&q=80&w=300&h=300',
-    content: "We just finished compiling the experimental results from our 15kW peanut hull gasifier trials in rural Kaolack, Senegal. The gas clean-up system achieved 98% tar cracking efficiency using local laterite catalysts, which is a major win for lowering operational costs of off-grid agricultural cooperatives. Paper draft coming soon!",
-    createdAt: new Date(Date.now() - 3600000 * 18).toISOString(), // 18 hours ago
-    likes: ['res-sarah-adeyemi'],
-    comments: []
-  },
-  {
-    id: 'post_seed_chinedu_1',
-    userId: 'res-chinedu-okafor',
-    authorName: 'Engr. Chinedu Okafor',
-    authorInstitution: 'Africa CleanTech Solutions',
-    authorCountry: 'Kenya',
-    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300&h=300',
-    content: "Field installation update: Successfully commissioned a 45kWp solar smart mini-grid with built-in LFP (Lithium Iron Phosphate) battery storage for a farming cooperative near Nakuru. Integrating smart controls allows the cooperative to prioritize solar direct-drive during peak sunshine for maize-milling, while preserving battery state-of-charge for household lighting after dark.",
-    imageUrl: 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&q=80&w=800&h=500',
-    createdAt: new Date(Date.now() - 3600000 * 36).toISOString(), // 1.5 days ago
-    likes: ['res-sarah-adeyemi', 'res-almaz-demissie'],
-    comments: [
-      {
-        userId: 'res-almaz-demissie',
-        userName: 'Almaz Demissie',
-        userAvatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=300&h=300',
-        content: 'Fantastic practical results, Chinedu! How did you address the voltage sag during high-torque startup of the milling motors?',
-        createdAt: new Date(Date.now() - 3600000 * 30).toISOString()
-      }
-    ]
-  }
-];
-
 function getLocalCommunityPosts(): CommunityPost[] {
   const data = localStorage.getItem(LOCAL_POSTS_KEY);
   if (!data) {
-    localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(SEED_COMMUNITY_POSTS));
-    return SEED_COMMUNITY_POSTS;
+    return [];
   }
   return JSON.parse(data);
 }
@@ -1666,13 +1460,6 @@ export async function getCommunityPosts(): Promise<CommunityPost[]> {
     snapshot.forEach(docSnap => {
       list.push({ id: docSnap.id, ...docSnap.data() } as CommunityPost);
     });
-
-    if (list.length === 0) {
-      for (const p of SEED_COMMUNITY_POSTS) {
-        await setDoc(doc(db, path, p.id), p);
-      }
-      return SEED_COMMUNITY_POSTS;
-    }
 
     return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } catch (error) {

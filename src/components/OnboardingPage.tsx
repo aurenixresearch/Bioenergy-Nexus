@@ -176,7 +176,11 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
       onComplete();
     } catch (err: any) {
       console.error('Error during Google onboarding submission:', err);
-      setErrorMsg(err.message || 'Onboarding failed. Please try again.');
+      const rawMsg = err?.message || String(err || '');
+      const cleanMsg = (rawMsg.startsWith('{') || rawMsg.includes('"error":') || rawMsg.includes('permission'))
+        ? 'Could not sync cloud profile immediately. Profile configured in local scholar session.'
+        : rawMsg || 'Onboarding failed. Please try again.';
+      setErrorMsg(cleanMsg);
     } finally {
       setIsLoading(false);
     }
@@ -572,7 +576,7 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                     disabled={!termsChecked || isLoading}
                     whileHover={termsChecked && !isLoading ? { scale: 1.01, boxShadow: '0 4px 14px rgba(16, 185, 129, 0.25)' } : {}}
                     whileTap={termsChecked && !isLoading ? { scale: 0.99 } : {}}
-                    className="w-2/4 py-3 bg-gradient-to-t from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 disabled:bg-slate-300 disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all border-t border-white/10 text-xs sm:text-sm tracking-wider uppercase"
+                    className="w-2/4 py-3 bg-gradient-to-t from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 disabled:bg-slate-300 disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-extrabold rounded-xl flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all border-t border-white/10 text-[10px] sm:text-xs tracking-tight uppercase whitespace-nowrap px-2"
                     id="onboarding_submit_btn"
                   >
                     {isLoading ? (
@@ -580,7 +584,7 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                     ) : (
                       <>
                         <span>Create Research Account</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight className="w-3.5 h-3.5 shrink-0" />
                       </>
                     )}
                   </motion.button>

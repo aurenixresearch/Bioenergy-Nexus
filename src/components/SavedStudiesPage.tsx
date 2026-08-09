@@ -268,7 +268,7 @@ export default function SavedStudiesPage({
             </div>
             <div className="space-y-1.5 sm:space-y-2">
               <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                {searchTerm || selectedCategory !== 'All' ? 'No matching saved studies' : 'Your saved library is empty'}
+                {searchTerm || selectedCategory !== 'All' ? 'No matching saved studies' : "You haven't saved any research yet."}
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
                 {searchTerm || selectedCategory !== 'All' 

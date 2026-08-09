@@ -78,7 +78,6 @@ const InsightsHub = safeLazy(() => import('./components/InsightsHub'));
 const ResearchAreasPage = safeLazy(() => import('./components/ResearchAreasPage'));
 const LegalLayout = safeLazy(() => import('./components/legal/LegalLayout'));
 const CommunityPage = safeLazy(() => import('./components/CommunityPage'));
-const UtilityPage = safeLazy(() => import('./components/UtilityPage'));
 const NotFoundPage = safeLazy(() => import('./components/NotFoundPage'));
 
 function ViewLoadingFallback() {
@@ -166,7 +165,7 @@ function parsePath(path: string) {
   }
 
   // Standard views
-  const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas', 'legal', 'community', 'utility'];
+  const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas', 'legal', 'community'];
   const viewName = path.substring(1);
   if (views.includes(viewName)) {
     return { view: viewName as any, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: 'terms' };
@@ -176,13 +175,13 @@ function parsePath(path: string) {
 }
 
 const DEMO_GUEST_USER = {
-  uid: 'demo-scholar-guest',
-  displayName: 'Dr. Sarah Jenkins',
-  email: 's.jenkins@aurenix-research.org',
-  photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
-  emailVerified: true,
-  isAnonymous: false,
-  metadata: { creationTime: '2026-01-15T08:00:00.000Z' }
+  uid: 'guest-user',
+  displayName: 'Guest Scholar',
+  email: '',
+  photoURL: '',
+  emailVerified: false,
+  isAnonymous: true,
+  metadata: {}
 };
 
 function parseUrl() {
@@ -263,8 +262,7 @@ export default function App() {
       insights: '/insights',
       'research-areas': '/research-areas',
       legal: '/legal',
-      community: '/community',
-      utility: '/utility'
+      community: '/community'
     };
 
     const currentPath = window.location.pathname;
@@ -695,10 +693,12 @@ export default function App() {
       localStorage.removeItem('nexus_demo_mode');
       localStorage.removeItem('nexus_demo_user');
       localStorage.removeItem('nexus_last_active_timestamp');
-      sessionStorage.removeItem('nexus_system_initialized');
       await signOut(auth);
       setUser(null);
-      setView('about');
+      setUserProfileState(null);
+      setView('home');
+      window.history.pushState(null, '', '/');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       console.error('Sign Out Error:', err);
     }
@@ -777,9 +777,9 @@ export default function App() {
               transition={{ duration: 0.35, ease: 'easeOut' }}
             >
               <SeoManager
-                title="Aurenix — Connecting Energy and Climate Research, Innovation, and Global Collaboration"
-                description="Aurenix connects African researchers, universities, students, climate tech leaders, and funding bodies to accelerate renewable energy research, bioenergy, energy storage, and clean technology."
-                keywords={['Energy research', 'Renewable energy', 'Clean energy innovation', 'Climate technology', 'African research', 'Global research collaboration']}
+                title="Aurenix Research | Nigeria's Bioenergy, Waste-to-Energy & Circular Economy Research Hub"
+                description="Aurenix Research is Nigeria's dedicated research, training, and consulting hub for waste-to-energy technologies, bioenergy systems, biomass assessments, and circular economy solutions across Sub-Saharan Africa."
+                keywords={['bioenergy research Nigeria', 'waste-to-energy Africa', 'circular economy research', 'biomass feasibility study', 'anaerobic digestion Nigeria', 'biogas technology Africa', 'renewable energy research hub', 'environmental sustainability Africa', 'energy transition Nigeria', 'organic waste management', 'Aurenix Research']}
                 canonicalUrl="https://aurenix-research.org/"
               />
               <Hero 
@@ -1234,28 +1234,6 @@ export default function App() {
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
                 <UserDashboard 
-                  user={user || (DEMO_GUEST_USER as any)}
-                  onBackToLanding={() => setView('research')}
-                  activeInquiries={activeInquiries}
-                  activePartnerships={activePartnerships}
-                  onRefreshAll={handleRefreshAll}
-                  onNavigateToProfile={() => setView('profile')}
-                  onNavigateToSettings={() => setView('settings')}
-                  onNavigateToView={setView}
-                  setSavedPaperIds={setSavedPaperIds}
-                />
-              </motion.div>
-            )}
-
-            {currentView === 'utility' && (
-              <motion.div
-                key="utility-page"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
-              >
-                <UtilityPage 
                   user={user || (DEMO_GUEST_USER as any)}
                   onBackToLanding={() => setView('research')}
                   activeInquiries={activeInquiries}

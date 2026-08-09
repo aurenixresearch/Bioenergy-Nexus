@@ -1021,7 +1021,7 @@ export default function MessagesPage({
                   <MessageSquare className="w-6 h-6" />
                 </div>
                 <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  No messages found
+                  {searchQuery ? 'No messages found' : 'No conversations yet.'}
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
                   Connect with scholars via mutual follows or alliance applications to start chatting.

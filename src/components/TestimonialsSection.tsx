@@ -40,168 +40,7 @@ export interface TestimonialFAQ {
   rating: number;
 }
 
-const TESTIMONIAL_FAQS: TestimonialFAQ[] = [
-  {
-    id: 't-1',
-    category: 'chemistry',
-    categoryLabel: 'FEEDSTOCK & CHEMISTRY',
-    categoryIcon: FlaskConical,
-    faqQuestion: 'How reliable are anaerobic digestion yields with variable organic waste in tropical climates?',
-    quote: 'We used to suffer unpredictable methane output due to seasonal humidity and feedstock moisture swings in Lagos. Aurenix researchers came to our lab, conducted biochemical characterization, and developed moisture-tuned loading algorithms that stabilized our biomethane production at 94% efficiency year-round. Their direct research support saved us over 18 months of trial and error.',
-    authorName: 'Dr. Samuel Adebayo',
-    authorTitle: 'Process Chemistry Specialist',
-    institution: 'University of Lagos (UNILAG)',
-    location: 'Lagos, Nigeria',
-    initials: 'SA',
-    verifiedMetricHighlight: '94.2%',
-    verifiedMetricLabel: 'Methane Yield Stability Achieved',
-    rating: 5,
-  },
-  {
-    id: 't-2',
-    category: 'roi',
-    categoryLabel: 'ROI & FEASIBILITY',
-    categoryIcon: TrendingUp,
-    faqQuestion: 'What is the typical ROI and capital payback period for commercial waste-to-energy projects in West Africa?',
-    quote: 'Institutional investors always question capital payback in emerging markets. Aurenix researchers worked side-by-side with our team to conduct a comprehensive empirical audit and bankable feasibility study, accurately projecting our 3.2-year IRR and levelized cost of energy for a 2MW facility. Financial institutions approved our $4.5M debt financing based directly on their research.',
-    authorName: 'Engr. Chidi Okafor',
-    authorTitle: 'Clean Tech Plant Operations Consultant',
-    institution: 'Pan-African Energy Infrastructure Fund',
-    location: 'Abuja, Nigeria',
-    initials: 'CO',
-    verifiedMetricHighlight: '$4.5M',
-    verifiedMetricLabel: 'Debt Financing Approved',
-    rating: 5,
-  },
-  {
-    id: 't-3',
-    category: 'regulatory',
-    categoryLabel: 'REGULATORY & NDCS',
-    categoryIcon: ShieldCheck,
-    faqQuestion: 'How do Aurenix feasibility reports align with national environmental regulations and NDCs?',
-    quote: 'Navigating national emission reduction targets (NDCs) and EIA compliance often delays projects for years. Aurenix researchers helped us by designing rigorous carbon-accounting frameworks and EPA-compliant leachate control protocols, answering every regulatory query and streamlining our clearance in under 60 days.',
-    authorName: 'Dr. Kweku Mensah',
-    authorTitle: 'Senior Climate Policy Advisor',
-    institution: 'ECOWAS Energy & Climate Directorate',
-    location: 'Accra, Ghana',
-    initials: 'KM',
-    verifiedMetricHighlight: '60-Day',
-    verifiedMetricLabel: 'Fast-Track EIA Clearance',
-    rating: 5,
-  },
-  {
-    id: 't-4',
-    category: 'scaling',
-    categoryLabel: 'SCALING & TECHNOLOGY',
-    categoryIcon: Building2,
-    faqQuestion: 'Can lab-scale biodigester results be reliably scaled to megawatt-capacity industrial plants?',
-    quote: 'Scaling up from lab-scale 50L batch digesters to 5,000m³ continuous CSTR reactors usually risks thermal degradation. Aurenix researchers helped us run computational fluid dynamics modeling and custom inoculum balance, enabling a seamless 1.5MW airport waste scaling without digester acidification or operational downtime.',
-    authorName: 'Chief Engr. Tariq Hassan',
-    authorTitle: 'VP of Engineering',
-    institution: 'GreenGrid Solutions West Africa',
-    location: 'Port Harcourt, Nigeria',
-    initials: 'TH',
-    verifiedMetricHighlight: '1.5 MW',
-    verifiedMetricLabel: 'Plant Scaled Zero Downtime',
-    rating: 5,
-  },
-  {
-    id: 't-5',
-    category: 'training',
-    categoryLabel: 'CAPACITY & TRAINING',
-    categoryIcon: GraduationCap,
-    faqQuestion: 'Does Aurenix provide hands-on technical training for site engineers or just static PDF reports?',
-    quote: 'Most consultancies hand over a PDF report and walk away. Aurenix researchers joined us on-site for 3 weeks, personally training our 14 facility technicians on gas chromatography, pH buffer balance, and safety monitoring. Their hands-on research guidance kept our operational uptime above 98% for two straight years.',
-    authorName: 'Fatima Alao',
-    authorTitle: 'Director of Plant Operations',
-    institution: 'West African Circularity Cooperative',
-    location: 'Ibadan, Nigeria',
-    initials: 'FA',
-    verifiedMetricHighlight: '98.5%',
-    verifiedMetricLabel: 'Plant Uptime Maintained',
-    rating: 5,
-  },
-  {
-    id: 't-6',
-    category: 'chemistry',
-    categoryLabel: 'FEEDSTOCK & CHEMISTRY',
-    categoryIcon: Award,
-    faqQuestion: 'How accurate is Aurenix’s chemical composition analysis for agro-industrial waste streams?',
-    quote: 'Aurenix researchers collaborated with our academic lab to perform high-precision proximate and ultimate analyses on cassava peel and abattoir effluent. Their empirical findings provided the exact baseline data we needed to answer our postgraduate research hypotheses and publish in peer-reviewed journals.',
-    authorName: 'Prof. Elizabeth Nwachukwu',
-    authorTitle: 'Head of Chemical Engineering Dept.',
-    institution: 'African Institute for Sustainable Sciences',
-    location: 'Enugu, Nigeria',
-    initials: 'EN',
-    verifiedMetricHighlight: '100%',
-    verifiedMetricLabel: 'Peer-Reviewed Reference Benchmark',
-    rating: 5,
-  },
-  {
-    id: 't-7',
-    category: 'chemistry',
-    categoryLabel: 'FEEDSTOCK & CHEMISTRY',
-    categoryIcon: Flame,
-    faqQuestion: 'Which organic waste streams yield the highest biomethane output without digester clogging?',
-    quote: 'When we struggled to identify optimal co-digestion blends, Aurenix researchers analyzed our mixed food waste, abattoir blood, and cassava peel samples in their lab. Their custom feedstock recipe boosted our specific gas yield by 41% while preventing volatile fatty acid accumulation and digester footsing.',
-    authorName: 'Engr. Blessing Danjuma',
-    authorTitle: 'Biomass Energy Systems Lead',
-    institution: 'Kaduna Renewable Energy Agency',
-    location: 'Kaduna, Nigeria',
-    initials: 'BD',
-    verifiedMetricHighlight: '+41.2%',
-    verifiedMetricLabel: 'Biomethane Yield Increase',
-    rating: 5,
-  },
-  {
-    id: 't-8',
-    category: 'roi',
-    categoryLabel: 'ROI & FEASIBILITY',
-    categoryIcon: Zap,
-    faqQuestion: 'How does the levelized cost of biogas electricity compare to off-grid diesel generation?',
-    quote: 'Operating our 800kW processing factory on diesel was costing us $0.38/kWh. Aurenix researchers evaluated our thermal loads, modeled engine heat recovery, and helped us design an integrated biogas system that brought our levelized cost of energy down to $0.11/kWh, cutting fuel expenditures by over 70%.',
-    authorName: 'Dr. Ibrahim Toure',
-    authorTitle: 'Chief Technology Officer',
-    institution: 'Sahel Agritech Industrial Park',
-    location: 'Niamey, Niger',
-    initials: 'IT',
-    verifiedMetricHighlight: '71% Cost',
-    verifiedMetricLabel: 'LCOE Savings vs Diesel',
-    rating: 5,
-  },
-  {
-    id: 't-9',
-    category: 'chemistry',
-    categoryLabel: 'FEEDSTOCK & CHEMISTRY',
-    categoryIcon: FlaskConical,
-    faqQuestion: 'Can bio-digestate effluent be safely processed and sold as commercial bio-fertilizer?',
-    quote: 'To answer whether our digester waste could become a commercial asset, Aurenix researchers conducted heavy metal testing, pathogen destruction verification, and NPK stabilization protocols. Their research helped us transform raw digestate into packaged organic bio-fertilizer, generating $120,000 in new annual revenue.',
-    authorName: 'Dr. Amina Bello',
-    authorTitle: 'Soil & Waste Agro-chemist',
-    institution: 'Federal University of Agriculture, Abeokuta (FUNAAB)',
-    location: 'Abeokuta, Nigeria',
-    initials: 'AB',
-    verifiedMetricHighlight: '$120K/yr',
-    verifiedMetricLabel: 'New Fertilizer Revenue Created',
-    rating: 5,
-  },
-  {
-    id: 't-10',
-    category: 'regulatory',
-    categoryLabel: 'REGULATORY & NDCS',
-    categoryIcon: ShieldCheck,
-    faqQuestion: 'How can bioenergy projects qualify for international carbon offset credits and climate grants?',
-    quote: 'When we needed to qualify our plant for international climate finance, Aurenix researchers helped us measure real-time methane avoidance and establish Article 6.2 ITMO verification rules. Their scientific audit validated 12,400 tCO2e of annual carbon savings, unlocking $180,000 in carbon credit grants.',
-    authorName: 'Prof. Jean-Paul Kouassi',
-    authorTitle: 'Climate Finance & Carbon Lead',
-    institution: 'West African Science Service Centre on Climate Change (WASCAL)',
-    location: 'Ouagadougou, Burkina Faso',
-    initials: 'JK',
-    verifiedMetricHighlight: '12,400 tCO2e',
-    verifiedMetricLabel: 'Verified Carbon Avoidance / Year',
-    rating: 5,
-  }
-];
+const TESTIMONIAL_FAQS: TestimonialFAQ[] = [];
 
 const CATEGORIES = [
   { id: 'all', label: 'All Endorsements & FAQs' },
@@ -394,19 +233,19 @@ export default function TestimonialsSection() {
 
         {/* Testimonials Container */}
         {filteredTestimonials.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 p-8 space-y-3 max-w-xl mx-auto">
-            <HelpCircle className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto" />
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">No matching testimonials found</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Try adjusting your search query or rephrasing your question.</p>
+          <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 p-8 sm:p-10 space-y-4 max-w-xl mx-auto shadow-xs">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+              <MessageSquare className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-base font-extrabold text-slate-900 dark:text-white">No testimonials have been published yet</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Be the first researcher, institution, or industry partner to share your field experiences.</p>
+            </div>
             <button
-              onClick={() => {
-                setSelectedCategory('all');
-                setSearchQuery('');
-                setMobileIndex(0);
-              }}
-              className="mt-2 inline-flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
+              onClick={() => setIsTestimonialModalOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-xs"
             >
-              Reset Search & View All
+              Share Your Feedback
             </button>
           </div>
         ) : (

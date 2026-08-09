@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { AdminThemeVars } from './AdminPortal';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   AlertTriangle, 
@@ -36,6 +37,7 @@ interface SystemOperationsProps {
   onUpdateAuditLogs: (updated: AdminAuditLog[]) => void;
   onUpdateAdminRoles: (updated: AdminRoleConfig[]) => void;
   theme: 'light' | 'dark';
+  tv?: AdminThemeVars;
   users?: any[];
   funding?: any[];
 }
@@ -289,51 +291,119 @@ export default function SystemOperations({
       )}
 
       {/* SYSTEM ANALYTICS */}
-      {currentTab === 'analytics' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" id="analytics_reporting_center">
-          
-          <div className="p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xs space-y-6">
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 font-display">Institution Engagement League</h4>
-              <p className="text-[11px] text-slate-400 mt-0.5">Ranked by publications, grants received, and collaborations</p>
+      {currentTab === 'analytics' && (() => {
+        // ── Compute real analytics from Firestore data ──────────────────────
+        // Institution engagement: group users by institution, score = researchCount + projects * 2
+        const institutionMap: Record<string, { institution: string; score: number; count: number }> = {};
+        users.forEach(u => {
+          const inst = u.institution || 'Individual';
+          if (!institutionMap[inst]) institutionMap[inst] = { institution: inst, score: 0, count: 0 };
+          institutionMap[inst].score += (u.researchCount || 0) + (u.projects || 0) * 2 + (u.verified ? 5 : 0);
+          institutionMap[inst].count++;
+        });
+        const topInstitutions = Object.values(institutionMap)
+          .filter(i => i.institution !== 'Individual' && i.institution !== '' && i.count > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 5);
+
+        // Alliance conversion: % of reports that are resolved (proxy for resolution success)
+        const resolvedReports = reports.filter(r => r.status === 'Resolved').length;
+        const totalReports = reports.length || 1;
+        const resolutionRate = Math.round((resolvedReports / totalReports) * 100);
+
+        // Active funding: open vs total
+        const openFunding = funding.filter(f => f.status === 'Open').length;
+        const totalFunding = funding.length;
+        const fundingUtilPct = totalFunding > 0 ? Math.round((openFunding / totalFunding) * 100) : 0;
+
+        // Average research per user
+        const totalResearch = users.reduce((s, u) => s + (u.researchCount || 0), 0);
+        const avgResearchPerUser = users.length > 0 ? (totalResearch / users.length).toFixed(1) : '0';
+
+        // Verified researcher rate
+        const verifiedCount = users.filter(u => u.verified).length;
+        const verifiedPct = users.length > 0 ? Math.round((verifiedCount / users.length) * 100) : 0;
+
+        // Audit activity in last 30 days
+        const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const recentAuditCount = auditLogs.filter(a => {
+          const d = new Date(a.timestamp || '');
+          return !isNaN(d.getTime()) && d >= thirtyDaysAgo;
+        }).length;
+
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" id="analytics_reporting_center">
+
+            {/* Institution Engagement League — real data */}
+            <div className="p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xs space-y-5">
+              <div>
+                <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">Institution Engagement League</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Ranked by member research output + projects · {Object.keys(institutionMap).length} institutions on platform
+                </p>
+              </div>
+              {topInstitutions.length === 0 ? (
+                <div className="py-6 text-center">
+                  <p className="text-xs text-slate-400">No institution data yet. Rankings will appear as researchers fill in their profiles.</p>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {topInstitutions.map((inst, i) => {
+                    const maxScore = topInstitutions[0].score || 1;
+                    const pct = Math.round((inst.score / maxScore) * 100);
+                    return (
+                      <div key={inst.institution} className="space-y-1.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[200px]">
+                            {i + 1}. {inst.institution}
+                          </span>
+                          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 shrink-0 ml-2">
+                            {inst.score} pts · {inst.count} member{inst.count !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <div className="h-1.5 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                          <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width:`${pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="text-[9px] font-mono text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
+                Score = research papers + (projects × 2) + verified bonus (5 pts). Source: Firestore users collection.
+              </p>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/40 rounded-2xl">
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">1. University of Ibadan (Nigeria)</span>
-                <span className="text-xs font-mono font-bold text-emerald-600">82 Points</span>
+            {/* Platform Health Metrics — real data */}
+            <div className="p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xs space-y-5">
+              <div>
+                <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">Platform Health Metrics</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5">Derived from live Firestore collections</p>
               </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/40 rounded-2xl">
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">2. Université Cheikh Anta Diop (Senegal)</span>
-                <span className="text-xs font-mono font-bold text-emerald-600">64 Points</span>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label:'Report Resolution Rate',   value:`${resolutionRate}%`,         sub:`${resolvedReports} / ${reports.length} resolved`,        color:'emerald' },
+                  { label:'Open Funding Calls',        value:`${openFunding} / ${totalFunding}`, sub:`${fundingUtilPct}% open`,                           color:'cyan' },
+                  { label:'Avg Research / Member',     value:avgResearchPerUser,             sub:`across ${users.length} members`,                       color:'blue' },
+                  { label:'Member Verification Rate',  value:`${verifiedPct}%`,             sub:`${verifiedCount} of ${users.length} verified`,          color:'violet' },
+                  { label:'Admin Actions (30d)',        value:String(recentAuditCount),       sub:'audit log entries',                                    color:'amber' },
+                  { label:'Pending Reports',            value:String(reports.filter(r => r.status === 'Pending').length), sub:'awaiting triage',          color:'red' },
+                ].map(m => (
+                  <div key={m.label} className={`p-4 rounded-2xl bg-${m.color}-50/50 dark:bg-${m.color}-950/10 space-y-1`}>
+                    <span className="block text-[9px] font-mono text-slate-400 uppercase tracking-wider">{m.label}</span>
+                    <span className={`block text-xl font-black text-${m.color}-700 dark:text-${m.color}-400`}>{m.value}</span>
+                    <span className="block text-[9px] text-slate-400">{m.sub}</span>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/40 rounded-2xl">
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">3. KNUST (Ghana)</span>
-                <span className="text-xs font-mono font-bold text-emerald-600">45 Points</span>
-              </div>
+              <p className="text-[9px] font-mono text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
+                All values computed from Firestore in real time. Refresh the portal to update.
+              </p>
             </div>
+
           </div>
-
-          <div className="p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xs space-y-6">
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 font-display">Alliance Success & Yields</h4>
-              <p className="text-[11px] text-slate-400 mt-0.5">Reviewing matching covenant transitions into commercial projects</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/10 rounded-2xl">
-                <span className="block text-[10px] font-mono text-slate-400 uppercase">Alliance Conversion</span>
-                <span className="block text-xl font-black text-emerald-700 dark:text-emerald-400 mt-1">74.2%</span>
-              </div>
-              <div className="p-4 bg-teal-50/50 dark:bg-teal-950/10 rounded-2xl">
-                <span className="block text-[10px] font-mono text-slate-400 uppercase">Consulting Growth</span>
-                <span className="block text-xl font-black text-teal-700 dark:text-teal-400 mt-1">+14.5%</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      )}
+        );
+      })()}
 
       {/* NOTIFICATIONS DISPATCH */}
       {currentTab === 'notifications' && (

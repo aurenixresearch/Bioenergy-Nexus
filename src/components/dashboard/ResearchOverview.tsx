@@ -167,7 +167,6 @@ export default function ResearchOverview({
       {/* Section Title */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-display font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-          <FileText className="w-5 h-5 text-[#008744] shrink-0" />
           <span>Research Overview</span>
         </h3>
         {loading && (
@@ -251,12 +250,12 @@ export default function ResearchOverview({
                 >
                   <UploadCloud className="w-8 h-8 stroke-[1.5]" />
                 </div>
-                <div className="space-y-1 max-w-[200px]">
+                <div className="space-y-1">
                   <p 
-                    className="text-xs font-bold"
+                    className="text-xs font-bold whitespace-nowrap"
                     style={{ color: '#0c1b00' }}
                   >
-                    No research has been uploaded yet.
+                    No research has been published yet.
                   </p>
                 </div>
                 <button

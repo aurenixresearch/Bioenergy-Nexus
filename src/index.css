@@ -464,6 +464,8 @@ textarea.composer-textarea:active,
    ========================================================================== */
 
 /* 1. Cards, Dashboard Widgets, and Statistics Panels */
+/* Note: Global card hover translateY has been removed to prevent distracting bounce on every container.
+   Hover lift effects are only applied on explicitly interactive elements (buttons) below. */
 #app_layout_wrapper div.bg-white,
 #app_layout_wrapper div[class*="bg-white"],
 #app_layout_wrapper div.rounded-2xl,
@@ -488,8 +490,8 @@ div.rounded-2xl.shadow-md,
 div.rounded-xl.shadow-md,
 div.rounded-2xl.shadow-lg,
 div.rounded-xl.shadow-lg {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03), 0 0 10px 1px rgba(16, 185, 129, 0.04), 0 0 0 1px rgba(16, 185, 129, 0.05) !important;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03), 0 0 0 1px rgba(16, 185, 129, 0.03) !important;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease !important;
 }
 
 #app_layout_wrapper div.bg-white:hover,
@@ -516,8 +518,7 @@ div.rounded-2xl.shadow-md:hover,
 div.rounded-xl.shadow-md:hover,
 div.rounded-2xl.shadow-lg:hover,
 div.rounded-xl.shadow-lg:hover {
-  transform: translateY(-1.5px) !important;
-  box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.06), 0 0 14px 1px rgba(16, 185, 129, 0.08), 0 0 0 1px rgba(16, 185, 129, 0.08) !important;
+  box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(16, 185, 129, 0.06) !important;
 }
 
 /* 2. Primary Buttons (Vibrant Emerald/Green theme) */
@@ -648,6 +649,7 @@ div[role="listbox"],
    ========================================================================== */
 
 /* 1. Dark Mode Cards, Widgets, and Panels with Subtle Illuminated Depth & Soft Emerald Glow */
+/* Note: Global card hover translateY removed — prevents all containers from bouncing on hover */
 .dark #app_layout_wrapper div.bg-white,
 .dark #app_layout_wrapper div[class*="bg-white"],
 .dark #app_layout_wrapper div.rounded-2xl,
@@ -669,8 +671,8 @@ div[role="listbox"],
 .dark div.rounded-2xl.shadow-lg,
 .dark div.rounded-xl.shadow-lg {
   background-color: #0b110e !important;
-  border: 1px solid rgba(52, 211, 153, 0.08) !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85), 0 0 15px 1px rgba(52, 211, 153, 0.05), 0 0 0 1px rgba(52, 211, 153, 0.03) !important;
+  border: 1px solid rgba(52, 211, 153, 0.07) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(52, 211, 153, 0.03) !important;
 }
 
 .dark #app_layout_wrapper div.bg-white:hover,
@@ -693,10 +695,9 @@ div[role="listbox"],
 .dark div.rounded-xl.shadow-md:hover,
 .dark div.rounded-2xl.shadow-lg:hover,
 .dark div.rounded-xl.shadow-lg:hover {
-  transform: translateY(-1.5px) !important;
   background-color: #0e1814 !important;
-  border: 1px solid rgba(52, 211, 153, 0.16) !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9), 0 0 20px 2px rgba(52, 211, 153, 0.1), 0 0 0 1px rgba(52, 211, 153, 0.06) !important;
+  border: 1px solid rgba(52, 211, 153, 0.12) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(52, 211, 153, 0.05) !important;
 }
 
 /* 2. Dark Mode Primary Buttons (Vibrant Emerald with Deep Ambient Glow) */
