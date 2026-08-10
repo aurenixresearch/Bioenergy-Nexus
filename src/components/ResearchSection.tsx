@@ -311,31 +311,40 @@ export default function ResearchSection({
   };
 
   // Handle Publish Wizard Submit
-  const handlePublishWizardSubmit = async (paperData: Omit<ResearchPaper, 'id'>) => {
+  const handlePublishWizardSubmit = async (paperData: Omit<ResearchPaper, 'id'>, draftPaperId?: string | null) => {
     if (!user) return;
     try {
+      const targetDraftId = draftPaperId || editingDraftData?.id;
       // Check if this is the user's first published research upload
-      const existingPublished = customPapers.filter(p => !p.isDraft && p.id !== editingDraftData?.id);
+      const existingPublished = customPapers.filter(p => !p.isDraft && p.id !== targetDraftId);
       const isFirstUpload = existingPublished.length === 0;
 
-      const docId = await addCustomPaper(paperData, user.uid, user.email || '');
-      
+      let docId = targetDraftId;
+      if (targetDraftId) {
+        // Direct update to existing draft converts it into published paper cleanly
+        await updateCustomPaper(targetDraftId, {
+          ...paperData,
+          isDraft: false,
+          status: paperData.status === 'Draft' ? 'Published' : paperData.status,
+          visibility: paperData.visibility === 'Private Draft' ? 'Public' : paperData.visibility
+        });
+      } else {
+        docId = await addCustomPaper(paperData, user.uid, user.email || '');
+      }
+
       const createdPaper: ResearchPaper = {
-        id: docId,
+        id: docId!,
         ...paperData,
+        isDraft: false,
         isCustom: true,
       };
 
       setCustomPapers(prev => {
-        const existingIdx = prev.findIndex(p => p.id === docId);
-        if (existingIdx >= 0) {
-          const copy = [...prev];
-          copy[existingIdx] = createdPaper;
-          return copy;
-        }
-        return [...prev, createdPaper];
+        const filtered = prev.filter(p => p.id !== targetDraftId && p.id !== docId);
+        return [...filtered, createdPaper];
       });
 
+      setEditingDraftData(null);
       setIsModalOpen(false);
 
       if (isFirstUpload) {
@@ -345,7 +354,7 @@ export default function ResearchSection({
         showNotification('Research entry contributed successfully to Aurenix Repository!', 'success');
       }
     } catch (err) {
-      console.error('Error adding custom paper:', err);
+      console.error('Error submitting paper:', err);
       showNotification('Could not submit paper. Please try again.', 'error');
       throw err;
     }

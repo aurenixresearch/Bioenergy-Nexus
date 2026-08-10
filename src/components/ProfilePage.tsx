@@ -2086,8 +2086,17 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
         <PublishWizard 
           userProfile={profileData}
           onClose={() => setIsUploadWizardOpen(false)}
-          onSubmit={async (paperData) => {
-            await addCustomPaper(paperData, user.uid, user.email || '');
+          onSubmit={async (paperData, draftPaperId) => {
+            if (draftPaperId) {
+              await updateCustomPaper(draftPaperId, {
+                ...paperData,
+                isDraft: false,
+                status: paperData.status === 'Draft' ? 'Published' : paperData.status,
+                visibility: paperData.visibility === 'Private Draft' ? 'Public' : paperData.visibility
+              });
+            } else {
+              await addCustomPaper(paperData, user.uid, user.email || '');
+            }
             setIsUploadWizardOpen(false);
             fetchProfileAndData();
             setAlertMsg({ type: 'success', text: 'Research published successfully!' });

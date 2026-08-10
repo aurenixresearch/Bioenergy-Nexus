@@ -20,12 +20,12 @@ export default function ProfileCompletionModal({
   if (!isOpen) return null;
 
   const requiredFields = [
-    { name: 'Full Name', key: 'Full Name' },
-    { name: 'Role / Designation', key: 'Role / Designation' },
-    { name: 'Institution / Affiliation', key: 'Institution / Affiliation' },
-    { name: 'Country / Location', key: 'Country / Location' },
-    { name: 'Professional Bio', key: 'Professional Bio' },
-    { name: 'Research Interests', key: 'Research Interests' }
+    { name: 'Profile Picture', key: 'Profile Picture' },
+    { name: 'Biography', key: 'Biography' },
+    { name: 'Institution / Organization', key: 'Institution / Organization' },
+    { name: 'Country', key: 'Country' },
+    { name: 'Research Interests', key: 'Research Interests' },
+    { name: 'Contact Information', key: 'Contact Information' }
   ];
 
   return (

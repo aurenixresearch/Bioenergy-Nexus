@@ -11,7 +11,7 @@ import { addCustomPaper, updateCustomPaper } from '../services/db';
 
 interface PublishWizardProps {
   onClose: () => void;
-  onSubmit: (paperData: Omit<ResearchPaper, 'id'>) => Promise<void>;
+  onSubmit: (paperData: Omit<ResearchPaper, 'id'>, draftPaperId?: string | null) => Promise<void> | void;
   initialData?: Partial<ResearchPaper>;
   userProfile?: any;
   onNavigateToProfile?: () => void;
@@ -468,7 +468,7 @@ export default function PublishWizard({ onClose, onSubmit, initialData, userProf
         await updateCustomPaper(draftPaperId, paperData);
       }
 
-      await onSubmit(paperData);
+      await onSubmit(paperData, draftPaperId);
     } catch (err: any) {
       console.error(err);
       setErrorMsg('Failed to publish research. Please try again.');
