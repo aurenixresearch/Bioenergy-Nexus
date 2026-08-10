@@ -122,7 +122,7 @@ export async function checkMessagingEligibility(currentUserId: string, targetUse
   }
 
   try {
-    // A. Check Mutual Follow
+    // A. Check Mutual Follow Connection (Strict Backend Rule)
     const researchers = await getResearchers();
     const currentUserRes = researchers.find(r => r.id === currentUserId || (r as any).uid === currentUserId);
     const targetUserRes = researchers.find(r => r.id === targetUserId || (r as any).uid === targetUserId);
@@ -137,11 +137,12 @@ export async function checkMessagingEligibility(currentUserId: string, targetUse
       userBFollowsUserA = currentUserRes.followers.includes(targetUserId);
     }
 
+    // Mutual follow connection verified
     if (userAFollowsUserB && userBFollowsUserA) {
       return { eligible: true, connectionType: 'mutual_follow' };
     }
 
-    // B. Check Approved Collaboration / Application Connection
+    // B. Check Approved Collaboration / Alliance Application Connection
     const applications = await getApplications();
     const hasApprovedCollab = applications.some(app => {
       const isConnectedUser = (app.applicantId === currentUserId || (app as any).createdBy === currentUserId) &&
@@ -154,21 +155,19 @@ export async function checkMessagingEligibility(currentUserId: string, targetUse
       return { eligible: true, connectionType: 'collaboration' };
     }
 
-    // C. Special Fallback for Demo Scholars/Researchers if connected in Seed Data
-    if (isDemoModeActive(currentUserId)) {
-      // In demo/guest mode, allow starting messaging with scientists for interactive user testing
+    // If Demo mode is active AND both users are in demo list with single follow, allow mutual connection initialization
+    if (isDemoModeActive(currentUserId) && (userAFollowsUserB || userBFollowsUserA)) {
       return { eligible: true, connectionType: 'mutual_follow' };
     }
 
     return { 
       eligible: false, 
-      reason: "Private messaging requires a mutual follow connection or an approved alliance application between scholars." 
+      reason: "Direct messaging requires a mutual follow connection. Both scholars must follow each other to exchange messages." 
     };
 
   } catch (err) {
     console.warn("Error checking messaging eligibility:", err);
-    // Graceful fallback for demo
-    return { eligible: true, connectionType: 'mutual_follow' };
+    return { eligible: false, reason: "Unable to verify mutual follow connection." };
   }
 }
 

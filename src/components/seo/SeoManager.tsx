@@ -14,8 +14,8 @@ export interface SeoProps {
   jsonLd?: Record<string, any> | Array<Record<string, any>>;
 }
 
-const DEFAULT_TITLE = 'Aurenix Research | Nigeria\'s Bioenergy, Waste-to-Energy & Circular Economy Research Hub';
-const DEFAULT_DESC = 'Aurenix Research is Nigeria\'s dedicated research, training, and consulting hub for waste-to-energy technologies, bioenergy systems, biomass assessments, and circular economy research across Sub-Saharan Africa. We provide scientists, policymakers, and developers with verified environmental studies and sustainable feasibility reports.';
+const DEFAULT_TITLE = 'Aurenix Research | Africa\'s Research & Innovation Platform';
+const DEFAULT_DESC = 'Aurenix is Africa\'s research and innovation platform dedicated to advancing energy, climate, and technology solutions. We connect students, researchers, institutions, and global stakeholders to document research, foster collaboration, and transform innovative ideas into real-world impact.';
 const DEFAULT_IMAGE = 'https://lh3.googleusercontent.com/d/1t_ZlrLjmjasOCDhzkwmIohFTqC8ux0oZ';
 const DEFAULT_DOMAIN = 'https://aurenix-research.org';
 

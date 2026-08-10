@@ -128,7 +128,7 @@ export const FOUNDER_INFO = {
   name: 'Filani Olalekan Theophilus',
   title: 'Founder & Lead Renewable Energy Analyst',
   bio: 'Filani Olalekan Theophilus is a dedicated Renewable Energy and Environmental Feasibility/Impact Analyst with hands-on expertise in design, operation, and training of bioenergy systems. He holds a B.Sc. in Industrial Chemistry and has successfully applied his chemical and process foundations in several high-profile real-world implementations, such as configuring waste biodigesters at the Murtala Muhammed International Airport (MMA), Ikeja. Filani is passionate about scaling indigenous scientific capability across Africa and bridging the gap between university research and commercial, scalable clean energy projects.',
-  mission: "Aurenix Research connects African research, innovation, and expertise with the global energy and climate ecosystem. We bridge the gap between academic research and real-world impact by empowering local innovators, fostering strategic partnerships, and deploying practical bioenergy solutions across Africa."
+  mission: "Aurenix is Africa's research and innovation platform dedicated to advancing energy, climate, and technology solutions. We connect students, researchers, institutions, and global stakeholders to document research, foster collaboration, and transform innovative ideas into real-world impact."
 };
 
 export const CONTACT_INFO = {

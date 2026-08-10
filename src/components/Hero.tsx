@@ -30,11 +30,11 @@ function InteractiveBackground() {
   const glowRef = useRef({ x: -999, y: -999, opacity: 0 });
 
   const PALETTE = ['#10b981', '#059669', '#34d399', '#008744', '#10b981'];
-  const REPEL_RADIUS = 160;
-  const REPEL_STRENGTH = 8;
-  const RETURN_EASE = 0.07;
-  const FRICTION = 0.82;
-  const GRID_SIZE = 56; // 56px grid cell
+  const REPEL_RADIUS = 140;
+  const REPEL_STRENGTH = 5.2;
+  const RETURN_EASE = 0.085;
+  const FRICTION = 0.83;
+  const GRID_SIZE = 64; // Clean, elegant 64px grid cells
 
   const initParticles = useCallback((w: number, h: number) => {
     const cols = Math.ceil(w / GRID_SIZE) + 1;
@@ -52,8 +52,8 @@ function InteractiveBackground() {
           originY: y,
           vx: 0,
           vy: 0,
-          radius: Math.random() * 1.8 + 1.2,
-          opacity: Math.random() * 0.45 + 0.45,
+          radius: Math.random() * 0.7 + 0.5, // Refined micro sparkles
+          opacity: Math.random() * 0.35 + 0.45, // Clearly visible green sparkles
           color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
         });
       }
@@ -93,7 +93,7 @@ function InteractiveBackground() {
         clientY <= rect.bottom
       ) {
         mouse.current = { x: clientX - rect.left, y: clientY - rect.top };
-        glowRef.current.opacity = Math.min(glowRef.current.opacity + 0.1, 1);
+        glowRef.current.opacity = Math.min(glowRef.current.opacity + 0.12, 1);
       } else {
         mouse.current = { x: -999, y: -999 };
       }
@@ -113,8 +113,8 @@ function InteractiveBackground() {
       ctx.clearRect(0, 0, w, h);
 
       // Lerp glow position toward cursor
-      glowRef.current.x += (mouse.current.x - glowRef.current.x) * 0.1;
-      glowRef.current.y += (mouse.current.y - glowRef.current.y) * 0.1;
+      glowRef.current.x += (mouse.current.x - glowRef.current.x) * 0.12;
+      glowRef.current.y += (mouse.current.y - glowRef.current.y) * 0.12;
 
       const mx = mouse.current.x;
       const my = mouse.current.y;
@@ -124,18 +124,18 @@ function InteractiveBackground() {
       if (glowRef.current.opacity > 0.01 && hasMouse) {
         const grd = ctx.createRadialGradient(
           glowRef.current.x, glowRef.current.y, 0,
-          glowRef.current.x, glowRef.current.y, 220
+          glowRef.current.x, glowRef.current.y, 180
         );
-        grd.addColorStop(0, `rgba(16, 185, 129, ${0.16 * glowRef.current.opacity})`);
-        grd.addColorStop(0.4, `rgba(52, 211, 153, ${0.08 * glowRef.current.opacity})`);
+        grd.addColorStop(0, `rgba(16, 185, 129, ${0.14 * glowRef.current.opacity})`);
+        grd.addColorStop(0.4, `rgba(52, 211, 153, ${0.06 * glowRef.current.opacity})`);
         grd.addColorStop(1, 'rgba(16, 185, 129, 0)');
         ctx.fillStyle = grd;
         ctx.fillRect(0, 0, w, h);
       } else if (!hasMouse) {
-        glowRef.current.opacity = Math.max(0, glowRef.current.opacity - 0.03);
+        glowRef.current.opacity = Math.max(0, glowRef.current.opacity - 0.04);
       }
 
-      // ─── 2. DRAW INTERACTIVE GREY & EMERALD GRID LINES ────────────
+      // ─── 2. DRAW INTERACTIVE FINE GREY & EMERALD GRID LINES ────────
       const cols = Math.ceil(w / GRID_SIZE) + 1;
       const rows = Math.ceil(h / GRID_SIZE) + 1;
       const gridNodes: { x: number; y: number }[][] = [];
@@ -152,8 +152,8 @@ function InteractiveBackground() {
             const dx = mx - origX;
             const dy = my - origY;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 200 && dist > 0) {
-              const factor = Math.pow((200 - dist) / 200, 1.5) * 14;
+            if (dist < 160 && dist > 0) {
+              const factor = Math.pow((160 - dist) / 160, 1.4) * 9; // Visible, elegant wave displacement
               dispX -= (dx / dist) * factor;
               dispY -= (dy / dist) * factor;
             }
@@ -171,21 +171,20 @@ function InteractiveBackground() {
           else ctx.lineTo(pt.x, pt.y);
         }
 
-        // Calculate proximity of line to cursor for responsive color reaction
         let lineProximity = 0;
         if (hasMouse) {
           const lineY = r * GRID_SIZE;
           const distY = Math.abs(my - lineY);
-          if (distY < 180) {
-            lineProximity = Math.max(0, 1 - distY / 180);
+          if (distY < 150) {
+            lineProximity = Math.max(0, 1 - distY / 150);
           }
         }
 
-        ctx.lineWidth = 1.2 + lineProximity * 0.8;
-        if (lineProximity > 0.1) {
-          ctx.strokeStyle = `rgba(16, 185, 129, ${0.45 + lineProximity * 0.45})`;
+        ctx.lineWidth = 0.75 + lineProximity * 0.55;
+        if (lineProximity > 0.08) {
+          ctx.strokeStyle = `rgba(16, 185, 129, ${0.4 + lineProximity * 0.5})`;
         } else {
-          ctx.strokeStyle = 'rgba(203, 213, 225, 0.65)'; // crisp grey grid line
+          ctx.strokeStyle = 'rgba(203, 213, 225, 0.65)'; // Crisp, visible grey grid line
         }
         ctx.stroke();
       }
@@ -203,16 +202,16 @@ function InteractiveBackground() {
         if (hasMouse) {
           const lineX = c * GRID_SIZE;
           const distX = Math.abs(mx - lineX);
-          if (distX < 180) {
-            lineProximity = Math.max(0, 1 - distX / 180);
+          if (distX < 150) {
+            lineProximity = Math.max(0, 1 - distX / 150);
           }
         }
 
-        ctx.lineWidth = 1.2 + lineProximity * 0.8;
-        if (lineProximity > 0.1) {
-          ctx.strokeStyle = `rgba(16, 185, 129, ${0.45 + lineProximity * 0.45})`;
+        ctx.lineWidth = 0.75 + lineProximity * 0.55;
+        if (lineProximity > 0.08) {
+          ctx.strokeStyle = `rgba(16, 185, 129, ${0.4 + lineProximity * 0.5})`;
         } else {
-          ctx.strokeStyle = 'rgba(203, 213, 225, 0.65)'; // crisp grey grid line
+          ctx.strokeStyle = 'rgba(203, 213, 225, 0.65)'; // Crisp, visible grey grid line
         }
         ctx.stroke();
       }
@@ -232,41 +231,37 @@ function InteractiveBackground() {
           }
         }
 
-        // Spring return to origin
         p.vx += (p.originX - p.x) * RETURN_EASE;
         p.vy += (p.originY - p.y) * RETURN_EASE;
 
-        // Friction
         p.vx *= FRICTION;
         p.vy *= FRICTION;
 
         p.x += p.vx;
         p.y += p.vy;
 
-        // Draw dot
         const displacement = Math.sqrt((p.x - p.originX) ** 2 + (p.y - p.originY) ** 2);
-        const brighten = Math.min(displacement / 25, 1);
-        const finalOpacity = Math.min(p.opacity + brighten * 0.5, 0.95);
+        const brighten = Math.min(displacement / 16, 1);
+        const finalOpacity = Math.min(p.opacity + brighten * 0.35, 0.9);
 
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius + brighten * 1.2, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.radius + brighten * 0.4, 0, Math.PI * 2);
         ctx.fillStyle = p.color + Math.round(finalOpacity * 255).toString(16).padStart(2, '0');
         ctx.fill();
 
-        // Draw connecting green energy lines between nearby displaced particles
-        if (displacement > 3) {
+        if (displacement > 2) {
           for (const other of particlesRef.current) {
             const ox = other.x - p.x;
             const oy = other.y - p.y;
             const od = Math.sqrt(ox * ox + oy * oy);
-            if (od > 0 && od < 65) {
+            if (od > 0 && od < 55) {
               const otherDisp = Math.sqrt((other.x - other.originX) ** 2 + (other.y - other.originY) ** 2);
-              if (otherDisp > 3) {
+              if (otherDisp > 2) {
                 ctx.beginPath();
                 ctx.moveTo(p.x, p.y);
                 ctx.lineTo(other.x, other.y);
-                ctx.strokeStyle = `rgba(16, 185, 129, ${(1 - od / 65) * 0.35})`;
-                ctx.lineWidth = 0.8;
+                ctx.strokeStyle = `rgba(16, 185, 129, ${(1 - od / 55) * 0.28})`;
+                ctx.lineWidth = 0.6;
                 ctx.stroke();
               }
             }
@@ -330,22 +325,22 @@ export default function Hero({ onExploreResearch, onRequestConsulting, onSignIn,
             {/* Tagline Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200/70 rounded-full text-[11px] sm:text-xs font-semibold text-emerald-800 uppercase tracking-wider mx-auto lg:mx-0 shadow-sm">
               <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
-              <span>Africa's Bioenergy Research Hub</span>
+              <span>Africa's Research & Innovation Platform</span>
             </div>
 
             {/* Main Headline — SEO-optimised H1 */}
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-display font-extrabold tracking-tight text-slate-900 leading-[1.15] sm:leading-[1.1]">
-              Nigeria's Leading{' '}
+              Africa's Premier{' '}
               <span className="text-emerald-600 relative inline-block">
-                Waste-to-Energy
+                Research & Innovation
                 <span className="absolute left-0 bottom-1 w-full h-1 bg-emerald-100/80 -z-10 rounded-full" aria-hidden="true" />
               </span>{' '}
-              Research Hub
+              Platform
             </h1>
 
             {/* SEO-rich description */}
             <p className="max-w-2xl text-sm sm:text-base md:text-lg text-slate-600 leading-relaxed mx-auto lg:mx-0 px-2 sm:px-0">
-              Aurenix Research is Nigeria's dedicated research, training, and consulting hub for waste-to-energy technologies, bioenergy systems, and circular economy solutions. We provide scientists, policymakers, and developers with verified environmental studies, biomass assessments, and sustainable feasibility reports for Sub-Saharan Africa.
+              Aurenix is Africa's research and innovation platform dedicated to advancing energy, climate, and technology solutions. We connect students, researchers, institutions, and global stakeholders to document research, foster collaboration, and transform innovative ideas into real-world impact.
             </p>
 
             {/* Action Buttons */}
@@ -511,35 +506,6 @@ export default function Hero({ onExploreResearch, onRequestConsulting, onSignIn,
                     </div>
                   </motion.div>
                 </div>
-
-                {/* Mini Stat Bar (Flies in from Far Bottom of Screen) */}
-                <motion.div 
-                  className="mt-5 pt-4 border-t border-slate-100 grid grid-cols-3 gap-3 text-center"
-                  variants={{
-                    hidden: { opacity: 0, y: 450, x: 100, scale: 0.7, rotate: 6 },
-                    visible: { 
-                      opacity: 1, 
-                      y: 0, 
-                      x: 0, 
-                      scale: 1, 
-                      rotate: 0, 
-                      transition: { duration: 1.2, delay: 0.90, ease: [0.16, 1, 0.3, 1] } 
-                    }
-                  }}
-                >
-                  <div>
-                    <div className="text-base font-extrabold text-slate-900 font-display">12+</div>
-                    <div className="text-[9px] font-mono text-slate-400 uppercase tracking-wider mt-0.5">Studies</div>
-                  </div>
-                  <div className="border-x border-slate-100">
-                    <div className="text-base font-extrabold text-emerald-600 font-display">6+</div>
-                    <div className="text-[9px] font-mono text-slate-400 uppercase tracking-wider mt-0.5">Pilot Sites</div>
-                  </div>
-                  <div>
-                    <div className="text-base font-extrabold text-slate-900 font-display">5+</div>
-                    <div className="text-[9px] font-mono text-slate-400 uppercase tracking-wider mt-0.5">Countries</div>
-                  </div>
-                </motion.div>
               </motion.div>
 
               {/* Bottom Trust Badge (Flies in diagonally from Far Bottom-Left of Screen) */}

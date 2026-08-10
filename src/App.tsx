@@ -18,8 +18,10 @@ import Navbar from './components/Navbar';
 import AnnouncementBar from './components/AnnouncementBar';
 import FloatingAside from './components/FloatingAside';
 import Hero from './components/Hero';
+import FeaturedPilots from './components/FeaturedPilots';
+import { TrustedLeadersBanner } from './components/TrustedLeadersBanner';
+import TestimonialsSection from './components/TestimonialsSection';
 import Footer from './components/Footer';
-import SystemBootLoader from './components/SystemBootLoader';
 import CookieConsent from './components/CookieConsent';
 import SeoManager from './components/seo/SeoManager';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -31,30 +33,21 @@ function safeLazy<T extends React.ComponentType<any>>(
 ) {
   return lazy(async () => {
     try {
-      return await factory();
+      const res = await factory();
+      return 'default' in res ? res : { default: res };
     } catch (error) {
-      console.warn('Dynamic import failed, retrying...', error);
-      try {
-        await new Promise((res) => setTimeout(res, 400));
-        return await factory();
-      } catch (retryError) {
-        console.error('Retry loading dynamic module failed:', retryError);
-        const key = 'ais_dynamic_import_reload';
-        const lastReload = parseInt(sessionStorage.getItem(key) || '0', 10);
-        if (Date.now() - lastReload > 8000) {
-          sessionStorage.setItem(key, String(Date.now()));
-          window.location.reload();
-        }
-        throw retryError;
+      console.warn('Lazy module load failed, attempting chunk reload:', error);
+      const hasReloaded = sessionStorage.getItem('nexus_chunk_reloaded');
+      if (!hasReloaded) {
+        sessionStorage.setItem('nexus_chunk_reloaded', 'true');
+        window.location.reload();
       }
+      throw error;
     }
   });
 }
 
 // Route-based code splitting
-const FeaturedPilots = safeLazy(() => import('./components/FeaturedPilots'));
-const TrustedLeadersBanner = safeLazy(() => import('./components/TrustedLeadersBanner').then(m => ({ default: m.TrustedLeadersBanner })));
-const TestimonialsSection = safeLazy(() => import('./components/TestimonialsSection'));
 const SignInPage = safeLazy(() => import('./components/SignInPage'));
 const OnboardingPage = safeLazy(() => import('./components/OnboardingPage'));
 const AboutSection = safeLazy(() => import('./components/AboutSection'));
@@ -81,14 +74,7 @@ const CommunityPage = safeLazy(() => import('./components/CommunityPage'));
 const NotFoundPage = safeLazy(() => import('./components/NotFoundPage'));
 
 function ViewLoadingFallback() {
-  return (
-    <div className="w-full min-h-[400px] flex items-center justify-center p-8 text-slate-500">
-      <div className="flex items-center gap-3 px-5 py-2.5 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 shadow-xs">
-        <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-xs font-mono font-medium text-slate-600 dark:text-slate-300">Loading view...</span>
-      </div>
-    </div>
-  );
+  return null;
 }
 
 function parsePath(path: string) {
@@ -186,14 +172,8 @@ const DEMO_GUEST_USER = {
 
 function parseUrl() {
   if (typeof window === 'undefined') {
-    return { view: 'initializing' as const, researcherId: null as string | null, paperId: null as string | null, projectId: null as string | null, allianceId: null as string | null, insightSlug: null as string | null, areaSlug: null as string | null };
+    return parsePath('/');
   }
-  
-  const isInitialized = sessionStorage.getItem('nexus_system_initialized') === 'true';
-  if (!isInitialized) {
-    return { view: 'initializing' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
-  }
-  
   return parsePath(window.location.pathname);
 }
 
@@ -410,9 +390,6 @@ export default function App() {
           setUser(currentUser);
           setAuthLoading(false);
           await refreshAllUserData(currentUser.uid);
-          if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
-            setView('initializing');
-          }
           return;
         }
 
@@ -436,9 +413,6 @@ export default function App() {
               setUser(demoObj);
               setAuthLoading(false);
               await refreshAllUserData(demoObj.uid);
-              if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
-                setView('initializing');
-              }
               return;
             } catch (e) {
               console.error('Error parsing stored demo user:', e);
@@ -661,11 +635,7 @@ export default function App() {
       if (res && res.user) {
         setUser(res.user);
       }
-      if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
-        setView('initializing');
-      } else {
-        setView('dashboard');
-      }
+      setView('dashboard');
     } catch (err: any) {
       console.warn('Google Sign-In failed or was restricted:', err);
       const errStr = String(err);
@@ -764,22 +734,21 @@ export default function App() {
         )}
 
         {/* Main Container */}
-        <main className="flex-grow">
+        <main className="flex-grow min-h-[85vh]">
           <ErrorBoundary>
             <Suspense fallback={<ViewLoadingFallback />}>
           {/* Bypassing AnimatePresence prevents the fatal React 19 "Expected static flag was missing" reconciler assertion crash while preserving mounting fade-ins */}
           {currentView === 'home' && (
             <motion.div
               key="home-page"
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 1, y: 0 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
+              transition={{ duration: 0 }}
             >
               <SeoManager
-                title="Aurenix Research | Nigeria's Bioenergy, Waste-to-Energy & Circular Economy Research Hub"
-                description="Aurenix Research is Nigeria's dedicated research, training, and consulting hub for waste-to-energy technologies, bioenergy systems, biomass assessments, and circular economy solutions across Sub-Saharan Africa."
-                keywords={['bioenergy research Nigeria', 'waste-to-energy Africa', 'circular economy research', 'biomass feasibility study', 'anaerobic digestion Nigeria', 'biogas technology Africa', 'renewable energy research hub', 'environmental sustainability Africa', 'energy transition Nigeria', 'organic waste management', 'Aurenix Research']}
+                title="Aurenix Research | Africa's Research & Innovation Platform"
+                description="Aurenix is Africa's research and innovation platform dedicated to advancing energy, climate, and technology solutions. We connect students, researchers, institutions, and global stakeholders to document research, foster collaboration, and transform innovative ideas into real-world impact."
+                keywords={['energy climate technology solutions Africa', 'African research platform', 'scholarly collaboration Africa', 'bioenergy research', 'waste-to-energy Africa', 'circular economy research', 'Aurenix Research']}
                 canonicalUrl="https://aurenix-research.org/"
               />
               <Hero 
@@ -911,10 +880,9 @@ export default function App() {
             {currentView === 'about' && (
               <motion.div
                 key="about-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <SeoManager
                   title="About Us — Energy Research & Climate Innovation Hub | Aurenix"
@@ -949,10 +917,9 @@ export default function App() {
             {currentView === 'services' && (
               <motion.div
                 key="services-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <SeoManager
                   title="Technical Advisory & Feasibility Services | Aurenix"
@@ -971,10 +938,9 @@ export default function App() {
             {currentView === 'research' && selectedPaperId && (
               <motion.div
                 key="research-detail-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 {allPapers.find(p => p.id === selectedPaperId) ? (
                   <>
@@ -1050,10 +1016,9 @@ export default function App() {
             {currentView === 'research' && !selectedPaperId && (
               <motion.div
                 key="research-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <SeoManager
                   title="Research Repository — Peer-Reviewed Energy & Climate Publications | Aurenix"
@@ -1074,10 +1039,9 @@ export default function App() {
             {currentView === 'researchers' && (
               <motion.div
                 key="researchers-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <SeoManager
                   title="Explore Researchers & Energy Scientists | Aurenix Network"
@@ -1106,10 +1070,9 @@ export default function App() {
             {currentView === 'collaboration' && selectedAllianceId && (
               <motion.div
                 key="alliance-details-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <SeoManager
                   title="Research Alliance Details | Aurenix Network"
@@ -1132,10 +1095,9 @@ export default function App() {
             {currentView === 'collaboration' && !selectedAllianceId && (
               <motion.div
                 key="collaboration-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <SeoManager
                   title="Collaboration Network & Research Alliances | Aurenix"
@@ -1153,10 +1115,9 @@ export default function App() {
             {currentView === 'console' && (
               <motion.div
                 key="operational-console-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <SeoManager noIndex={true} />
                 <OperationalConsole 
@@ -1169,10 +1130,9 @@ export default function App() {
             {currentView === 'contact' && (
               <motion.div
                 key="contact-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <SeoManager
                   title="Contact Aurenix Research — Connect with Lead Analysts"
@@ -1207,10 +1167,9 @@ export default function App() {
             {currentView === 'dashboard' && selectedProjectId && (
               <motion.div
                 key="project-details-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <ProjectDetailsPage 
                   projectId={selectedProjectId}
@@ -1228,10 +1187,9 @@ export default function App() {
             {currentView === 'dashboard' && !selectedProjectId && (
               <motion.div
                 key="dashboard-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <UserDashboard 
                   user={user || (DEMO_GUEST_USER as any)}
@@ -1250,10 +1208,9 @@ export default function App() {
             {currentView === 'profile' && (
               <motion.div
                 key="profile-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <ProfilePage 
                   user={user || (DEMO_GUEST_USER as any)}
@@ -1266,10 +1223,9 @@ export default function App() {
             {currentView === 'settings' && (
               <motion.div
                 key="settings-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <SettingsPage 
                   user={user || (DEMO_GUEST_USER as any)}
@@ -1283,10 +1239,9 @@ export default function App() {
             {currentView === 'messages' && (
               <motion.div
                 key="messages-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <MessagesPage 
                   user={user || (DEMO_GUEST_USER as any)}
@@ -1304,10 +1259,9 @@ export default function App() {
             {currentView === 'notifications' && (
               <motion.div
                 key="notifications-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <NotificationsPage 
                   user={user}
@@ -1320,10 +1274,9 @@ export default function App() {
             {currentView === 'community' && (
               <motion.div
                 key="community-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <SeoManager
                   title="Scholar Community Feed | Aurenix Network"
@@ -1340,10 +1293,9 @@ export default function App() {
             {currentView === 'saved' && (
               <motion.div
                 key="saved-studies-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <SavedStudiesPage 
                   user={user}
@@ -1357,10 +1309,9 @@ export default function App() {
             {currentView === 'signin' && (
               <motion.div
                 key="signin-page"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0 }}
               >
                 <SignInPage 
                   onBack={() => {
@@ -1379,11 +1330,7 @@ export default function App() {
                       localStorage.removeItem('nexus_demo_user');
                     }
                     setUser(authenticatedUser);
-                    if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
-                      setView('initializing');
-                    } else {
-                      setView('dashboard');
-                    }
+                    setView('dashboard');
                   }}
                   onGoogleSignIn={handleSignIn}
                    onGuestSignIn={async (customProfile) => {
@@ -1404,11 +1351,7 @@ export default function App() {
                       localStorage.setItem('nexus_demo_user', JSON.stringify(demoUser));
                       setUser(demoUser as any);
                       await refreshAllUserData(demoUser.uid);
-                      if (sessionStorage.getItem('nexus_system_initialized') !== 'true') {
-                        setView('initializing');
-                      } else {
-                        setView('dashboard');
-                      }
+                      setView('dashboard');
                     } catch (err: any) {
                       setAuthError(err.message || String(err));
                     } finally {
@@ -1422,10 +1365,9 @@ export default function App() {
             {currentView === 'onboarding' && user && (
               <motion.div
                 key="onboarding-page"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0 }}
               >
                 <OnboardingPage 
                   user={user}
@@ -1439,36 +1381,12 @@ export default function App() {
               </motion.div>
             )}
 
-            {currentView === 'initializing' && (
-              <motion.div
-                key="initializing-page"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <SystemBootLoader 
-                  user={user}
-                  onComplete={() => {
-                    sessionStorage.setItem('nexus_system_initialized', 'true');
-                    const targetRoute = parsePath(window.location.pathname);
-                    if (targetRoute.view === 'initializing' || targetRoute.view === 'home') {
-                      setView(user ? (needsOnboarding ? 'onboarding' : 'dashboard') : 'home');
-                    } else {
-                      setRouteState(targetRoute);
-                    }
-                  }}
-                />
-              </motion.div>
-            )}
-
             {currentView === 'insights' && (
               <motion.div
                 key="insights-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <InsightsHub 
                   selectedSlug={selectedInsightSlug}
@@ -1489,10 +1407,9 @@ export default function App() {
             {currentView === 'research-areas' && (
               <motion.div
                 key="research-areas-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <ResearchAreasPage 
                   selectedSlug={selectedAreaSlug}
@@ -1513,10 +1430,9 @@ export default function App() {
             {currentView === 'legal' && (
               <motion.div
                 key="legal-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <SeoManager
                   title="Legal & Platform Compliance Center — Aurenix Research"
@@ -1534,10 +1450,9 @@ export default function App() {
             {currentView === 'notfound' && (
               <motion.div
                 key="notfound-page"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                transition={{ duration: 0 }}
               >
                 <NotFoundPage onNavigate={setView} />
               </motion.div>
@@ -1546,10 +1461,9 @@ export default function App() {
             {currentView === 'admin' && (
               <motion.div
                 key="admin-page"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
+                initial={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0 }}
               >
                 <SeoManager noIndex={true} />
                 <AdminPortal 

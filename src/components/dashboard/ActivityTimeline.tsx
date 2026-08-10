@@ -45,7 +45,7 @@ export default function ActivityTimeline({ customActivities }: ActivityTimelineP
     <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow text-left space-y-6 min-h-[368px] h-auto" id="activity_timeline_section" style={{ minHeight: '368px', height: 'auto' }}>
       <div>
         <h3 className="text-lg font-display font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-          <Clock className="w-5 h-5 text-emerald-600 animate-spin" style={{ animationDuration: '10s' }} />
+          <Clock className="w-5 h-5 text-emerald-600 shrink-0" />
           Academic Activity Timeline
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 font-sans font-medium mt-0.5">

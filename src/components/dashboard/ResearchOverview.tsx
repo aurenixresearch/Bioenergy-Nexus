@@ -169,12 +169,6 @@ export default function ResearchOverview({
         <h3 className="text-lg font-display font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
           <span>Research Overview</span>
         </h3>
-        {loading && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            <span>Syncing Firebase...</span>
-          </div>
-        )}
       </div>
 
       {/* Responsive Grid: Desktop (3 columns side-by-side), Tablet (2 columns), Mobile (Stacked vertically) */}

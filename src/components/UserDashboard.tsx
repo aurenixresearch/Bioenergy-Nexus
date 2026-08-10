@@ -851,8 +851,8 @@ export default function UserDashboard({
             style={{ backgroundColor: '#ffffff' }}
             id="refresh_dashboard_btn"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>{loading ? 'Reloading...' : 'Reload'}</span>
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Reload</span>
           </motion.button>
         </div>
 
