@@ -34,6 +34,8 @@ import WorkflowVisualizer from './WorkflowVisualizer';
 import ResearcherDashboard from './ResearcherDashboard';
 import StakeholderDashboard from './StakeholderDashboard';
 import WorkspaceView from './Workspace';
+import VerificationGuardModal from '../verification/VerificationGuardModal';
+import OrganizationVerificationModal from '../verification/OrganizationVerificationModal';
 
 interface CollaborationHomeProps {
   user: any;
@@ -49,6 +51,26 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
   const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
   const [consoleType, setConsoleType] = useState<'none' | 'researcher' | 'stakeholder'>('none');
   const [userProfile, setUserProfile] = useState<any>(null);
+
+  // Verification guard states
+  const [showGuardModal, setShowGuardModal] = useState(false);
+  const [guardActionTitle, setGuardActionTitle] = useState('');
+  const [showOrgVerificationModal, setShowOrgVerificationModal] = useState(false);
+
+  const isOrgAccount = ['Institution', 'Industry', 'Government', 'NGO', 'Other'].includes(userProfile?.userRole || userProfile?.role || '') || !!userProfile?.isOrganization || !!userProfile?.organizationType || userProfile?.accountType === 'institution';
+
+  const checkVerificationBeforeAction = (actionTitle: string, callback: () => void) => {
+    if (!user) {
+      onSignIn();
+      return;
+    }
+    if (isOrgAccount && userProfile?.verificationStatus !== 'verified') {
+      setGuardActionTitle(actionTitle);
+      setShowGuardModal(true);
+      return;
+    }
+    callback();
+  };
 
   // Notifications alerts
   const [notificationMsg, setNotificationMsg] = useState('');
@@ -381,11 +403,9 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
               <button
                 id="btn_publish_collab_alliance"
                 onClick={() => {
-                  if (!user) {
-                    onSignIn();
-                  } else {
+                  checkVerificationBeforeAction('Create Alliance Opportunity', () => {
                     setShowAllianceWizard(true);
-                  }
+                  });
                 }}
                 className="mt-6 w-full py-2.5 bg-slate-900 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5"
               >
@@ -532,6 +552,29 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
           />
         )}
       </AnimatePresence>
+
+      {/* VERIFICATION GUARD POPUP */}
+      <VerificationGuardModal
+        isOpen={showGuardModal}
+        onClose={() => setShowGuardModal(false)}
+        onCompleteVerification={() => setShowOrgVerificationModal(true)}
+        actionTitle={guardActionTitle}
+      />
+
+      {/* ORGANIZATION VERIFICATION MODAL */}
+      <OrganizationVerificationModal
+        isOpen={showOrgVerificationModal}
+        onClose={() => setShowOrgVerificationModal(false)}
+        user={user}
+        userProfile={userProfile}
+        onVerificationSubmitted={() => {
+          triggerSuccessAlert('Organization verification application submitted! Review in progress.');
+          // Refresh profile
+          if (user) {
+            getUserProfile(user.uid).then(setUserProfile).catch(() => {});
+          }
+        }}
+      />
 
     </div>
   );

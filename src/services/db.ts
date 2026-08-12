@@ -726,6 +726,244 @@ export async function applyForVerification(userId: string, researchCount: number
   }
 }
 
+// --- ORGANIZATION VERIFICATION SERVICES ---
+
+export async function submitOrganizationVerification(
+  userId: string,
+  userEmail: string,
+  userRole: string,
+  orgType: any,
+  orgData: Record<string, any>,
+  documents: string[] = []
+): Promise<void> {
+  const now = new Date().toISOString();
+  
+  // Base publisher verification level if publisher
+  let publisherVerificationLevel = undefined;
+  if (orgType === 'publisher') {
+    publisherVerificationLevel = 'identity_submitted';
+  }
+
+  const submissionPayload = {
+    userId,
+    userEmail,
+    userRole,
+    organizationType: orgType,
+    organizationName: orgData.orgName || orgData.institutionName || orgData.companyName || orgData.agencyName || orgData.publisherName || orgData.fundName || 'Organization Account',
+    country: orgData.country || 'Nigeria',
+    contactPerson: orgData.contactPerson || orgData.contactName || 'Primary Contact',
+    contactEmail: orgData.officialEmail || userEmail,
+    website: orgData.website || '',
+    submittedAt: now,
+    status: 'under_review',
+    publisherVerificationLevel,
+    details: orgData,
+    documents,
+    history: [
+      {
+        status: 'under_review',
+        date: now,
+        note: 'Organization verification application submitted successfully.'
+      }
+    ]
+  };
+
+  const updateData = {
+    organizationType: orgType,
+    organizationName: submissionPayload.organizationName,
+    organizationProfile: orgData,
+    verificationStatus: 'under_review',
+    publisherVerificationLevel,
+    verificationSubmittedAt: now,
+    verificationDocuments: documents,
+    verificationHistory: submissionPayload.history,
+    isOrganization: true,
+  };
+
+  if (isDemoModeActive(userId)) {
+    const profileKey = `nexus_demo_profile_${userId}`;
+    const data = localStorage.getItem(profileKey);
+    const profile = data ? JSON.parse(data) : {};
+    const updatedProfile = { ...profile, ...updateData };
+    localStorage.setItem(profileKey, JSON.stringify(updatedProfile));
+
+    // Also store submission in global org queue local storage for admin portal demo
+    const queueKey = 'nexus_demo_org_verification_queue';
+    const existingQueue = JSON.parse(localStorage.getItem(queueKey) || '[]');
+    const filtered = existingQueue.filter((item: any) => item.userId !== userId);
+    localStorage.setItem(queueKey, JSON.stringify([...filtered, submissionPayload]));
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId, profile: updatedProfile } }));
+    }
+    return;
+  }
+
+  const path = 'users';
+  try {
+    const docRef = doc(db, path, userId);
+    await setDoc(docRef, {
+      ...updateData,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    // Store separate record in organization_verifications collection
+    const verificationRef = doc(db, 'organization_verifications', userId);
+    await setDoc(verificationRef, {
+      ...submissionPayload,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId, profile: updateData } }));
+    }
+  } catch (error) {
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+      return submitOrganizationVerification(userId, userEmail, userRole, orgType, orgData, documents);
+    }
+    handleFirestoreError(error, OperationType.UPDATE, `${path}/${userId}`);
+  }
+}
+
+export async function reviewOrganizationVerificationByAdmin(
+  userId: string,
+  action: 'approve' | 'request_info' | 'reject',
+  notes: string = '',
+  publisherLevel?: string,
+  reviewerName: string = 'System Admin'
+): Promise<void> {
+  const now = new Date().toISOString();
+  let targetStatus: 'verified' | 'action_required' | 'rejected' = 'verified';
+  if (action === 'request_info') targetStatus = 'action_required';
+  if (action === 'reject') targetStatus = 'rejected';
+
+  // Get current profile
+  const currentProfile = await getUserProfile(userId);
+  const currentHistory = currentProfile?.verificationHistory || [];
+  
+  const historyEntry = {
+    status: targetStatus,
+    date: now,
+    note: notes || (action === 'approve' ? 'Verification application approved.' : action === 'request_info' ? 'Additional information requested by admin.' : 'Verification request rejected.'),
+    reviewer: reviewerName
+  };
+
+  const updateData: Record<string, any> = {
+    verificationStatus: targetStatus,
+    verificationReviewedAt: now,
+    verificationReviewedBy: reviewerName,
+    verificationNotes: notes || '',
+    verificationHistory: [...currentHistory, historyEntry],
+    isVerified: action === 'approve',
+    verified: action === 'approve',
+  };
+
+  if (publisherLevel) {
+    updateData.publisherVerificationLevel = publisherLevel;
+  } else if (action === 'approve' && currentProfile?.organizationType === 'publisher') {
+    updateData.publisherVerificationLevel = 'fully_verified';
+  }
+
+  // Create dashboard notification for user
+  let notifTitle = 'Organization Verification Approved';
+  let notifMessage = 'Your organization profile has been successfully verified! You now have full institutional capabilities.';
+  let notifType: 'follower' | 'alliance' | 'grant' | 'citation' | 'comment' | 'workspace' | 'deadline' = 'workspace';
+
+  if (action === 'request_info') {
+    notifTitle = 'Organization Verification - Additional Info Required';
+    notifMessage = `Admin review update: ${notes || 'Please review your organization application and provide the missing details.'}`;
+    notifType = 'alliance';
+  } else if (action === 'reject') {
+    notifTitle = 'Organization Verification Status Update';
+    notifMessage = `Your organization verification could not be completed at this time. Reason: ${notes || 'Information provided did not satisfy verification criteria.'}`;
+    notifType = 'alliance';
+  }
+
+  await addNotification(userId, {
+    title: notifTitle,
+    message: notifMessage,
+    type: notifType,
+  });
+
+  if (isDemoModeActive(userId)) {
+    const profileKey = `nexus_demo_profile_${userId}`;
+    const data = localStorage.getItem(profileKey);
+    const profile = data ? JSON.parse(data) : {};
+    const updatedProfile = { ...profile, ...updateData };
+    localStorage.setItem(profileKey, JSON.stringify(updatedProfile));
+
+    // Update queue in local storage
+    const queueKey = 'nexus_demo_org_verification_queue';
+    const existingQueue = JSON.parse(localStorage.getItem(queueKey) || '[]');
+    const updatedQueue = existingQueue.map((item: any) => {
+      if (item.userId === userId) {
+        return {
+          ...item,
+          status: targetStatus,
+          reviewedAt: now,
+          reviewedBy: reviewerName,
+          notes,
+          publisherVerificationLevel: updateData.publisherVerificationLevel || item.publisherVerificationLevel,
+          history: [...(item.history || []), historyEntry]
+        };
+      }
+      return item;
+    });
+    localStorage.setItem(queueKey, JSON.stringify(updatedQueue));
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId, profile: updatedProfile } }));
+    }
+    return;
+  }
+
+  try {
+    const userDocRef = doc(db, 'users', userId);
+    await setDoc(userDocRef, { ...updateData, updatedAt: serverTimestamp() }, { merge: true });
+
+    const queueDocRef = doc(db, 'organization_verifications', userId);
+    await setDoc(queueDocRef, {
+      status: targetStatus,
+      reviewedAt: now,
+      reviewedBy: reviewerName,
+      notes,
+      publisherVerificationLevel: updateData.publisherVerificationLevel || null,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId, profile: updateData } }));
+    }
+  } catch (error) {
+    console.error('Error updating organization verification review:', error);
+  }
+}
+
+export async function getOrganizationVerificationQueue(): Promise<any[]> {
+  if (isFirestoreOffline || isDemoModeActive()) {
+    const queueKey = 'nexus_demo_org_verification_queue';
+    const queue = localStorage.getItem(queueKey);
+    return queue ? JSON.parse(queue) : [];
+  }
+
+  try {
+    const colRef = collection(db, 'organization_verifications');
+    const querySnapshot = await getDocs(colRef);
+    const list: any[] = [];
+    querySnapshot.forEach((docSnap) => {
+      list.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    return list;
+  } catch (error) {
+    console.error('Error fetching org verification queue:', error);
+    const queueKey = 'nexus_demo_org_verification_queue';
+    const queue = localStorage.getItem(queueKey);
+    return queue ? JSON.parse(queue) : [];
+  }
+}
+
+
 export async function approveVerification(userId: string, userProfile: any): Promise<void> {
   const updateData = {
     verificationStatus: 'verified',

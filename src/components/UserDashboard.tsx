@@ -73,6 +73,10 @@ import ActivityTimeline from './dashboard/ActivityTimeline';
 import UpcomingDeadlines from './dashboard/UpcomingDeadlines';
 import NotificationsPanel from './dashboard/NotificationsPanel';
 
+// Verification Components
+import VerificationStatusCard from './verification/VerificationStatusCard';
+import OrganizationVerificationModal from './verification/OrganizationVerificationModal';
+
 interface UserDashboardProps {
   user: FirebaseUser;
   onBackToLanding: () => void;
@@ -171,6 +175,10 @@ export default function UserDashboard({
   const [myUploadedPapers, setMyUploadedPapers] = useState<ResearchPaper[]>([]);
   const [isSubmittingApp, setIsSubmittingApp] = useState(false);
   const [showAppForm, setShowAppForm] = useState(false);
+  
+  // Organization verification pathway states
+  const [showOrgVerificationModal, setShowOrgVerificationModal] = useState(false);
+  const [dismissedBanner, setDismissedBanner] = useState(false);
   
   // Application form fields
   const [institution, setInstitution] = useState('');
@@ -830,6 +838,9 @@ export default function UserDashboard({
     );
   }
 
+  const isOrgAccount = ['Institution', 'Industry', 'Government', 'NGO', 'Other'].includes(userProfile?.userRole || userProfile?.role || '') || !!userProfile?.isOrganization || !!userProfile?.organizationType || userProfile?.accountType === 'institution';
+  const isOrgUnverified = isOrgAccount && (userProfile?.verificationStatus !== 'verified');
+
   return (
     <div className="bg-white min-h-screen py-10" id="user_dashboard" style={{ backgroundColor: '#ffffff' }}>
       <div className="w-full px-3 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 font-bold">
@@ -855,6 +866,53 @@ export default function UserDashboard({
             <span>Reload</span>
           </motion.button>
         </div>
+
+        {/* NON-BLOCKING VERIFICATION BANNER FOR ORGANIZATION USERS */}
+        {isOrgUnverified && !dismissedBanner && (
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-slate-900 border border-amber-500/30 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left shadow-lg">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 shrink-0 mt-0.5">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Institutional Action Restriction Notice
+                </h4>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl font-normal">
+                  Verification required before you can create alliances, publish collaboration opportunities, or submit organization-led proposals.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setShowOrgVerificationModal(true)}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer border-0"
+              >
+                <span>Complete Verification</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setDismissedBanner(true)}
+                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition-colors cursor-pointer border-0"
+              >
+                Maybe Later
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* VERIFICATION STATUS CARD FOR ORGANIZATIONS */}
+        {isOrgAccount && (
+          <VerificationStatusCard
+            status={userProfile?.verificationStatus || 'not_started'}
+            orgType={userProfile?.organizationType}
+            orgName={userProfile?.organizationName || userProfile?.institution}
+            notes={userProfile?.verificationNotes}
+            submittedAt={userProfile?.verificationSubmittedAt}
+            publisherLevel={userProfile?.publisherVerificationLevel}
+            onStartVerification={() => setShowOrgVerificationModal(true)}
+          />
+        )}
 
         {/* Dashboard Profile Hero */}
         <div className="bg-white text-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-8 lg:p-6 xl:p-10 flex flex-col lg:flex-row lg:items-center lg:justify-between relative overflow-hidden shadow-xs border border-slate-100 max-w-full w-full gap-5 lg:gap-4 xl:gap-8">
@@ -1380,7 +1438,14 @@ export default function UserDashboard({
 
       </div>
 
-
+      {/* ORGANIZATION VERIFICATION MODAL */}
+      <OrganizationVerificationModal
+        isOpen={showOrgVerificationModal}
+        onClose={() => setShowOrgVerificationModal(false)}
+        user={user}
+        userProfile={userProfile}
+        onVerificationSubmitted={fetchSavedAndCustom}
+      />
     </div>
   );
 }

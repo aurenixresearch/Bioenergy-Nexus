@@ -373,8 +373,25 @@ export interface UserProfile {
   // Organization Specifics (If Institution account)
   organizationName?: string;
   organizationLogo?: string;
-  organizationType?: string;
+  organizationType?: OrganizationCategory;
   organizationDescription?: string;
+  organizationProfile?: Record<string, any>;
+
+  // Organization Verification Architecture
+  userRole?: string;
+  verificationStatus?: OrgVerificationStatus;
+  publisherVerificationLevel?: PublisherVerificationLevel;
+  verificationSubmittedAt?: string;
+  verificationReviewedAt?: string;
+  verificationReviewedBy?: string;
+  verificationNotes?: string;
+  verificationDocuments?: string[];
+  verificationHistory?: Array<{
+    status: string;
+    date: string;
+    note?: string;
+    reviewer?: string;
+  }>;
 
   // Meta / Stats
   isVerified?: boolean;
@@ -382,5 +399,58 @@ export interface UserProfile {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export type OrganizationCategory =
+  | 'university'
+  | 'lab'
+  | 'company'
+  | 'investor'
+  | 'government'
+  | 'ngo'
+  | 'publisher'
+  | 'professional'
+  | 'other_org';
+
+export type OrgVerificationStatus =
+  | 'not_started'
+  | 'under_review'
+  | 'action_required'
+  | 'verified'
+  | 'rejected';
+
+export type PublisherVerificationLevel =
+  | 'identity_submitted'
+  | 'identity_verified'
+  | 'journal_verified'
+  | 'practices_reviewed'
+  | 'fully_verified';
+
+export interface OrgVerificationSubmission {
+  userId: string;
+  userEmail: string;
+  userName?: string;
+  userRole?: string;
+  organizationType: OrganizationCategory;
+  organizationName: string;
+  country: string;
+  contactPerson: string;
+  contactEmail: string;
+  website?: string;
+  submittedAt: string;
+  status: OrgVerificationStatus;
+  publisherVerificationLevel?: PublisherVerificationLevel;
+  details: Record<string, any>;
+  documents?: string[];
+  reviewedAt?: string;
+  reviewedBy?: string;
+  notes?: string;
+  history?: Array<{
+    status: string;
+    date: string;
+    note?: string;
+    reviewer?: string;
+  }>;
+}
+
 
 

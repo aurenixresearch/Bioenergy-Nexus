@@ -7,7 +7,7 @@ import {
 import { User as FirebaseUser } from 'firebase/auth';
 import { ResearchPaper } from '../types';
 import { RESEARCH_PAPERS } from '../data';
-import { savePaper, unsavePaper, addCustomPaper, getCustomPapers, getUserProfile } from '../services/db';
+import { savePaper, unsavePaper, addCustomPaper, updateCustomPaper, getCustomPapers, getUserProfile } from '../services/db';
 import { motion, AnimatePresence } from 'motion/react';
 import ResearchDetail from './ResearchDetail';
 import PublishWizard from './PublishWizard';

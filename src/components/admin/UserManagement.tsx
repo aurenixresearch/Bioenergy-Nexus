@@ -10,6 +10,10 @@ import {
 import type { AdminThemeVars } from './AdminPortal';
 import { AdminUser, AdminRoleConfig, MOCK_ADMIN_ROLES } from './AdminMockData';
 
+import { getOrganizationVerificationQueue, reviewOrganizationVerificationByAdmin } from '../../services/db';
+import { PublisherVerificationLevel } from '../../types';
+import { ShieldCheck, Clock, AlertTriangle, ExternalLink, FileText, Check, ArrowRight } from 'lucide-react';
+
 interface UserManagementProps {
   users: AdminUser[];
   onUpdateUsers: (updated: AdminUser[]) => void;
@@ -56,6 +60,55 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 export default function UserManagement({ users, onUpdateUsers, adminRoles = MOCK_ADMIN_ROLES, defaultFilterRole = '', theme, tv }: UserManagementProps) {
+
+  // ── Organization Verification Queue State ─────────────────────────────────
+  const [viewTab, setViewTab] = useState<'directory' | 'verification_queue'>('directory');
+  const [orgQueue, setOrgQueue] = useState<any[]>([]);
+  const [queueLoading, setQueueLoading] = useState(false);
+  const [selectedQueueItem, setSelectedQueueItem] = useState<any | null>(null);
+  const [queueFilterStatus, setQueueFilterStatus] = useState<string>('all');
+  const [adminReviewNotes, setAdminReviewNotes] = useState<string>('');
+  const [publisherTierLevel, setPublisherTierLevel] = useState<PublisherVerificationLevel>('identity_submitted');
+  const [isProcessingReview, setIsProcessingReview] = useState(false);
+
+  const fetchQueue = async () => {
+    setQueueLoading(true);
+    try {
+      const q = await getOrganizationVerificationQueue();
+      setOrgQueue(q);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setQueueLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQueue();
+  }, []);
+
+  const handleReviewOrg = async (action: 'approve' | 'request_info' | 'reject') => {
+    if (!selectedQueueItem) return;
+    setIsProcessingReview(true);
+    try {
+      await reviewOrganizationVerificationByAdmin(
+        selectedQueueItem.userId,
+        action,
+        adminReviewNotes,
+        selectedQueueItem.organizationType === 'publisher' ? publisherTierLevel : undefined,
+        'Admin Portal'
+      );
+      alert(`Organization verification review saved: ${action.toUpperCase()}`);
+      setSelectedQueueItem(null);
+      setAdminReviewNotes('');
+      await fetchQueue();
+    } catch (e) {
+      console.error(e);
+      alert('Error saving review action.');
+    } finally {
+      setIsProcessingReview(false);
+    }
+  };
 
   // ── Filter & search state ───────────────────────────────────────────────────
   const [search, setSearch] = useState('');
@@ -196,11 +249,322 @@ export default function UserManagement({ users, onUpdateUsers, adminRoles = MOCK
     ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3 inline ml-1" /> : <ArrowDown className="w-3 h-3 inline ml-1" />)
     : null;
 
+  const pendingOrgCount = orgQueue.filter(q => q.status === 'under_review' || q.status === 'pending').length;
+
   return (
     <div className="space-y-5" id="user_management_root">
 
-      {/* ── Page header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* ── Sub-Navigation Tabs: User Directory vs Org Verification Queue ── */}
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl w-fit" style={{ background:tv.surfaceRaised, border:`1px solid ${tv.border}` }}>
+        <button
+          onClick={() => setViewTab('directory')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-0`}
+          style={{
+            background: viewTab === 'directory' ? tv.accent : 'transparent',
+            color: viewTab === 'directory' ? '#fff' : tv.textSecondary
+          }}
+        >
+          <Users className="w-4 h-4" />
+          <span>User Directory</span>
+        </button>
+
+        <button
+          onClick={() => setViewTab('verification_queue')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-0 relative`}
+          style={{
+            background: viewTab === 'verification_queue' ? tv.accent : 'transparent',
+            color: viewTab === 'verification_queue' ? '#fff' : tv.textSecondary
+          }}
+        >
+          <ShieldCheck className="w-4 h-4" />
+          <span>Organization Verification Queue</span>
+          {pendingOrgCount > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950">
+              {pendingOrgCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ── ORGANIZATION VERIFICATION QUEUE VIEW ── */}
+      {viewTab === 'verification_queue' ? (
+        <div className="space-y-5">
+          {/* Header & Refresh */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-black" style={{ color:tv.textPrimary }}>Organization Verification Queue</h2>
+              <p className="text-sm mt-0.5" style={{ color:tv.textSecondary }}>
+                Review institutional verification submissions for Universities, Companies, Investors, Governments, NGOs, and Publishers.
+              </p>
+            </div>
+
+            <button
+              onClick={fetchQueue}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all border-0"
+              style={{ background:tv.surfaceRaised, border:`1px solid ${tv.border}`, color:tv.textPrimary }}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${queueLoading ? 'animate-spin' : ''}`} />
+              <span>Refresh Queue</span>
+            </button>
+          </div>
+
+          {/* Filter Status Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            {['all', 'under_review', 'action_required', 'verified', 'rejected'].map(st => (
+              <button
+                key={st}
+                onClick={() => setQueueFilterStatus(st)}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize transition-all cursor-pointer border-0"
+                style={{
+                  background: queueFilterStatus === st ? tv.accentDim : tv.surfaceRaised,
+                  color: queueFilterStatus === st ? tv.accent : tv.textSecondary,
+                  border: `1px solid ${queueFilterStatus === st ? tv.accentBorder : tv.border}`
+                }}
+              >
+                {st.replace('_', ' ')}
+              </button>
+            ))}
+          </div>
+
+          {/* Queue List Table */}
+          <div style={card} className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr style={{ background:tv.surfaceRaised, borderBottom:`1px solid ${tv.border}` }}>
+                    <th className="p-3 text-xs font-mono font-bold uppercase tracking-wider" style={{ color:tv.textMuted }}>Organization Name</th>
+                    <th className="p-3 text-xs font-mono font-bold uppercase tracking-wider" style={{ color:tv.textMuted }}>Type</th>
+                    <th className="p-3 text-xs font-mono font-bold uppercase tracking-wider" style={{ color:tv.textMuted }}>Country</th>
+                    <th className="p-3 text-xs font-mono font-bold uppercase tracking-wider" style={{ color:tv.textMuted }}>Contact Person</th>
+                    <th className="p-3 text-xs font-mono font-bold uppercase tracking-wider" style={{ color:tv.textMuted }}>Submitted Date</th>
+                    <th className="p-3 text-xs font-mono font-bold uppercase tracking-wider" style={{ color:tv.textMuted }}>Status</th>
+                    <th className="p-3 text-xs font-mono font-bold uppercase tracking-wider" style={{ color:tv.textMuted }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orgQueue
+                    .filter(item => queueFilterStatus === 'all' || item.status === queueFilterStatus)
+                    .map((item, idx) => (
+                      <tr key={item.userId || idx} className="hover:bg-slate-800/20 transition-colors border-b" style={{ borderColor:tv.border }}>
+                        <td className="p-3 text-sm font-bold" style={{ color:tv.textPrimary }}>
+                          <div className="flex items-center gap-2">
+                            <Building className="w-4 h-4 text-emerald-400 shrink-0" />
+                            <span>{item.organizationName}</span>
+                          </div>
+                        </td>
+                        <td className="p-3 text-xs font-semibold capitalize" style={{ color:tv.textSecondary }}>
+                          {item.organizationType?.replace(/_/g, ' ')}
+                        </td>
+                        <td className="p-3 text-xs" style={{ color:tv.textSecondary }}>
+                          {item.country}
+                        </td>
+                        <td className="p-3 text-xs" style={{ color:tv.textPrimary }}>
+                          <div>{item.contactPerson}</div>
+                          <div className="text-[10px]" style={{ color:tv.textMuted }}>{item.contactEmail}</div>
+                        </td>
+                        <td className="p-3 text-xs font-mono" style={{ color:tv.textMuted }}>
+                          {item.submittedAt ? new Date(item.submittedAt).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td className="p-3 text-xs font-bold">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] uppercase font-bold inline-flex items-center gap-1 ${
+                            item.status === 'verified' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            : item.status === 'action_required' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
+                            : item.status === 'rejected' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          }`}>
+                            {item.status?.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="p-3 text-xs">
+                          <button
+                            onClick={() => {
+                              setSelectedQueueItem(item);
+                              setAdminReviewNotes(item.notes || '');
+                              if (item.publisherVerificationLevel) {
+                                setPublisherTierLevel(item.publisherVerificationLevel);
+                              }
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer border-0"
+                          >
+                            Review
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+
+                  {orgQueue.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="p-8 text-center text-sm" style={{ color:tv.textMuted }}>
+                        No organization verification submissions in the queue.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* DETAIL REVIEW DRAWER FOR SELECTED QUEUE ITEM */}
+          <AnimatePresence>
+            {selectedQueueItem && (
+              <>
+                <motion.div
+                  initial={{ opacity:0 }}
+                  animate={{ opacity:1 }}
+                  exit={{ opacity:0 }}
+                  className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs"
+                  onClick={() => setSelectedQueueItem(null)}
+                />
+                <motion.div
+                  initial={{ x:'100%' }}
+                  animate={{ x:0 }}
+                  exit={{ x:'100%' }}
+                  transition={{ type:'spring', damping:25, stiffness:200 }}
+                  className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-xl shadow-2xl overflow-y-auto flex flex-col p-6 space-y-6"
+                  style={{ background:tv.surface, borderLeft:`1px solid ${tv.border}` }}
+                >
+                  <div className="flex items-center justify-between border-b pb-4" style={{ borderColor:tv.border }}>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400">
+                        Institutional Review Drawer
+                      </span>
+                      <h3 className="text-lg font-extrabold" style={{ color:tv.textPrimary }}>
+                        {selectedQueueItem.organizationName}
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setSelectedQueueItem(null)}
+                      className="p-2 rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer border-0"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Submission Details List */}
+                  <div className="space-y-4 text-xs">
+                    <div className="grid grid-cols-2 gap-3 p-4 rounded-xl" style={{ background:tv.surfaceRaised, border:`1px solid ${tv.border}` }}>
+                      <div>
+                        <span className="text-slate-400 block font-semibold">Organization Type:</span>
+                        <strong className="capitalize text-slate-200">{selectedQueueItem.organizationType?.replace(/_/g, ' ')}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block font-semibold">Country:</span>
+                        <strong className="text-slate-200">{selectedQueueItem.country}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block font-semibold">Contact Person:</span>
+                        <strong className="text-slate-200">{selectedQueueItem.contactPerson}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block font-semibold">Contact Email:</span>
+                        <strong className="text-slate-200">{selectedQueueItem.contactEmail}</strong>
+                      </div>
+                      {selectedQueueItem.website && (
+                        <div className="col-span-2">
+                          <span className="text-slate-400 block font-semibold">Official Website:</span>
+                          <a href={selectedQueueItem.website} target="_blank" rel="noreferrer" className="text-emerald-400 underline flex items-center gap-1 mt-0.5">
+                            <span>{selectedQueueItem.website}</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Dynamic Form Responses */}
+                    <div className="space-y-3 p-4 rounded-xl" style={{ background:tv.surfaceRaised, border:`1px solid ${tv.border}` }}>
+                      <h4 className="font-bold text-slate-200 uppercase tracking-wider text-[11px] border-b pb-2" style={{ borderColor:tv.border }}>
+                        Submitted Data Payload
+                      </h4>
+                      <pre className="p-3 rounded-lg bg-slate-950 text-slate-300 font-mono text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-60">
+                        {JSON.stringify(selectedQueueItem.details || {}, null, 2)}
+                      </pre>
+                    </div>
+
+                    {/* Supporting Documents if available */}
+                    {selectedQueueItem.documents && selectedQueueItem.documents.length > 0 && (
+                      <div className="p-4 rounded-xl space-y-2" style={{ background:tv.surfaceRaised, border:`1px solid ${tv.border}` }}>
+                        <h4 className="font-bold text-slate-200 text-xs">Supporting Document Link</h4>
+                        {selectedQueueItem.documents.map((docUrl: string, idx: number) => (
+                          <a key={idx} href={docUrl} target="_blank" rel="noreferrer" className="text-emerald-400 underline flex items-center gap-1.5">
+                            <FileText className="w-4 h-4" />
+                            <span>View Submitted Document / Certificate #{idx + 1}</span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Publisher Verification Level Dropdown if Publisher */}
+                    {selectedQueueItem.organizationType === 'publisher' && (
+                      <div className="p-4 rounded-xl space-y-2 bg-amber-500/10 border border-amber-500/20">
+                        <label className="block text-xs font-bold text-amber-200">
+                          Set Publisher Verification Level:
+                        </label>
+                        <select
+                          value={publisherTierLevel}
+                          onChange={(e) => setPublisherTierLevel(e.target.value as any)}
+                          className="w-full p-2.5 rounded-xl bg-slate-950 text-slate-200 border border-slate-800 text-xs focus:outline-none"
+                        >
+                          <option value="identity_submitted">1. Identity Submitted</option>
+                          <option value="identity_verified">2. Identity Verified</option>
+                          <option value="journal_verified">3. Journal Info Verified</option>
+                          <option value="practices_reviewed">4. Publishing Practices Reviewed</option>
+                          <option value="fully_verified">5. Fully Verified Publisher</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Admin Review Feedback Notes */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold" style={{ color:tv.textPrimary }}>
+                        Admin Feedback Notes / Rejection / Info Request Reason:
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={adminReviewNotes}
+                        onChange={(e) => setAdminReviewNotes(e.target.value)}
+                        placeholder="State clear reasons or requirements for the user dashboard notification..."
+                        className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Review Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t" style={{ borderColor:tv.border }}>
+                    <button
+                      onClick={() => handleReviewOrg('approve')}
+                      disabled={isProcessingReview}
+                      className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer border-0"
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Approve Organization</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleReviewOrg('request_info')}
+                      disabled={isProcessingReview}
+                      className="flex-1 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer border-0"
+                    >
+                      <AlertTriangle className="w-4 h-4" />
+                      <span>Request Info</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleReviewOrg('reject')}
+                      disabled={isProcessingReview}
+                      className="px-4 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all shadow-md cursor-pointer border-0"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
+      ) : (
+        <>
+          {/* ── Page header ── */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-black" style={{ color:tv.textPrimary }}>User Directory</h2>
           <p className="text-sm mt-0.5" style={{ color:tv.textSecondary }}>
@@ -647,6 +1011,8 @@ export default function UserManagement({ users, onUpdateUsers, adminRoles = MOCK
           </>
         )}
       </AnimatePresence>
+        </>
+      )}
     </div>
   );
 }
