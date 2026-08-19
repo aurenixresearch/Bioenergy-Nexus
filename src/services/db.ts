@@ -13,6 +13,7 @@ import {
 import { db, auth, isFirestoreOffline, setFirestoreOffline } from '../firebase';
 import { ResearchPaper, ConsultationInquiry, PartnershipSubmission, Researcher, Publication, CommunityPost, CommunityComment, Testimonial } from '../types';
 import { SEED_RESEARCHERS, SEED_PUBLICATIONS } from './researchersSeed';
+import { checkProfileCompleteness } from '../utils/profileValidation';
 
 export enum OperationType {
   CREATE = 'create',
@@ -520,6 +521,93 @@ export async function getCustomPapers(): Promise<ResearchPaper[]> {
 }
 
 // USER PROFILES
+export function isPublicProfileComplete(profile: any): boolean {
+  if (!profile) return false;
+  // If user explicitly made their profile private, do not show on public researcher page
+  if (profile.privacySettings?.visibility === 'Private' || profile.privacySettings?.profileVisibility === 'private') {
+    return false;
+  }
+  
+  const completeness = checkProfileCompleteness(profile);
+  if (completeness.isComplete) return true;
+
+  // Alternatively check if key public identity fields are present
+  const hasName = Boolean((profile.fullName || profile.displayName || profile.organizationName || '').trim());
+  const hasCountry = Boolean((profile.country || profile.location || '').trim());
+  const hasInstitution = Boolean((profile.institution || profile.organization || profile.organizationName || '').trim());
+  const hasBio = Boolean((profile.bio || profile.professionalBio || profile.organizationDescription || '').trim());
+  const interests = profile.researchInterests || profile.primaryResearchArea;
+  const hasInterests = Array.isArray(interests) ? interests.length > 0 : Boolean(interests && interests.trim());
+  const photo = profile.profilePicture || profile.photoURL || profile.avatar || profile.organizationLogo;
+  const hasPhoto = Boolean(photo && typeof photo === 'string' && photo.trim() !== '');
+
+  return Boolean(hasName && hasCountry && hasInstitution && hasBio && hasInterests && hasPhoto);
+}
+
+export async function syncUserProfileToResearcher(userId: string, profile: any): Promise<void> {
+  if (!userId || !profile) return;
+
+  const isComplete = isPublicProfileComplete(profile);
+  const isPrivate = profile.privacySettings?.visibility === 'Private' || profile.privacySettings?.profileVisibility === 'private';
+
+  if (isPrivate || !isComplete) {
+    return;
+  }
+
+  // Get papers count
+  const allPapers = getLocalCustomPapers();
+  const userPaperCount = allPapers.filter(p => p.userId === userId || (profile.email && p.userEmail === profile.email)).length;
+
+  const existingLocal = getLocalResearchers().find(r => r.id === userId);
+
+  const researcherData: Researcher = {
+    id: userId,
+    fullName: (profile.fullName || profile.displayName || profile.organizationName || 'Researcher').trim(),
+    profilePhoto: profile.profilePicture || profile.photoURL || profile.avatar || profile.organizationLogo || 'https://lh3.googleusercontent.com/d/1utUCWpBRmKjeGRFF1Jo2Z3-ta7B8bgOq',
+    role: profile.professionalTitle || profile.currentPosition || (profile.isOrganization ? 'Research Institution' : (profile.role || 'Researcher')),
+    institution: profile.institution || profile.organization || profile.organizationName || 'Aurenix Research Network',
+    country: profile.country || profile.location || 'Nigeria',
+    bio: profile.bio || profile.professionalBio || profile.organizationDescription || '',
+    researchInterests: Array.isArray(profile.researchInterests) && profile.researchInterests.length > 0 
+      ? profile.researchInterests 
+      : (profile.primaryResearchArea ? [profile.primaryResearchArea] : ['Bioenergy']),
+    verified: Boolean(profile.isVerified || profile.verified || profile.verificationStatus === 'verified'),
+    followers: Array.isArray(profile.followers) ? profile.followers : (existingLocal?.followers || []),
+    following: typeof profile.following === 'number' ? profile.following : (existingLocal?.following || 0),
+    publicationCount: userPaperCount || (Array.isArray(profile.publishedPapers) ? profile.publishedPapers.length : (existingLocal?.publicationCount || 0)),
+    downloads: typeof profile.downloads === 'number' ? profile.downloads : (existingLocal?.downloads || 0),
+    views: typeof profile.views === 'number' ? profile.views : (existingLocal?.views || 1),
+    citations: typeof profile.citations === 'number' ? profile.citations : (existingLocal?.citations || 0),
+    createdAt: profile.createdAt?.toDate ? profile.createdAt.toDate().toISOString() : (profile.createdAt || existingLocal?.createdAt || new Date().toISOString()),
+    orcid: profile.orcid || '',
+    googleScholar: profile.googleScholar || '',
+    linkedin: profile.linkedin || '',
+    email: profile.privacySettings?.email === 'private' ? '' : (profile.email || ''),
+    website: profile.privacySettings?.website === 'private' ? '' : (profile.website || ''),
+    qualifications: Array.isArray(profile.academicQualifications) ? profile.academicQualifications : (Array.isArray(profile.qualifications) ? profile.qualifications : []),
+    experienceYears: Number(profile.yearsOfExperience || profile.experienceYears || 0)
+  };
+
+  // 1. Update local storage cache
+  const currentLocal = getLocalResearchers();
+  const filteredLocal = currentLocal.filter(r => r.id !== userId);
+  setLocalResearchers([researcherData, ...filteredLocal]);
+
+  // 2. Sync to Firestore researchers collection
+  if (!isFirestoreOffline && !isDemoModeActive(userId)) {
+    try {
+      const docRef = doc(db, 'researchers', userId);
+      await setDoc(docRef, sanitizeForFirestore(researcherData), { merge: true });
+    } catch (err) {
+      console.warn('Could not sync researcher document to Firestore directly:', err);
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('researchers-updated', { detail: { userId, researcher: researcherData } }));
+  }
+}
+
 export async function createUserProfile(userId: string, profile: any): Promise<void> {
   const sanitizedProfile = {
     fullName: profile.fullName || '',
@@ -540,6 +628,7 @@ export async function createUserProfile(userId: string, profile: any): Promise<v
       updatedAt: new Date().toISOString()
     };
     localStorage.setItem(`nexus_demo_profile_${userId}`, JSON.stringify(updated));
+    await syncUserProfileToResearcher(userId, updated);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId, profile: updated } }));
     }
@@ -555,6 +644,7 @@ export async function createUserProfile(userId: string, profile: any): Promise<v
       updatedAt: serverTimestamp()
     });
     await setDoc(docRef, cleanPayload, { merge: true });
+    await syncUserProfileToResearcher(userId, sanitizedProfile);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId, profile: sanitizedProfile } }));
     }
@@ -570,6 +660,7 @@ export async function createUserProfile(userId: string, profile: any): Promise<v
     };
     try {
       localStorage.setItem(`nexus_demo_profile_${userId}`, JSON.stringify(updated));
+      await syncUserProfileToResearcher(userId, updated);
     } catch {}
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId, profile: updated } }));
@@ -613,13 +704,19 @@ export async function saveUserProfileByAdmin(userId: string, data: any): Promise
     const profileKey = `nexus_demo_profile_${userId}`;
     const localProfile = localStorage.getItem(profileKey);
     const parsed = localProfile ? JSON.parse(localProfile) : {};
-    localStorage.setItem(profileKey, JSON.stringify({ ...parsed, ...data, updatedAt: new Date().toISOString() }));
+    const updated = { ...parsed, ...data, updatedAt: new Date().toISOString() };
+    localStorage.setItem(profileKey, JSON.stringify(updated));
+    await syncUserProfileToResearcher(userId, updated);
     return;
   }
   const path = 'users';
   try {
     const docRef = doc(db, path, userId);
     await setDoc(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+    const fullProfile = await getUserProfile(userId);
+    if (fullProfile) {
+      await syncUserProfileToResearcher(userId, fullProfile);
+    }
   } catch (error) {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
@@ -1060,18 +1157,90 @@ function setLocalPublications(publications: Publication[]) {
 
 // FETCH RESEARCHERS
 export async function getResearchers(): Promise<Researcher[]> {
+  const localResearchers = getLocalResearchers();
+  const customPapers = await getCustomPapers();
+
+  // Helper to map and sync any complete user profile
+  const syncCompleteProfiles = (users: any[], existingMap: Map<string, Researcher>) => {
+    for (const u of users) {
+      const uId = u.id || u.uid;
+      if (!uId) continue;
+      if (isPublicProfileComplete(u)) {
+        const uPapers = customPapers.filter(p => p.userId === uId || (u.email && p.userEmail === u.email)).length;
+        const existing = existingMap.get(uId);
+        const mapped: Researcher = {
+          id: uId,
+          fullName: (u.fullName || u.displayName || u.organizationName || 'Researcher').trim(),
+          profilePhoto: u.profilePicture || u.photoURL || u.avatar || u.organizationLogo || 'https://lh3.googleusercontent.com/d/1utUCWpBRmKjeGRFF1Jo2Z3-ta7B8bgOq',
+          role: u.professionalTitle || u.currentPosition || (u.isOrganization ? 'Research Institution' : (u.role || 'Researcher')),
+          institution: u.institution || u.organization || u.organizationName || 'Aurenix Research Network',
+          country: u.country || u.location || 'Nigeria',
+          bio: u.bio || u.professionalBio || u.organizationDescription || '',
+          researchInterests: Array.isArray(u.researchInterests) && u.researchInterests.length > 0 
+            ? u.researchInterests 
+            : (u.primaryResearchArea ? [u.primaryResearchArea] : ['Bioenergy']),
+          verified: Boolean(u.isVerified || u.verified || u.verificationStatus === 'verified'),
+          followers: Array.isArray(u.followers) ? u.followers : (existing?.followers || []),
+          following: typeof u.following === 'number' ? u.following : (existing?.following || 0),
+          publicationCount: uPapers || (Array.isArray(u.publishedPapers) ? u.publishedPapers.length : (existing?.publicationCount || 0)),
+          downloads: typeof u.downloads === 'number' ? u.downloads : (existing?.downloads || 0),
+          views: typeof u.views === 'number' ? u.views : (existing?.views || 1),
+          citations: typeof u.citations === 'number' ? u.citations : (existing?.citations || 0),
+          createdAt: u.createdAt?.toDate ? u.createdAt.toDate().toISOString() : (u.createdAt || existing?.createdAt || new Date().toISOString()),
+          orcid: u.orcid || '',
+          googleScholar: u.googleScholar || '',
+          linkedin: u.linkedin || '',
+          email: u.privacySettings?.email === 'private' ? '' : (u.email || ''),
+          website: u.privacySettings?.website === 'private' ? '' : (u.website || ''),
+          qualifications: Array.isArray(u.academicQualifications) ? u.academicQualifications : (Array.isArray(u.qualifications) ? u.qualifications : []),
+          experienceYears: Number(u.yearsOfExperience || u.experienceYears || 0)
+        };
+        existingMap.set(uId, mapped);
+      }
+    }
+  };
+
   if (isDemoModeActive()) {
-    return getLocalResearchers();
+    const researcherMap = new Map<string, Researcher>();
+    for (const r of localResearchers) {
+      researcherMap.set(r.id, r);
+    }
+
+    // Scan localStorage for all user profiles in demo mode
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const demoUsers: any[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('nexus_demo_profile_')) {
+            const uId = key.replace('nexus_demo_profile_', '');
+            const val = localStorage.getItem(key);
+            if (val) {
+              try {
+                const parsed = JSON.parse(val);
+                demoUsers.push({ id: uId, ...parsed });
+              } catch {}
+            }
+          }
+        }
+        syncCompleteProfiles(demoUsers, researcherMap);
+      } catch {}
+    }
+
+    const result = Array.from(researcherMap.values());
+    setLocalResearchers(result);
+    return result;
   }
 
   const path = 'researchers';
   try {
     const colRef = collection(db, path);
     const querySnapshot = await getDocs(colRef);
-    const list: Researcher[] = [];
+    const researcherMap = new Map<string, Researcher>();
+
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      list.push({
+      researcherMap.set(docSnap.id, {
         id: docSnap.id,
         fullName: data.fullName || '',
         profilePhoto: data.profilePhoto || '',
@@ -1098,7 +1267,29 @@ export async function getResearchers(): Promise<Researcher[]> {
       });
     });
 
-    return list;
+    // Also load users from users collection to discover any complete profiles
+    try {
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const usersList: any[] = [];
+      usersSnap.forEach((docSnap) => {
+        usersList.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      syncCompleteProfiles(usersList, researcherMap);
+    } catch (usersErr) {
+      console.warn('Notice: Could not query users collection, using researchers collection:', usersErr);
+    }
+
+    // Update accurate publication count for each researcher based on custom_papers
+    for (const [id, res] of researcherMap.entries()) {
+      const userPapers = customPapers.filter(p => p.userId === id || (res.email && p.userEmail === res.email)).length;
+      if (userPapers > 0) {
+        res.publicationCount = Math.max(res.publicationCount || 0, userPapers);
+      }
+    }
+
+    const result = Array.from(researcherMap.values());
+    setLocalResearchers(result);
+    return result;
   } catch (error) {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
@@ -1116,8 +1307,34 @@ export async function getResearcherById(id: string): Promise<Researcher | null> 
 
 // FETCH PUBLICATIONS
 export async function getPublications(): Promise<Publication[]> {
+  const customPapers = await getCustomPapers();
+  const customPubs: Publication[] = customPapers
+    .filter(p => !p.isDraft && p.status !== 'Draft')
+    .map(p => ({
+      id: p.id,
+      researcherId: p.userId || p.id,
+      title: p.title || 'Untitled Research Paper',
+      abstract: p.abstract || '',
+      category: p.category || 'Bioenergy Technology',
+      keywords: p.keywords || [],
+      pdfUrl: p.downloadUrl || p.uploads?.pdf || '#',
+      coverImage: p.uploads?.coverImage,
+      downloads: p.downloadsCount || 0,
+      views: p.viewsCount || 0,
+      citations: 0,
+      createdAt: p.createdAt || new Date().toISOString()
+    }));
+
   if (isDemoModeActive()) {
-    return getLocalPublications();
+    const local = getLocalPublications();
+    const existingIds = new Set(local.map(l => l.id));
+    const merged = [...local];
+    for (const cp of customPubs) {
+      if (!existingIds.has(cp.id)) {
+        merged.push(cp);
+      }
+    }
+    return merged;
   }
 
   const path = 'publications';
@@ -1143,6 +1360,12 @@ export async function getPublications(): Promise<Publication[]> {
       });
     });
 
+    const existingIds = new Set(list.map(l => l.id));
+    for (const cp of customPubs) {
+      if (!existingIds.has(cp.id)) {
+        list.push(cp);
+      }
+    }
     return list;
   } catch (error) {
     if (isOfflineError(error)) {
@@ -1150,7 +1373,15 @@ export async function getPublications(): Promise<Publication[]> {
       return getPublications();
     }
     console.warn('Error fetching publications from Firestore, falling back to local storage:', error);
-    return getLocalPublications();
+    const local = getLocalPublications();
+    const existingIds = new Set(local.map(l => l.id));
+    const merged = [...local];
+    for (const cp of customPubs) {
+      if (!existingIds.has(cp.id)) {
+        merged.push(cp);
+      }
+    }
+    return merged;
   }
 }
 

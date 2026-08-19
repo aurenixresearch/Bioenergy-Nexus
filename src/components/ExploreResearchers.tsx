@@ -33,7 +33,8 @@ import {
   SlidersHorizontal,
   ChevronRight,
   MessageSquare,
-  AlertCircle
+  AlertCircle,
+  Edit3
 } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { Researcher, Publication } from '../types';
@@ -46,12 +47,15 @@ import {
 } from '../services/db';
 import { checkMessagingEligibility } from '../services/messagingDb';
 
+const DEFAULT_AVATAR = 'https://lh3.googleusercontent.com/d/1utUCWpBRmKjeGRFF1Jo2Z3-ta7B8bgOq';
+
 interface ExploreResearchersProps {
   user: FirebaseUser | null;
   onSignIn: () => void;
   selectedResearcherId?: string | null;
   onSelectResearcherId?: (id: string | null) => void;
   onNavigateToMessages?: (targetUserId: string) => void;
+  onNavigateToProfile?: () => void;
 }
 
 export default function ExploreResearchers({ 
@@ -59,7 +63,8 @@ export default function ExploreResearchers({
   onSignIn,
   selectedResearcherId: propSelectedResearcherId,
   onSelectResearcherId,
-  onNavigateToMessages
+  onNavigateToMessages,
+  onNavigateToProfile
 }: ExploreResearchersProps) {
   // Data State
   const [researchers, setResearchers] = useState<Researcher[]>([]);
@@ -111,6 +116,15 @@ export default function ExploreResearchers({
 
   useEffect(() => {
     loadData();
+    const handleUpdated = () => {
+      loadData(true);
+    };
+    window.addEventListener('researchers-updated', handleUpdated);
+    window.addEventListener('user-profile-updated', handleUpdated);
+    return () => {
+      window.removeEventListener('researchers-updated', handleUpdated);
+      window.removeEventListener('user-profile-updated', handleUpdated);
+    };
   }, []);
 
   // Sync / Refresh handler
@@ -388,8 +402,9 @@ export default function ExploreResearchers({
                 {/* Left Side: Avatar */}
                 <div className="shrink-0">
                   <img 
-                    src={selectedResearcher.profilePhoto} 
+                    src={selectedResearcher.profilePhoto || DEFAULT_AVATAR} 
                     alt={selectedResearcher.fullName} 
+                    onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR; }}
                     className="w-28 h-28 rounded-2xl object-cover border-2 border-emerald-500/20 shadow-md"
                   />
                 </div>
@@ -405,6 +420,11 @@ export default function ExploreResearchers({
                       <MapPin className="w-3 h-3 text-slate-400" />
                       {selectedResearcher.country}
                     </span>
+                    {user && user.uid === selectedResearcher.id && (
+                      <span className="px-2.5 py-0.5 bg-emerald-600 text-white text-[10px] font-extrabold uppercase tracking-wider rounded-md shadow-xs">
+                        You
+                      </span>
+                    )}
                   </div>
 
                   <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-900 tracking-tight flex items-center gap-1.5 flex-wrap">
@@ -430,37 +450,55 @@ export default function ExploreResearchers({
 
                 {/* Right Side: Follow / Connect / Message actions */}
                 <div className="w-full md:w-auto flex flex-col gap-2 shrink-0 border-t md:border-t-0 pt-4 md:pt-0 border-slate-100">
-                  <div className="flex flex-col sm:flex-row md:flex-col gap-2">
-                    <button
-                      onClick={(e) => handleFollowToggle(selectedResearcher.id, e)}
-                      className={`w-full md:w-52 flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
-                        user && selectedResearcher.followers.includes(user.uid)
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80 hover:bg-emerald-100'
-                          : 'bg-emerald-700 text-white hover:bg-emerald-800'
-                      }`}
-                    >
-                      {user && selectedResearcher.followers.includes(user.uid) ? (
-                        <>
-                          <UserCheck className="w-4 h-4 shrink-0" />
-                          Following Scientist
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="w-4 h-4 shrink-0" />
-                          Follow Scientist
-                        </>
+                  {user && user.uid === selectedResearcher.id ? (
+                    <div className="flex flex-col sm:flex-row md:flex-col gap-2">
+                      <div className="w-full md:w-52 py-3 px-4 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold text-center flex items-center justify-center gap-2 shadow-xs">
+                        <UserCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>Your Public Profile (Active)</span>
+                      </div>
+                      {onNavigateToProfile && (
+                        <button
+                          onClick={onNavigateToProfile}
+                          className="w-full md:w-52 flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-all shadow-sm cursor-pointer"
+                        >
+                          <Edit3 className="w-4 h-4 text-emerald-400 shrink-0" />
+                          Edit Profile
+                        </button>
                       )}
-                    </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row md:flex-col gap-2">
+                      <button
+                        onClick={(e) => handleFollowToggle(selectedResearcher.id, e)}
+                        className={`w-full md:w-52 flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
+                          user && selectedResearcher.followers.includes(user.uid)
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80 hover:bg-emerald-100'
+                            : 'bg-emerald-700 text-white hover:bg-emerald-800'
+                        }`}
+                      >
+                        {user && selectedResearcher.followers.includes(user.uid) ? (
+                          <>
+                            <UserCheck className="w-4 h-4 shrink-0" />
+                            Following Scientist
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="w-4 h-4 shrink-0" />
+                            Follow Scientist
+                          </>
+                        )}
+                      </button>
 
-                    <button
-                      onClick={(e) => handleMessageResearcher(selectedResearcher.id, e)}
-                      className="w-full md:w-52 flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-all shadow-sm cursor-pointer"
-                      title="Send Private Message"
-                    >
-                      <MessageSquare className="w-4 h-4 shrink-0 text-emerald-400" />
-                      Message Scholar
-                    </button>
-                  </div>
+                      <button
+                        onClick={(e) => handleMessageResearcher(selectedResearcher.id, e)}
+                        className="w-full md:w-52 flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-all shadow-sm cursor-pointer"
+                        title="Send Private Message"
+                      >
+                        <MessageSquare className="w-4 h-4 shrink-0 text-emerald-400" />
+                        Message Scholar
+                      </button>
+                    </div>
+                  )}
 
                   {/* Messaging Restriction Alert Notice */}
                   {messageNotice && (
@@ -749,6 +787,65 @@ export default function ExploreResearchers({
               className="space-y-10"
               id="explorers_dashboard"
             >
+              {/* User Profile Status Banner */}
+              {user && (
+                <div>
+                  {researchers.some(r => r.id === user.uid) ? (
+                    <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left shadow-xs">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-emerald-600 text-white rounded-2xl shadow-xs shrink-0">
+                          <UserCheck className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-xs sm:text-sm font-extrabold text-emerald-950">Your Public Profile is Live</h3>
+                            <span className="px-2 py-0.5 bg-emerald-200/80 text-emerald-900 text-[9px] font-black uppercase tracking-wider rounded-full">Visible to all users</span>
+                          </div>
+                          <p className="text-[11px] text-emerald-800/90 mt-0.5">Other scholars, universities, and partners can explore your research papers, follow you, and send messages.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
+                        <button
+                          onClick={() => handleViewProfile(user.uid)}
+                          className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View Your Card</span>
+                        </button>
+                        {onNavigateToProfile && (
+                          <button
+                            onClick={onNavigateToProfile}
+                            className="px-3.5 py-2 bg-white hover:bg-emerald-100/50 text-emerald-900 border border-emerald-300/80 text-xs font-bold rounded-xl transition cursor-pointer"
+                          >
+                            Edit Profile
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left shadow-xs">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-amber-500 text-white rounded-2xl shadow-xs shrink-0">
+                          <Sparkles className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-xs sm:text-sm font-extrabold text-amber-950">Want to appear on this Researchers Hub?</h3>
+                          <p className="text-[11px] text-amber-800/90 mt-0.5">Complete your public profile (photo, bio, institution, country, and interests) so other researchers across Africa can discover your work.</p>
+                        </div>
+                      </div>
+                      {onNavigateToProfile && (
+                        <button
+                          onClick={onNavigateToProfile}
+                          className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-extrabold rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1.5 shrink-0 w-full sm:w-auto justify-center"
+                        >
+                          <span>Complete Profile Now</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
               
               {/* Top Row: Search & Filters Bar */}
               <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-6 shadow-xs sm:shadow-sm space-y-3.5 sm:space-y-4 text-left" id="search_and_filters_box">
@@ -922,17 +1019,21 @@ export default function ExploreResearchers({
                                 {/* Profile image */}
                                 <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto">
                                   <img 
-                                    src={res.profilePhoto} 
+                                    src={res.profilePhoto || DEFAULT_AVATAR} 
                                     alt={res.fullName} 
+                                    onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR; }}
                                     className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover border border-slate-200 shadow-xs"
                                   />
                                 </div>
 
                                 <div className="space-y-0.5">
-                                  <h4 className="text-xs font-black text-slate-900 flex items-center justify-center gap-1 px-1 sm:px-2">
+                                  <h4 className="text-xs font-black text-slate-900 flex items-center justify-center gap-1 px-1 sm:px-2 flex-wrap">
                                     <span className="truncate">{res.fullName}</span>
                                     {res.verified && (
                                       <BadgeCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white fill-emerald-600 shrink-0" title="Verified Expert" />
+                                    )}
+                                    {user && user.uid === res.id && (
+                                      <span className="px-1.5 py-0.2 bg-emerald-600 text-white text-[8px] font-black uppercase rounded">You</span>
                                     )}
                                   </h4>
                                   <p className="text-[10px] text-emerald-700 font-mono font-bold truncate">{res.role}</p>
@@ -975,15 +1076,19 @@ export default function ExploreResearchers({
                               <div className="space-y-3 sm:space-y-4">
                                 <div className="flex gap-3 sm:gap-4 items-center">
                                   <img 
-                                    src={res.profilePhoto} 
+                                    src={res.profilePhoto || DEFAULT_AVATAR} 
                                     alt={res.fullName} 
+                                    onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR; }}
                                     className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover border border-slate-200 shrink-0"
                                   />
                                   <div className="min-w-0 flex-grow">
-                                    <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors flex items-center gap-1">
+                                    <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors flex items-center gap-1 flex-wrap">
                                       <span className="truncate">{res.fullName}</span>
                                       {res.verified && (
                                         <BadgeCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white fill-emerald-600 shrink-0" title="Verified Expert" />
+                                      )}
+                                      {user && user.uid === res.id && (
+                                        <span className="px-1.5 py-0.2 bg-emerald-600 text-white text-[8px] font-black uppercase rounded">You</span>
                                       )}
                                     </h4>
                                     <p className="text-[10px] text-slate-400 truncate font-semibold">{res.institution}</p>
@@ -1126,8 +1231,9 @@ export default function ExploreResearchers({
                               <div className="flex gap-4 items-start">
                                 <div className="shrink-0">
                                   <img 
-                                    src={res.profilePhoto} 
+                                    src={res.profilePhoto || DEFAULT_AVATAR} 
                                     alt={res.fullName} 
+                                    onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR; }}
                                     className="w-14 h-14 rounded-2xl object-cover border border-slate-200"
                                   />
                                 </div>
@@ -1140,6 +1246,11 @@ export default function ExploreResearchers({
                                     <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[8px] font-mono rounded">
                                       {res.country}
                                     </span>
+                                    {user && user.uid === res.id && (
+                                      <span className="px-1.5 py-0.2 bg-emerald-600 text-white text-[8px] font-black uppercase rounded">
+                                        You
+                                      </span>
+                                    )}
                                   </div>
 
                                   <h4 className="text-base font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5">

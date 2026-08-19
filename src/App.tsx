@@ -1063,6 +1063,7 @@ export default function App() {
                   onNavigateToMessages={(targetUid) => {
                     navigateTo(`/messages/${targetUid}`);
                   }}
+                  onNavigateToProfile={() => setView('profile')}
                 />
               </motion.div>
             )}

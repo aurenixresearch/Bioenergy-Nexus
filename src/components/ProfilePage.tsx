@@ -715,7 +715,7 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
                 />
               </div>
 
-              {/* 7 Task Checklist */}
+                {/* 7 Task Checklist */}
               <div className="space-y-3">
                 {completionTasks.map((task) => (
                   <div 
@@ -739,6 +739,36 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
                   </div>
                 ))}
               </div>
+
+              {/* Public Discovery Status */}
+              {completenessResult.isComplete ? (
+                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 text-left space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                    <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Public Profile Active on Researchers Page</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Other scholars across Africa can discover your research, follow your work, and message you.
+                  </p>
+                  <button
+                    onClick={() => onNavigateToView('researchers')}
+                    className="w-full mt-1.5 py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>View on Researchers Page</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 text-left space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-400">
+                    <ShieldAlert className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>Visibility Notice</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Complete the profile items above to automatically list your card on the public <strong>Explore Researchers</strong> page.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Privacy Guarantee Panel */}
