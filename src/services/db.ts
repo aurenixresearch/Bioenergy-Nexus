@@ -142,12 +142,12 @@ function setLocalPartnerships(userId: string, partnerships: PartnershipSubmissio
   localStorage.setItem(`nexus_demo_partnerships_${userId}`, JSON.stringify(partnerships));
 }
 
-function getLocalCustomPapers(): ResearchPaper[] {
+export function getLocalCustomPapers(): ResearchPaper[] {
   const data = localStorage.getItem(`nexus_demo_custom_papers`);
   return data ? JSON.parse(data) : [];
 }
 
-function setLocalCustomPapers(papers: ResearchPaper[]) {
+export function setLocalCustomPapers(papers: ResearchPaper[]) {
   localStorage.setItem(`nexus_demo_custom_papers`, JSON.stringify(papers));
 }
 
@@ -405,6 +405,10 @@ export async function addCustomPaper(paper: Omit<ResearchPaper, 'id'>, userId: s
       isCustom: true
     };
     setLocalCustomPapers([...papers, newPaper]);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('custom-papers-updated', { detail: { paperId: mockId, userId } }));
+      window.dispatchEvent(new CustomEvent('research-updated', { detail: { paperId: mockId, userId } }));
+    }
     return mockId;
   }
 
@@ -418,6 +422,10 @@ export async function addCustomPaper(paper: Omit<ResearchPaper, 'id'>, userId: s
       userEmail,
       createdAt: new Date().toISOString(),
     }));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('custom-papers-updated', { detail: { paperId: docRef.id, userId } }));
+      window.dispatchEvent(new CustomEvent('research-updated', { detail: { paperId: docRef.id, userId } }));
+    }
     return docRef.id;
   } catch (error) {
     if (isOfflineError(error)) {
@@ -438,6 +446,10 @@ export async function updateCustomPaper(paperId: string, paper: Partial<Research
     return p;
   });
   setLocalCustomPapers(updated);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('custom-papers-updated', { detail: { paperId } }));
+    window.dispatchEvent(new CustomEvent('research-updated', { detail: { paperId } }));
+  }
 
   if (isDemoModeActive()) {
     return;
@@ -447,6 +459,10 @@ export async function updateCustomPaper(paperId: string, paper: Partial<Research
   try {
     const docRef = doc(db, path, paperId);
     await setDoc(docRef, sanitizeForFirestore(paper), { merge: true });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('custom-papers-updated', { detail: { paperId } }));
+      window.dispatchEvent(new CustomEvent('research-updated', { detail: { paperId } }));
+    }
   } catch (error) {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
@@ -461,6 +477,10 @@ export async function deleteCustomPaper(paperId: string): Promise<void> {
   const papers = getLocalCustomPapers();
   const updated = papers.filter(p => p.id !== paperId);
   setLocalCustomPapers(updated);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('custom-papers-updated', { detail: { paperId } }));
+    window.dispatchEvent(new CustomEvent('research-updated', { detail: { paperId } }));
+  }
 
   if (isDemoModeActive()) {
     return;
@@ -470,6 +490,10 @@ export async function deleteCustomPaper(paperId: string): Promise<void> {
   try {
     const docRef = doc(db, path, paperId);
     await deleteDoc(docRef);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('custom-papers-updated', { detail: { paperId } }));
+      window.dispatchEvent(new CustomEvent('research-updated', { detail: { paperId } }));
+    }
   } catch (error) {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);

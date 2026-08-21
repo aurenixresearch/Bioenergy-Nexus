@@ -218,7 +218,7 @@ export default function ResearchSection({
     }
   };
 
-  // Load custom papers from Firestore on startup
+  // Load custom papers from Firestore on startup & sync with events
   useEffect(() => {
     async function loadPapers() {
       try {
@@ -229,7 +229,26 @@ export default function ResearchSection({
       }
     }
     loadPapers();
-  }, []);
+
+    const handlePapersUpdated = () => {
+      loadPapers();
+    };
+
+    const handleOpenWizardEvent = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      handleOpenPublishWizard(customEvent.detail?.draftData);
+    };
+
+    window.addEventListener('custom-papers-updated', handlePapersUpdated);
+    window.addEventListener('research-updated', handlePapersUpdated);
+    window.addEventListener('open-publish-wizard', handleOpenWizardEvent as EventListener);
+
+    return () => {
+      window.removeEventListener('custom-papers-updated', handlePapersUpdated);
+      window.removeEventListener('research-updated', handlePapersUpdated);
+      window.removeEventListener('open-publish-wizard', handleOpenWizardEvent as EventListener);
+    };
+  }, [user, userProfile]);
 
   // Merge static papers with custom ones
   useEffect(() => {
