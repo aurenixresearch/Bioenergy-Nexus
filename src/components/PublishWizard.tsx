@@ -40,13 +40,45 @@ export default function PublishWizard({ onClose, onSubmit, initialData, userProf
   const [readingTime, setReadingTime] = useState(initialData?.readingTime || '15 mins');
 
   // Step 2
-  const [leadResearcher, setLeadResearcher] = useState(initialData?.leadResearcher || '');
+  const [leadResearcher, setLeadResearcher] = useState(
+    initialData?.leadResearcher || 
+    initialData?.author || 
+    userProfile?.fullName || 
+    userProfile?.displayName || 
+    userProfile?.username || 
+    ''
+  );
   const [coAuthors, setCoAuthors] = useState<CoAuthor[]>(initialData?.coAuthors || []);
-  const [institution, setInstitution] = useState(initialData?.institution || '');
-  const [department, setDepartment] = useState(initialData?.department || '');
-  const [country, setCountry] = useState(initialData?.country || '');
-  const [orcid, setOrcid] = useState(initialData?.orcid || '');
-  const [googleScholar, setGoogleScholar] = useState(initialData?.googleScholar || '');
+  const [institution, setInstitution] = useState(
+    initialData?.institution || 
+    userProfile?.institution || 
+    userProfile?.organizationName || 
+    userProfile?.organization || 
+    ''
+  );
+  const [department, setDepartment] = useState(
+    initialData?.department || 
+    userProfile?.department || 
+    ''
+  );
+  const [country, setCountry] = useState(
+    initialData?.country || 
+    userProfile?.country || 
+    userProfile?.location || 
+    ''
+  );
+  const [orcid, setOrcid] = useState(
+    initialData?.orcid || 
+    userProfile?.orcid || 
+    userProfile?.portfolioLinks?.orcid || 
+    ''
+  );
+  const [googleScholar, setGoogleScholar] = useState(
+    initialData?.googleScholar || 
+    userProfile?.googleScholar || 
+    userProfile?.portfolioLinks?.googleScholar || 
+    ''
+  );
 
   // Co-author temporary fields
   const [tempCoAuthorName, setTempCoAuthorName] = useState('');
@@ -378,7 +410,7 @@ export default function PublishWizard({ onClose, onSubmit, initialData, userProf
 
   const handleFormSubmit = async () => {
     setErrorMsg(null);
-    if (!profileValidation.isComplete) {
+    if (!profileValidation.isComplete && !leadResearcher.trim()) {
       setErrorMsg(`Profile Completion Required: You cannot upload research without completing your profile (Missing: ${profileValidation.missingFields.join(', ')}).`);
       return;
     }
@@ -607,14 +639,14 @@ export default function PublishWizard({ onClose, onSubmit, initialData, userProf
 
         {/* Form Core Body */}
         <div className="flex-grow overflow-y-auto p-6 md:p-8 text-left" style={{ backgroundColor: '#ffffff' }}>
-          {!profileValidation.isComplete && (
+          {!profileValidation.isComplete && !leadResearcher.trim() && (
             <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs font-semibold animate-in fade-in duration-200">
               <div className="flex items-center gap-3">
                 <ShieldAlert className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" />
                 <div>
-                  <strong className="block text-sm font-extrabold text-amber-950 dark:text-amber-100">Profile Completion Required</strong>
+                  <strong className="block text-sm font-extrabold text-amber-950 dark:text-amber-100">Author Profile Identification</strong>
                   <p className="text-amber-800 dark:text-amber-300 mt-0.5">
-                    Your user profile is {profileValidation.completionPercent}% complete. Missing: {profileValidation.missingFields.join(', ')}. Please complete your profile before uploading research.
+                    Please provide your author name and affiliation details below to publish your research.
                   </p>
                 </div>
               </div>
@@ -628,7 +660,7 @@ export default function PublishWizard({ onClose, onSubmit, initialData, userProf
                 className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shrink-0 transition cursor-pointer shadow-xs"
                 id="wizard_complete_profile_btn"
               >
-                Complete Profile Now
+                View Profile
               </button>
             </div>
           )}

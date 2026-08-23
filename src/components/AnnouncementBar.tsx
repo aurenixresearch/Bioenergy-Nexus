@@ -290,16 +290,16 @@ export default function AnnouncementBar({
 
   // Calculate Profile Completeness and Total Published Count
   const effectiveProfile = liveProfile || propUserProfile;
-  const profileValidation = useMemo(() => checkProfileCompleteness(effectiveProfile), [effectiveProfile]);
-  const isProfileComplete = profileValidation.isComplete;
-  const isOrgAccount = ['Institution', 'Industry', 'Government', 'NGO', 'Other', 'Government Agency'].includes(effectiveProfile?.userRole || effectiveProfile?.role || '') || !!effectiveProfile?.isOrganization || !!effectiveProfile?.organizationType || effectiveProfile?.accountType === 'institution';
-
   const totalPublishedPapers = useMemo(() => {
     const profilePublished = Array.isArray(effectiveProfile?.publishedPapers) 
       ? effectiveProfile.publishedPapers.length 
       : (typeof effectiveProfile?.uploadedResearchCount === 'number' ? effectiveProfile.uploadedResearchCount : 0);
     return Math.max(publishedCount, profilePublished);
   }, [publishedCount, effectiveProfile]);
+
+  const profileValidation = useMemo(() => checkProfileCompleteness(effectiveProfile, totalPublishedPapers), [effectiveProfile, totalPublishedPapers]);
+  const isProfileComplete = profileValidation.isComplete;
+  const isOrgAccount = ['Institution', 'Industry', 'Government', 'NGO', 'Other', 'Government Agency'].includes(effectiveProfile?.userRole || effectiveProfile?.role || '') || !!effectiveProfile?.isOrganization || !!effectiveProfile?.organizationType || effectiveProfile?.accountType === 'institution';
 
   // Determine current announcement based on priority lifecycle rules
   const activeAnnouncement = useMemo<AnnouncementConfig | null>(() => {

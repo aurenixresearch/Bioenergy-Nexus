@@ -1086,6 +1086,11 @@ export default function UserDashboard({
               window.location.hash = `#/research/${draft.id}`;
             }
             safeOnNavigate('research');
+            setTimeout(() => {
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('open-publish-wizard', { detail: { draftData: draft } }));
+              }
+            }, 60);
           }} 
         />
 

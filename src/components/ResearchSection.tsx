@@ -169,53 +169,20 @@ export default function ResearchSection({
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileValidationResult, setProfileValidationResult] = useState<ProfileCompletenessResult | null>(null);
 
-  // Check profile completeness before opening upload wizard
+  // Open upload wizard seamlessly
   const handleOpenPublishWizard = async (initialPaper?: Partial<ResearchPaper>) => {
     if (!user) {
       onSignIn();
       return;
     }
 
-    try {
-      let profile = userProfile;
-      if (user?.uid) {
-        try {
-          const freshProfile = await getUserProfile(user.uid);
-          if (freshProfile) profile = freshProfile;
-        } catch (e) {
-          console.warn('Could not fetch latest profile from DB:', e);
-        }
-      }
-
-      const validation = checkProfileCompleteness(profile);
-      if (!validation.isComplete) {
-        setProfileValidationResult(validation);
-        setShowProfileModal(true);
-        return;
-      }
-
-      if (initialPaper) {
-        setEditingDraftData(initialPaper);
-      } else {
-        setEditingDraftData(null);
-      }
-
-      setIsModalOpen(true);
-    } catch (err) {
-      console.error('Error checking profile completeness:', err);
-      const validation = checkProfileCompleteness(userProfile);
-      if (!validation.isComplete) {
-        setProfileValidationResult(validation);
-        setShowProfileModal(true);
-        return;
-      }
-      if (initialPaper) {
-        setEditingDraftData(initialPaper);
-      } else {
-        setEditingDraftData(null);
-      }
-      setIsModalOpen(true);
+    if (initialPaper) {
+      setEditingDraftData(initialPaper);
+    } else {
+      setEditingDraftData(null);
     }
+
+    setIsModalOpen(true);
   };
 
   // Load custom papers from Firestore on startup & sync with events

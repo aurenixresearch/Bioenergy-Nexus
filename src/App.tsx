@@ -168,7 +168,10 @@ const DEMO_GUEST_USER = {
   photoURL: '',
   emailVerified: false,
   isAnonymous: true,
-  metadata: {}
+  metadata: {
+    creationTime: '2026-01-01T00:00:00.000Z',
+    lastSignInTime: '2026-01-01T00:00:00.000Z'
+  }
 };
 
 function parseUrl() {
@@ -531,7 +534,18 @@ export default function App() {
         }
       });
 
-      return () => unsubscribeSnap();
+      const handleProfileUpdated = (e: Event) => {
+        const customEvent = e as CustomEvent;
+        if (customEvent.detail && customEvent.detail.userId === userId) {
+          setUserProfileState(customEvent.detail.profile);
+        }
+      };
+      window.addEventListener('user-profile-updated', handleProfileUpdated as EventListener);
+
+      return () => {
+        if (unsubscribeSnap) unsubscribeSnap();
+        window.removeEventListener('user-profile-updated', handleProfileUpdated as EventListener);
+      };
     } catch (err) {
       console.error(`[REAL-TIME ROLE AUDIT] Error setting up Firestore listener:`, err);
     }

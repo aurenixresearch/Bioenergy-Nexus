@@ -555,17 +555,15 @@ export function isPublicProfileComplete(profile: any): boolean {
   const completeness = checkProfileCompleteness(profile);
   if (completeness.isComplete) return true;
 
-  // Alternatively check if key public identity fields are present
-  const hasName = Boolean((profile.fullName || profile.displayName || profile.organizationName || '').trim());
-  const hasCountry = Boolean((profile.country || profile.location || '').trim());
-  const hasInstitution = Boolean((profile.institution || profile.organization || profile.organizationName || '').trim());
-  const hasBio = Boolean((profile.bio || profile.professionalBio || profile.organizationDescription || '').trim());
-  const interests = profile.researchInterests || profile.primaryResearchArea;
-  const hasInterests = Array.isArray(interests) ? interests.length > 0 : Boolean(interests && interests.trim());
-  const photo = profile.profilePicture || profile.photoURL || profile.avatar || profile.organizationLogo;
-  const hasPhoto = Boolean(photo && typeof photo === 'string' && photo.trim() !== '');
+  // Check if key public identity fields are present
+  const hasName = Boolean((profile.fullName || profile.displayName || profile.organizationName || profile.name || '').trim());
+  const hasCountry = Boolean((profile.country || profile.location || profile.state || profile.city || '').trim());
+  const hasInstitution = Boolean((profile.institution || profile.organization || profile.organizationName || profile.affiliation || profile.university || profile.department || '').trim());
+  const hasBio = Boolean((profile.bio || profile.professionalBio || profile.organizationDescription || profile.role || profile.professionalTitle || '').trim());
+  const interests = profile.researchInterests || profile.primaryResearchArea || profile.interests;
+  const hasInterests = Array.isArray(interests) ? interests.length > 0 : Boolean(interests && (typeof interests === 'string' ? interests.trim() !== '' : true));
 
-  return Boolean(hasName && hasCountry && hasInstitution && hasBio && hasInterests && hasPhoto);
+  return Boolean(hasName && (hasInstitution || hasCountry || hasInterests || hasBio));
 }
 
 export async function syncUserProfileToResearcher(userId: string, profile: any): Promise<void> {

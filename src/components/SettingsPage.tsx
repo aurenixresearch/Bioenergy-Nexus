@@ -157,10 +157,18 @@ export default function SettingsPage({ user, onNavigateToView, theme, onToggleTh
     if (e) e.preventDefault();
     setLoading(true);
     try {
-      await createUserProfile(user.uid, formData);
-      setProfileData(formData);
+      const dataToSave = {
+        ...formData,
+        isProfileComplete: checkProfileCompleteness(formData).isComplete || formData.isProfileComplete || false,
+        profileCompleted: checkProfileCompleteness(formData).isComplete || formData.profileCompleted || false
+      };
+      await createUserProfile(user.uid, dataToSave);
+      setProfileData(dataToSave);
       setAlertMsg({ type: 'success', text: 'System configuration and preferences saved successfully.' });
       setTimeout(() => setAlertMsg(null), 4000);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId: user.uid, profile: dataToSave } }));
+      }
     } catch (err) {
       console.error('Error saving settings:', err);
       setAlertMsg({ type: 'error', text: 'Failed to update preferences.' });

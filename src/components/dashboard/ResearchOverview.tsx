@@ -120,27 +120,16 @@ export default function ResearchOverview({
     }
   };
 
-  const handleUploadClick = async () => {
-    let profile = userProfile;
-    if (user?.uid) {
-      try {
-        const latestProfile = await getUserProfile(user.uid);
-        if (latestProfile) profile = latestProfile;
-      } catch (err) {
-        console.error('Error fetching latest user profile for validation:', err);
-      }
-    }
-    const validation = checkProfileCompleteness(profile);
-    if (!validation.isComplete) {
-      setProfileValidation(validation);
-      setShowProfileModal(true);
-      return;
-    }
-
+  const handleUploadClick = () => {
     if (onUploadResearch) {
       onUploadResearch();
     } else if (onNavigateToView) {
       onNavigateToView('research');
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('open-publish-wizard'));
+        }
+      }, 60);
     }
   };
 

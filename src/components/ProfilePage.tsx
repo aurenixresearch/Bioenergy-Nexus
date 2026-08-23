@@ -207,23 +207,28 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
     if (!rawProfile) return null;
 
     const portfolio = rawProfile.portfolioLinks || {};
+    const uid = user?.uid || rawProfile.uid || 'guest-user';
+    const creationTime = user?.metadata?.creationTime;
+    const memberSinceFallback = creationTime
+      ? new Date(creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      : new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     
     return {
-      uid: user.uid,
+      uid,
       accountType: rawProfile.accountType || (rawProfile.role === 'Institution' ? 'institution' : 'individual'),
       isOrganization: Boolean(rawProfile.isOrganization || rawProfile.accountType === 'institution' || rawProfile.role === 'Institution'),
       
       // Basic
-      profilePicture: rawProfile.profilePicture || user.photoURL || '',
+      profilePicture: rawProfile.profilePicture || user?.photoURL || '',
       coverBanner: rawProfile.coverBanner || '',
-      fullName: rawProfile.fullName || user.displayName || '',
+      fullName: rawProfile.fullName || user?.displayName || '',
       professionalTitle: rawProfile.professionalTitle || rawProfile.title || '',
       bio: rawProfile.bio || rawProfile.description || '',
       country: rawProfile.country || rawProfile.location || '',
       city: rawProfile.city || '',
       institution: rawProfile.institution || rawProfile.organization || rawProfile.organizationName || '',
       department: rawProfile.department || '',
-      memberSince: rawProfile.memberSince || new Date(user.metadata.creationTime || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      memberSince: rawProfile.memberSince || memberSinceFallback,
       isVerified: Boolean(rawProfile.isVerified || rawProfile.verified),
 
       // Organization
@@ -267,7 +272,7 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
       collaborationAreasOfInterest: Array.isArray(rawProfile.collaborationAreasOfInterest) ? rawProfile.collaborationAreasOfInterest : [],
 
       // Contact
-      email: rawProfile.email || user.email || '',
+      email: rawProfile.email || user?.email || '',
       website: rawProfile.website || portfolio.website || '',
       orcid: rawProfile.orcid || portfolio.orcid || '',
       googleScholar: rawProfile.googleScholar || portfolio.googleScholar || '',
@@ -289,7 +294,8 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
   const fetchProfileAndData = async () => {
     setLoading(true);
     try {
-      const rawProfile = await getUserProfile(user.uid);
+      const activeUid = user?.uid || 'guest-user';
+      const rawProfile = await getUserProfile(activeUid);
       let sanitized: any = null;
 
       if (rawProfile) {
@@ -297,9 +303,9 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
       } else {
         // Fresh profile initialized from auth credentials with zero dummy content
         const freshProfile = {
-          fullName: user.displayName || '',
-          email: user.email || '',
-          profilePicture: user.photoURL || '',
+          fullName: user?.displayName || '',
+          email: user?.email || '',
+          profilePicture: user?.photoURL || '',
           memberSince: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
           isVerified: false,
           accountType: 'individual',
@@ -314,7 +320,7 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
             researchgate: 'public'
           }
         };
-        await createUserProfile(user.uid, freshProfile);
+        await createUserProfile(activeUid, freshProfile);
         sanitized = sanitizeProfileData(freshProfile);
       }
 
@@ -323,7 +329,7 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
 
       // Fetch user's custom papers directly from database
       const customP = await getCustomPapers();
-      const userPapers = customP.filter(p => p.userId === user.uid || p.userEmail === user.email);
+      const userPapers = customP.filter(p => (activeUid && p.userId === activeUid) || (user?.email && p.userEmail === user.email));
       setMyPublications(userPapers);
 
     } catch (err) {
@@ -354,12 +360,12 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
   const completionPercent = completenessResult.completionPercent;
 
   const completionTasks = [
-    { id: 'picture', label: 'Upload a profile picture', isDone: Boolean(profileData?.profilePicture && profileData.profilePicture.trim()) },
+    { id: 'picture', label: 'Upload a profile picture', isDone: Boolean((profileData?.profilePicture && profileData.profilePicture.trim()) || user?.photoURL || profileData?.photoURL || profileData?.avatar) },
     { id: 'bio', label: 'Add a biography', isDone: Boolean(profileData?.bio && profileData.bio.trim()) },
-    { id: 'institution', label: 'Add an institution', isDone: Boolean(profileData?.institution && profileData.institution.trim()) },
-    { id: 'country', label: 'Add a country', isDone: Boolean(profileData?.country && profileData.country.trim()) },
-    { id: 'interests', label: 'Add research interests', isDone: Boolean(profileData?.researchInterests && profileData.researchInterests.length > 0) },
-    { id: 'contact', label: 'Add contact information', isDone: Boolean(profileData?.email || profileData?.website || profileData?.orcid || profileData?.linkedin || profileData?.googleScholar || profileData?.researchgate) },
+    { id: 'institution', label: 'Add an institution', isDone: Boolean((profileData?.institution && profileData.institution.trim()) || (profileData?.organization && profileData.organization.trim()) || (profileData?.organizationName && profileData.organizationName.trim())) },
+    { id: 'country', label: 'Add a country', isDone: Boolean((profileData?.country && profileData.country.trim()) || (profileData?.location && profileData.location.trim())) },
+    { id: 'interests', label: 'Add research interests', isDone: Boolean((profileData?.researchInterests && profileData.researchInterests.length > 0) || (profileData?.primaryResearchArea && profileData.primaryResearchArea.trim())) },
+    { id: 'contact', label: 'Add contact information', isDone: Boolean(profileData?.email || user?.email || profileData?.website || profileData?.orcid || profileData?.linkedin || profileData?.googleScholar || profileData?.researchgate || profileData?.phone) },
     { id: 'research', label: 'Upload research', isDone: myPublications.length > 0 || (profileData?.publishedPapers && profileData.publishedPapers.length > 0) }
   ];
 
@@ -367,13 +373,21 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
   const handleSaveProfile = async (updatedData: any) => {
     setLoading(true);
     try {
-      const sanitized = sanitizeProfileData(updatedData);
-      await createUserProfile(user.uid, sanitized);
+      const activeUid = user?.uid || profileData?.uid || 'guest-user';
+      const sanitized = sanitizeProfileData({
+        ...updatedData,
+        isProfileComplete: true,
+        profileCompleted: true
+      });
+      await createUserProfile(activeUid, sanitized);
       setProfileData(sanitized);
       setEditForm(JSON.parse(JSON.stringify(sanitized)));
       setIsEditModalOpen(false);
       setAlertMsg({ type: 'success', text: 'Profile updated successfully.' });
       setTimeout(() => setAlertMsg(null), 4000);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId: activeUid, profile: sanitized } }));
+      }
     } catch (err) {
       console.error('Error saving profile:', err);
       setAlertMsg({ type: 'error', text: 'Failed to update profile. Please try again.' });
@@ -392,12 +406,13 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const activeUid = user?.uid || profileData?.uid || 'guest-user';
     setIsAnalyzingAvatar(true);
     setAvatarStatusText('Processing image with face/logo detection...');
     setAlertMsg(null);
 
     try {
-      const result = await validateAndProcessProfilePicture(file, user.uid, (status) => {
+      const result = await validateAndProcessProfilePicture(file, activeUid, (status) => {
         setAvatarStatusText(status);
       });
 
@@ -418,7 +433,7 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
           organizationLogo: profileData.isOrganization ? newPhotoUrl : profileData.organizationLogo,
           updatedAt: new Date().toISOString()
         };
-        await createUserProfile(user.uid, updated);
+        await createUserProfile(activeUid, updated);
         setProfileData(updated);
         setEditForm(JSON.parse(JSON.stringify(updated)));
         setAlertMsg({ type: 'success', text: 'Profile picture updated successfully.' });
@@ -451,7 +466,8 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
   };
 
   const handleShareProfile = () => {
-    const shareUrl = `${window.location.origin}/profile/${user.uid}`;
+    const activeUid = user?.uid || profileData?.uid || 'guest-user';
+    const shareUrl = `${window.location.origin}/profile/${activeUid}`;
     navigator.clipboard.writeText(shareUrl);
     setAlertMsg({ type: 'success', text: 'Profile link copied to clipboard!' });
     setTimeout(() => setAlertMsg(null), 3000);
@@ -2125,7 +2141,8 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
                 visibility: paperData.visibility === 'Private Draft' ? 'Public' : paperData.visibility
               });
             } else {
-              await addCustomPaper(paperData, user.uid, user.email || '');
+              const activeUid = user?.uid || profileData?.uid || 'guest-user';
+              await addCustomPaper(paperData, activeUid, user?.email || profileData?.email || '');
             }
             setIsUploadWizardOpen(false);
             fetchProfileAndData();

@@ -114,33 +114,7 @@ export default function ResearchDetail({
       onSignIn();
       return;
     }
-    try {
-      let profile = propUserProfile;
-      if (user?.uid) {
-        try {
-          const latestProfile = await getUserProfile(user.uid);
-          if (latestProfile) profile = latestProfile;
-        } catch (err) {
-          console.warn('Could not fetch latest user profile:', err);
-        }
-      }
-      const validation = checkProfileCompleteness(profile);
-      if (!validation.isComplete) {
-        setProfileValidationResult(validation);
-        setShowProfileModal(true);
-        return;
-      }
-      setIsEditingPaper(true);
-    } catch (err) {
-      console.error('Error checking profile before editing research:', err);
-      const validation = checkProfileCompleteness(propUserProfile);
-      if (!validation.isComplete) {
-        setProfileValidationResult(validation);
-        setShowProfileModal(true);
-        return;
-      }
-      setIsEditingPaper(true);
-    }
+    setIsEditingPaper(true);
   };
 
   const handleDeleteDetailPaper = () => {
