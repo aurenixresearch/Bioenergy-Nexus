@@ -113,6 +113,7 @@ export default function FloatingAside({
 
   const navItems = [
     { label: isOrgAccount ? 'Organization Dashboard' : 'User Dashboard', id: 'dashboard', icon: isOrgAccount ? Building2 : LayoutDashboard },
+    { label: 'AI Research & Support', id: 'ai-assistant', icon: Sparkles },
     { label: 'Messages', id: 'messages', icon: MessageSquare, badge: unreadMessages },
     { label: 'Community', id: 'community', icon: Globe },
     { label: 'Explore Researchers', id: 'researchers', icon: Users },

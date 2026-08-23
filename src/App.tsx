@@ -73,6 +73,8 @@ const ResearchAreasPage = safeLazy(() => import('./components/ResearchAreasPage'
 const LegalLayout = safeLazy(() => import('./components/legal/LegalLayout'));
 const CommunityPage = safeLazy(() => import('./components/CommunityPage'));
 const NotFoundPage = safeLazy(() => import('./components/NotFoundPage'));
+const ResearchAiAssistant = safeLazy(() => import('./components/ai/ResearchAiAssistant'));
+import FloatingAiWidget from './components/ai/FloatingAiWidget';
 
 function ViewLoadingFallback() {
   return null;
@@ -152,7 +154,7 @@ function parsePath(path: string) {
   }
 
   // Standard views
-  const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas', 'legal', 'community'];
+  const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas', 'legal', 'community', 'ai-assistant'];
   const viewName = path.substring(1);
   if (views.includes(viewName)) {
     return { view: viewName as any, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: 'terms' };
@@ -1485,6 +1487,27 @@ export default function App() {
               </motion.div>
             )}
 
+            {currentView === 'ai-assistant' && (
+              <motion.div
+                key="ai-assistant-page"
+                initial={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0 }}
+                className="w-full max-w-7xl mx-auto p-2 sm:p-6"
+              >
+                <SeoManager
+                  title="Aurenix Research Intelligence & AI Support — Paper Summarizer & Brainstorming"
+                  description="Interactive Gemini-powered research intelligence assistant. Summarize research PDFs, analyze experimental data, generate novel research proposals, and get platform support."
+                  canonicalUrl="https://aurenix-research.org/ai-assistant"
+                />
+                <ResearchAiAssistant 
+                  user={user || (DEMO_GUEST_USER as any)}
+                  userProfile={userProfile}
+                  onNavigateToView={setView}
+                />
+              </motion.div>
+            )}
+
             {currentView === 'admin' && (
               <motion.div
                 key="admin-page"
@@ -1512,6 +1535,14 @@ export default function App() {
 
       {/* Global Cookie Consent System */}
       <CookieConsent />
+
+      {/* Global Floating AI Research & Support Assistant */}
+      <FloatingAiWidget 
+        user={user}
+        userProfile={userProfile}
+        currentView={currentView}
+        onNavigateToView={setView}
+      />
 
     </div>
   );
