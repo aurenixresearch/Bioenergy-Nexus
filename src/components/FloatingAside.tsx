@@ -24,7 +24,8 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
-  Globe
+  Globe,
+  Building2
 } from 'lucide-react';
 import { subscribeToUnreadCount } from '../services/messagingDb';
 
@@ -103,8 +104,15 @@ export default function FloatingAside({
     return () => unsub();
   }, [effectiveUser?.uid]);
 
+  const isOrgAccount = Boolean(
+    ['Institution', 'Industry', 'Government', 'Government Agency', 'NGO', 'Other'].includes(userProfile?.userRole || userProfile?.role || '') ||
+    userProfile?.isOrganization ||
+    userProfile?.organizationType ||
+    userProfile?.accountType === 'institution'
+  );
+
   const navItems = [
-    { label: 'User Dashboard', id: 'dashboard', icon: LayoutDashboard },
+    { label: isOrgAccount ? 'Organization Dashboard' : 'User Dashboard', id: 'dashboard', icon: isOrgAccount ? Building2 : LayoutDashboard },
     { label: 'Messages', id: 'messages', icon: MessageSquare, badge: unreadMessages },
     { label: 'Community', id: 'community', icon: Globe },
     { label: 'Explore Researchers', id: 'researchers', icon: Users },

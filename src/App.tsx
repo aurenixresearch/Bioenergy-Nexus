@@ -60,6 +60,7 @@ const ConsultationSection = safeLazy(() => import('./components/ConsultationSect
 const CollaborationSection = safeLazy(() => import('./components/CollaborationSection'));
 const ContactSection = safeLazy(() => import('./components/ContactSection'));
 const UserDashboard = safeLazy(() => import('./components/UserDashboard'));
+const OrganizationDashboard = safeLazy(() => import('./components/organization/OrganizationDashboard'));
 const ExploreResearchers = safeLazy(() => import('./components/ExploreResearchers'));
 const OperationalConsole = safeLazy(() => import('./components/collaboration/OperationalConsole'));
 const ProfilePage = safeLazy(() => import('./components/ProfilePage'));
@@ -1192,17 +1193,28 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0 }}
               >
-                <UserDashboard 
-                  user={user || (DEMO_GUEST_USER as any)}
-                  onBackToLanding={() => setView('research')}
-                  activeInquiries={activeInquiries}
-                  activePartnerships={activePartnerships}
-                  onRefreshAll={handleRefreshAll}
-                  onNavigateToProfile={() => setView('profile')}
-                  onNavigateToSettings={() => setView('settings')}
-                  onNavigateToView={setView}
-                  setSavedPaperIds={setSavedPaperIds}
-                />
+                {((['Institution', 'Industry', 'Government', 'Government Agency', 'NGO', 'Other'].includes(userProfile?.userRole || userProfile?.role || '')) || !!userProfile?.isOrganization || !!userProfile?.organizationType || userProfile?.accountType === 'institution') ? (
+                  <OrganizationDashboard 
+                    user={user || (DEMO_GUEST_USER as any)}
+                    userProfile={userProfile}
+                    onRefreshAll={handleRefreshAll}
+                    onNavigateToView={setView}
+                    onNavigateToProfile={() => setView('profile')}
+                    onNavigateToSettings={() => setView('settings')}
+                  />
+                ) : (
+                  <UserDashboard 
+                    user={user || (DEMO_GUEST_USER as any)}
+                    onBackToLanding={() => setView('research')}
+                    activeInquiries={activeInquiries}
+                    activePartnerships={activePartnerships}
+                    onRefreshAll={handleRefreshAll}
+                    onNavigateToProfile={() => setView('profile')}
+                    onNavigateToSettings={() => setView('settings')}
+                    onNavigateToView={setView}
+                    setSavedPaperIds={setSavedPaperIds}
+                  />
+                )}
               </motion.div>
             )}
 

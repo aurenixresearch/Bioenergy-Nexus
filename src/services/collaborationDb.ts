@@ -215,6 +215,49 @@ export async function createAlliance(alliance: Omit<AllianceOpportunity, 'id' | 
   }
 }
 
+export async function updateAlliance(allianceId: string, updates: Partial<AllianceOpportunity>): Promise<void> {
+  if (isDemoModeActive()) {
+    const list = await getAlliances();
+    const idx = list.findIndex(a => a.id === allianceId);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...updates, updatedAt: new Date().toISOString() };
+      localStorage.setItem('collab_demo_alliances', JSON.stringify(list));
+    }
+    return;
+  }
+
+  try {
+    const docRef = doc(db, 'alliance_opportunities', allianceId);
+    await updateDoc(docRef, { ...updates, updatedAt: new Date().toISOString() });
+  } catch (err) {
+    if (isOfflineError(err)) {
+      setFirestoreOffline(true);
+      return updateAlliance(allianceId, updates);
+    }
+    handleFirestoreError(err, OperationType.UPDATE, `alliance_opportunities/${allianceId}`);
+  }
+}
+
+export async function deleteAlliance(allianceId: string): Promise<void> {
+  if (isDemoModeActive()) {
+    const list = await getAlliances();
+    const filtered = list.filter(a => a.id !== allianceId);
+    localStorage.setItem('collab_demo_alliances', JSON.stringify(filtered));
+    return;
+  }
+
+  try {
+    const docRef = doc(db, 'alliance_opportunities', allianceId);
+    await updateDoc(docRef, { status: 'Closed', updatedAt: new Date().toISOString() });
+  } catch (err) {
+    if (isOfflineError(err)) {
+      setFirestoreOffline(true);
+      return deleteAlliance(allianceId);
+    }
+    handleFirestoreError(err, OperationType.DELETE, `alliance_opportunities/${allianceId}`);
+  }
+}
+
 // 3. APPLICATIONS DB INTERACTION
 export async function getApplications(userId?: string, isStakeholder?: boolean): Promise<Application[]> {
   if (isDemoModeActive()) {

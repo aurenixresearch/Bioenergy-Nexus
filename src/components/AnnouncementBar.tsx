@@ -292,6 +292,7 @@ export default function AnnouncementBar({
   const effectiveProfile = liveProfile || propUserProfile;
   const profileValidation = useMemo(() => checkProfileCompleteness(effectiveProfile), [effectiveProfile]);
   const isProfileComplete = profileValidation.isComplete;
+  const isOrgAccount = ['Institution', 'Industry', 'Government', 'NGO', 'Other', 'Government Agency'].includes(effectiveProfile?.userRole || effectiveProfile?.role || '') || !!effectiveProfile?.isOrganization || !!effectiveProfile?.organizationType || effectiveProfile?.accountType === 'institution';
 
   const totalPublishedPapers = useMemo(() => {
     const profilePublished = Array.isArray(effectiveProfile?.publishedPapers) 
@@ -302,7 +303,12 @@ export default function AnnouncementBar({
 
   // Determine current announcement based on priority lifecycle rules
   const activeAnnouncement = useMemo<AnnouncementConfig | null>(() => {
-    // 1. Stage 1: Profile Incomplete
+    // For organizations: do not display the "Complete profile" banner under the header
+    if (isOrgAccount) {
+      return null;
+    }
+
+    // 1. Stage 1: Profile Incomplete (For researchers/scholars/students)
     if (!isProfileComplete) {
       return {
         type: 'profile',

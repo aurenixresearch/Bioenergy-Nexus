@@ -21,7 +21,7 @@ import config from '../firebase-applet-config.json';
 
 // Suppress internal Firestore connection warnings from clogging the console
 try {
-  setLogLevel('error');
+  setLogLevel('silent');
 } catch {
   // Ignore if already set or unsupported
 }
@@ -36,16 +36,17 @@ const firebaseConfig = {
   messagingSenderId: config.messagingSenderId,
   appId: config.appId,
   measurementId: config.measurementId,
- };
+};
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore with memory local cache and long polling to avoid IndexedDB persistent batch assertion crashes
+// Initialize Firestore with memory local cache and long polling
 let dbInstance;
 try {
   dbInstance = initializeFirestore(app, {
     localCache: memoryLocalCache(),
     experimentalForceLongPolling: true,
+    experimentalAutoDetectLongPolling: true,
   }, config.firestoreDatabaseId || '(default)');
 } catch (err) {
   console.warn("Failed initializing Firestore with memoryLocalCache, falling back:", err);
@@ -84,63 +85,5 @@ export let isFirestoreOffline = false;
 
 export function setFirestoreOffline(val: boolean) {
   isFirestoreOffline = val;
-  if (val && db) {
-    disableNetwork(db).catch(err => {
-      console.warn("Could not disable Firestore network:", err);
-    });
-  }
-}
-
-async function testConnection() {
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => {
-      reject(new Error('connection-timeout'));
-    }, 8000);
-  });
-
-  try {
-    await Promise.race([
-      getDocFromServer(doc(db, 'users', 'connection_test_doc')),
-      timeoutPromise
-    ]);
-    console.log("Firestore connection check succeeded. Operating in online mode.");
-  } catch (error) {
-    const errMsg = error instanceof Error ? error.message : String(error);
-    
-    // If the error is permission-denied or document-not-found, we actually reached the Firestore backend!
-    // It means the connection is active and healthy. Only activate offline mode for actual connectivity issues.
-    const isPermissionOrExistsError = 
-      errMsg.includes('permission-denied') || 
-      errMsg.includes('Permission denied') ||
-      errMsg.includes('not-found') ||
-      errMsg.includes('not found') ||
-      errMsg.includes('permission');
-
-    if (isPermissionOrExistsError) {
-      console.log("Firestore reached successfully (confirmed via secure response). Operating in online mode.");
-      return;
-    }
-
-    if (
-      errMsg.includes('offline') || 
-      errMsg.includes('failed to connect') || 
-      errMsg.includes('network') ||
-      errMsg.includes('unavailable') ||
-      errMsg.includes('Could not reach') ||
-      errMsg.includes('Connection failed') ||
-      errMsg.includes('connection-timeout')
-    ) {
-      console.warn("Firestore backend unavailable or offline. Operating in local sandbox/offline mode.");
-      setFirestoreOffline(true);
-    }
-  }
-}
-
-if (typeof window !== 'undefined') {
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(() => { testConnection(); });
-  } else {
-    setTimeout(testConnection, 2500);
-  }
 }
 
