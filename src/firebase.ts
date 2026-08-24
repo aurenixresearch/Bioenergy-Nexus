@@ -40,17 +40,18 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore with memory local cache and long polling
+// Initialize Firestore with memory local cache safely
 let dbInstance;
 try {
   dbInstance = initializeFirestore(app, {
     localCache: memoryLocalCache(),
-    experimentalForceLongPolling: true,
-    experimentalAutoDetectLongPolling: true,
   }, config.firestoreDatabaseId || '(default)');
-} catch (err) {
-  console.warn("Failed initializing Firestore with memoryLocalCache, falling back:", err);
-  dbInstance = getFirestore(app, config.firestoreDatabaseId || '(default)');
+} catch {
+  try {
+    dbInstance = getFirestore(app, config.firestoreDatabaseId || '(default)');
+  } catch (err) {
+    console.warn("Firestore initialization fallback:", err);
+  }
 }
 
 export const db = dbInstance;

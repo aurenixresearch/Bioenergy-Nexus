@@ -1008,14 +1008,14 @@ export default function AdminPortal({ user, userProfile, setView, theme = 'dark'
               {activeTab === 'users' && (
                 <UserManagement users={adminUsers} onUpdateUsers={handleUpdateAdminUsers} adminRoles={adminRoles} defaultFilterRole={userDirectoryFilter === 'admin_only' ? 'admin' : ''} theme={theme} tv={tv} />
               )}
-              {(['research','projects','alliances','organizations','challenges'] as AdminTab[]).includes(activeTab) && (
-                <PortfolioManagement currentTab={activeTab} research={adminResearch} projects={adminProjects} alliances={adminAlliances} organizations={adminOrgs} challenges={adminChallenges} onUpdateResearch={setAdminResearch} onUpdateProjects={setAdminProjects} onUpdateAlliances={setAdminAlliances} onUpdateOrganizations={setAdminOrgs} onUpdateChallenges={setAdminChallenges} theme={theme} tv={tv} />
+              {(['research','projects','alliances','organizations','challenges'] as const).some(t => t === activeTab) && (
+                <PortfolioManagement currentTab={activeTab as any} research={adminResearch} projects={adminProjects} alliances={adminAlliances} organizations={adminOrgs} challenges={adminChallenges} onUpdateResearch={setAdminResearch} onUpdateProjects={setAdminProjects} onUpdateAlliances={setAdminAlliances} onUpdateOrganizations={setAdminOrgs} onUpdateChallenges={setAdminChallenges} theme={theme} tv={tv} />
               )}
-              {(['consulting','funding','matchmaking'] as AdminTab[]).includes(activeTab) && (
-                <ConsultingFunding currentTab={activeTab} consulting={adminConsulting} funding={adminFunding} users={adminUsers} projects={adminProjects} onUpdateConsulting={setAdminConsulting} onUpdateFunding={setAdminFunding} theme={theme} tv={tv} />
+              {(['consulting','funding','matchmaking'] as const).some(t => t === activeTab) && (
+                <ConsultingFunding currentTab={activeTab as any} consulting={adminConsulting} funding={adminFunding} users={adminUsers} projects={adminProjects} onUpdateConsulting={setAdminConsulting} onUpdateFunding={setAdminFunding} theme={theme} tv={tv} />
               )}
-              {(['moderation','analytics','notifications','cms','reports','settings','logs','accounts'] as AdminTab[]).includes(activeTab) && (
-                <SystemOperations currentTab={activeTab} reports={adminReports} auditLogs={adminAuditLogs} adminRoles={adminRoles} onUpdateReports={setAdminReports} onUpdateAuditLogs={setAdminAuditLogs} onUpdateAdminRoles={setAdminRoles} theme={theme} tv={tv} users={adminUsers} funding={adminFunding} />
+              {(['moderation','analytics','notifications','cms','reports','settings','logs','accounts'] as const).some(t => t === activeTab) && (
+                <SystemOperations currentTab={activeTab as any} reports={adminReports} auditLogs={adminAuditLogs} adminRoles={adminRoles} onUpdateReports={setAdminReports} onUpdateAuditLogs={setAdminAuditLogs} onUpdateAdminRoles={setAdminRoles} theme={theme} tv={tv} users={adminUsers} funding={adminFunding} />
               )}
               {activeTab === 'legal' && <PolicyAdminView onClose={() => setActiveTab('dashboard')} />}
               {activeTab === 'testimonials' && <TestimonialsManagement theme={theme} tv={tv} />}

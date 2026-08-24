@@ -64,6 +64,12 @@ export interface ResearchPaper {
   userId?: string; // Owner of custom research
   userEmail?: string;
 
+  // Compatibility aliases
+  authors?: string;
+  methodology?: string;
+  journal?: string;
+  year?: number | string;
+
   // Step 1: Basic Information
   subtitle?: string;
   keywords?: string[];
@@ -176,6 +182,7 @@ export interface Researcher {
   downloads: number;
   views: number;
   citations: number;
+  reads?: number;
   createdAt: string;
   orcid?: string;
   googleScholar?: string;

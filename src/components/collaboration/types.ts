@@ -78,8 +78,15 @@ export interface AllianceOpportunity {
   createdAt: any;
   updatedAt: any;
   createdBy: string;
-  status: 'Active' | 'Closed' | 'Draft';
+  status: 'Active' | 'Closed' | 'Draft' | 'Open';
   visibility: 'Public' | 'Private';
+
+  // Optional compatibility fields
+  budget?: string;
+  focusArea?: string;
+  trlLevel?: number;
+  applicationDeadline?: string;
+  availableSpots?: number;
 }
 
 export interface Application {

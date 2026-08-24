@@ -43,7 +43,8 @@ import {
   getPublications, 
   followResearcher, 
   incrementResearcherMetric, 
-  incrementPublicationMetric 
+  incrementPublicationMetric,
+  isIndividualResearcherRole
 } from '../services/db';
 import { checkMessagingEligibility } from '../services/messagingDb';
 
@@ -132,16 +133,21 @@ export default function ExploreResearchers({
     loadData(true);
   };
 
-  // Helper lists derived from current dataset
-  const uniqueCountries = useMemo(() => {
-    const countries = researchers.map(r => r.country);
-    return ['All', ...Array.from(new Set(countries))].sort();
+  // Strict subset of verified individual researchers (excluding organizations, industry entities, NGOs, funders)
+  const validResearchers = useMemo(() => {
+    return researchers.filter(r => isIndividualResearcherRole(r.role, r));
   }, [researchers]);
 
+  // Helper lists derived from current dataset
+  const uniqueCountries = useMemo(() => {
+    const countries = validResearchers.map(r => r.country);
+    return ['All', ...Array.from(new Set(countries))].sort();
+  }, [validResearchers]);
+
   const uniqueInterests = useMemo(() => {
-    const interests = researchers.flatMap(r => r.researchInterests);
+    const interests = validResearchers.flatMap(r => r.researchInterests);
     return ['All', ...Array.from(new Set(interests))].sort();
-  }, [researchers]);
+  }, [validResearchers]);
 
   // Map Countries to African Regions
   const getRegionForCountry = (country: string): 'West' | 'East' | 'North' | 'Southern' | 'Central' | 'Other' => {
@@ -162,10 +168,9 @@ export default function ExploreResearchers({
   // Role Badge Icon mapper
   const getRoleIcon = (role?: string) => {
     const r = (role || '').toLowerCase();
-    if (r.includes('student')) return GraduationCap;
-    if (r.includes('professor') || r.includes('lecturer')) return Award;
-    if (r.includes('institution') || r.includes('university')) return Building2;
-    if (r.includes('industry') || r.includes('professional')) return Briefcase;
+    if (r.includes('student') || r.includes('candidate') || r.includes('postdoc') || r.includes('graduate')) return GraduationCap;
+    if (r.includes('professor') || r.includes('lecturer') || r.includes('faculty') || r.includes('dean') || r.includes('chair')) return Award;
+    if (r.includes('scholar') || r.includes('fellow') || r.includes('independent')) return BookOpen;
     return BookOpen;
   };
 
@@ -240,9 +245,9 @@ export default function ExploreResearchers({
     }
   };
 
-  // Filter & Search Logic
+  // Filter & Search Logic (Strictly restricted to individual researchers, professors, and scholars)
   const filteredResearchers = useMemo(() => {
-    return researchers.filter(r => {
+    return validResearchers.filter(r => {
       // Search Box matching
       const query = (searchQuery || '').toLowerCase().trim();
       const matchesSearch = !query || 
@@ -251,15 +256,14 @@ export default function ExploreResearchers({
         (r.country || '').toLowerCase().includes(query) ||
         (r.researchInterests || []).some(i => (i || '').toLowerCase().includes(query));
 
-      // Role Filter
+      // Role Filter (Individual categories)
       const userRoleLower = (r.role || '').toLowerCase();
       const matchesRole = selectedRole === 'All' || 
-        (selectedRole === 'Students' && userRoleLower.includes('student')) ||
-        (selectedRole === 'Researchers' && userRoleLower === 'researcher') ||
-        (selectedRole === 'Lecturers' && (userRoleLower.includes('lecturer') || userRoleLower.includes('professor'))) ||
-        (selectedRole === 'Institutions' && userRoleLower.includes('institution')) ||
-        (selectedRole === 'Industry Professionals' && userRoleLower.includes('industry')) ||
-        (selectedRole === 'NGOs' && userRoleLower.includes('ngo'));
+        (selectedRole === 'Researchers' && (userRoleLower.includes('researcher') || userRoleLower.includes('scientist') || userRoleLower.includes('investigator') || userRoleLower.includes('fellow') || userRoleLower.includes('specialist'))) ||
+        (selectedRole === 'Professors' && (userRoleLower.includes('professor') || userRoleLower.includes('chair') || userRoleLower.includes('dean'))) ||
+        (selectedRole === 'Lecturers' && (userRoleLower.includes('lecturer') || userRoleLower.includes('faculty') || userRoleLower.includes('instructor') || userRoleLower.includes('academic'))) ||
+        (selectedRole === 'Students & Postdocs' && (userRoleLower.includes('student') || userRoleLower.includes('phd') || userRoleLower.includes('postdoc') || userRoleLower.includes('candidate') || userRoleLower.includes('graduate'))) ||
+        (selectedRole === 'Independent Scholars' && (userRoleLower.includes('scholar') || userRoleLower.includes('independent') || userRoleLower.includes('individual') || userRoleLower.includes('consultant')));
 
       // Country Filter
       const matchesCountry = selectedCountry === 'All' || r.country === selectedCountry;
@@ -282,13 +286,13 @@ export default function ExploreResearchers({
       // Default / recently joined
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-  }, [researchers, searchQuery, selectedRole, selectedCountry, selectedInterest, sortBy, onlyVerified, activeRegion]);
+  }, [validResearchers, searchQuery, selectedRole, selectedCountry, selectedInterest, sortBy, onlyVerified, activeRegion]);
 
   // Selected Researcher Object for Profile View
   const selectedResearcher = useMemo(() => {
     if (!selectedResearcherId) return null;
-    return researchers.find(r => r.id === selectedResearcherId) || null;
-  }, [researchers, selectedResearcherId]);
+    return validResearchers.find(r => r.id === selectedResearcherId) || null;
+  }, [validResearchers, selectedResearcherId]);
 
   // Publications for selected researcher
   const selectedPublications = useMemo(() => {
@@ -299,7 +303,7 @@ export default function ExploreResearchers({
   // Recommended researchers ("You may also like")
   const recommendedResearchers = useMemo(() => {
     if (!selectedResearcher) return [];
-    return researchers
+    return validResearchers
       .filter(r => r.id !== selectedResearcher.id)
       .map(r => {
         // Calculate overlap score
@@ -312,7 +316,7 @@ export default function ExploreResearchers({
       .sort((a, b) => b.score - a.score)
       .slice(0, 3)
       .map(item => item.researcher);
-  }, [researchers, selectedResearcher]);
+  }, [validResearchers, selectedResearcher]);
 
   // Handles downloading/viewing mock publication with metric increment
   const handleDownloadPublication = async (pubId: string, pdfUrl: string) => {
@@ -336,15 +340,15 @@ export default function ExploreResearchers({
 
   // Top Authors (Highest Publications)
   const topAuthors = useMemo(() => {
-    return [...researchers].sort((a, b) => b.publicationCount - a.publicationCount).slice(0, 3);
-  }, [researchers]);
+    return [...validResearchers].sort((a, b) => b.publicationCount - a.publicationCount).slice(0, 3);
+  }, [validResearchers]);
 
   // Recently Joined (Newest first, horizontal list)
   const recentlyJoined = useMemo(() => {
-    return [...researchers]
+    return [...validResearchers]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 4);
-  }, [researchers]);
+  }, [validResearchers]);
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-800" id="explore_researchers_root">
@@ -364,7 +368,7 @@ export default function ExploreResearchers({
             Explore <span className="text-emerald-600">Researchers</span>
           </h1>
           <p className="text-sm sm:text-base text-slate-500 max-w-3xl leading-relaxed">
-            Discover researchers, academics, students, institutions, and professionals advancing sustainable energy solutions across Africa. Connect with scientists tuning the future of local circular economies.
+            Discover African researchers, professors, scientists, scholars, and postgraduate students advancing sustainable bioenergy and clean tech innovation. Connect directly with individual academic minds driving energy transition.
           </p>
         </div>
       </div>
@@ -430,7 +434,9 @@ export default function ExploreResearchers({
                   <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-900 tracking-tight flex items-center gap-1.5 flex-wrap">
                     <span>{selectedResearcher.fullName}</span>
                     {selectedResearcher.verified && (
-                      <BadgeCheck className="w-6 h-6 text-white fill-emerald-600 shrink-0" title="Verified Expert" />
+                      <span title="Verified Expert" className="inline-flex items-center">
+                        <BadgeCheck className="w-6 h-6 text-white fill-emerald-600 shrink-0" />
+                      </span>
                     )}
                   </h2>
 
@@ -758,7 +764,9 @@ export default function ExploreResearchers({
                             <h4 className="text-xs font-bold text-slate-900 flex items-center justify-center gap-1 px-1">
                               <span className="truncate">{rec.fullName}</span>
                               {rec.verified && (
-                                <BadgeCheck className="w-3.5 h-3.5 text-white fill-emerald-600 shrink-0" title="Verified Expert" />
+                                <span title="Verified Expert">
+                                  <BadgeCheck className="w-3.5 h-3.5 text-white fill-emerald-600 shrink-0" />
+                                </span>
                               )}
                             </h4>
                             <p className="text-[10px] text-emerald-700 font-mono font-semibold truncate mb-1">{rec.role}</p>
@@ -790,7 +798,7 @@ export default function ExploreResearchers({
               {/* User Profile Status Banner */}
               {user && (
                 <div>
-                  {researchers.some(r => r.id === user.uid) ? (
+                  {validResearchers.some(r => r.id === user.uid) ? (
                     <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left shadow-xs">
                       <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-emerald-600 text-white rounded-2xl shadow-xs shrink-0">
@@ -904,7 +912,7 @@ export default function ExploreResearchers({
 
                   {/* Role Selection Chips - Touch scrollable on mobile */}
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none sm:flex-wrap">
-                    {['All', 'Students', 'Researchers', 'Lecturers', 'Institutions', 'Industry Professionals', 'NGOs'].map((role) => (
+                    {['All', 'Researchers', 'Professors', 'Lecturers', 'Students & Postdocs', 'Independent Scholars'].map((role) => (
                       <button
                         key={role}
                         onClick={() => setSelectedRole(role)}
@@ -1030,7 +1038,9 @@ export default function ExploreResearchers({
                                   <h4 className="text-xs font-black text-slate-900 flex items-center justify-center gap-1 px-1 sm:px-2 flex-wrap">
                                     <span className="truncate">{res.fullName}</span>
                                     {res.verified && (
-                                      <BadgeCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white fill-emerald-600 shrink-0" title="Verified Expert" />
+                                      <span title="Verified Expert" className="inline-flex items-center">
+                                        <BadgeCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white fill-emerald-600 shrink-0" />
+                                      </span>
                                     )}
                                     {user && user.uid === res.id && (
                                       <span className="px-1.5 py-0.2 bg-emerald-600 text-white text-[8px] font-black uppercase rounded">You</span>
@@ -1085,7 +1095,9 @@ export default function ExploreResearchers({
                                     <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors flex items-center gap-1 flex-wrap">
                                       <span className="truncate">{res.fullName}</span>
                                       {res.verified && (
-                                        <BadgeCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white fill-emerald-600 shrink-0" title="Verified Expert" />
+                                        <span title="Verified Expert" className="inline-flex items-center">
+                                          <BadgeCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white fill-emerald-600 shrink-0" />
+                                        </span>
                                       )}
                                       {user && user.uid === res.id && (
                                         <span className="px-1.5 py-0.2 bg-emerald-600 text-white text-[8px] font-black uppercase rounded">You</span>
@@ -1256,7 +1268,9 @@ export default function ExploreResearchers({
                                   <h4 className="text-base font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5">
                                     <span className="truncate">{res.fullName}</span>
                                     {res.verified && (
-                                      <BadgeCheck className="w-4.5 h-4.5 text-white fill-emerald-600 shrink-0" title="Verified Expert" />
+                                      <span title="Verified Expert" className="inline-flex items-center">
+                                        <BadgeCheck className="w-4.5 h-4.5 text-white fill-emerald-600 shrink-0" />
+                                      </span>
                                     )}
                                   </h4>
                                 </div>

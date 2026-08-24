@@ -542,7 +542,7 @@ export default function ResearchDetail({
                 session.messages.push({
                   id: `msg_paper_${Date.now()}`,
                   role: 'user',
-                  text: `Please provide a deep scientific review, quantitative insights, and 3 novel follow-up research ideas based on this research paper:\n\n**Title**: ${paper.title}\n**Field/Category**: ${paper.category}\n**Authors**: ${paper.authors?.join(', ') || 'N/A'}\n**Abstract**: ${paper.abstract}\n${paper.methodology ? `**Methodology**: ${paper.methodology}\n` : ''}${paper.keyFindings ? `**Key Findings**: ${paper.keyFindings}\n` : ''}`,
+                  text: `Please provide a deep scientific review, quantitative insights, and 3 novel follow-up research ideas based on this research paper:\n\n**Title**: ${paper.title}\n**Field/Category**: ${paper.category}\n**Authors**: ${paper.author || (paper.coAuthors ? paper.coAuthors.map(c => c.name).join(', ') : 'N/A')}\n**Abstract**: ${paper.abstract}\n${paper.researchMethodology || paper.methodology ? `**Methodology**: ${paper.researchMethodology || paper.methodology}\n` : ''}${paper.keyFindings ? `**Key Findings**: ${paper.keyFindings}\n` : ''}`,
                   timestamp: new Date().toISOString()
                 });
                 saveChatSession(session);

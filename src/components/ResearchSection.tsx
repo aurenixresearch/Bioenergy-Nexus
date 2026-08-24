@@ -471,7 +471,7 @@ export default function ResearchSection({
           </div>
 
           <button
-            onClick={handleOpenPublishWizard}
+            onClick={() => handleOpenPublishWizard()}
             className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-emerald-700 via-emerald-800 to-emerald-950 hover:from-emerald-800 hover:to-slate-950 text-white rounded-2xl font-extrabold shadow-md hover:shadow-lg hover:shadow-emerald-900/20 active:scale-[0.98] transition-all duration-200 shrink-0 cursor-pointer text-sm border border-emerald-600/30 group"
             id="contribute_research_btn"
           >

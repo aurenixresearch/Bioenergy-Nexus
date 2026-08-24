@@ -35,35 +35,73 @@ export const AI_MODELS = [
   { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash Lite', tag: 'Ultra-Fast', desc: 'Instant lookups, brief definitions, quick answers' }
 ];
 
-export const AI_PROMPT_PRESETS = [
+export interface PromptPreset {
+  id: string;
+  icon: string;
+  category: 'review' | 'ideation' | 'grants' | 'data' | 'support';
+  tag: string;
+  title: string;
+  description: string;
+  prompt: string;
+  requiresUpload?: boolean;
+}
+
+export const AI_PROMPT_PRESETS: PromptPreset[] = [
   {
     id: 'summarize_paper',
     icon: 'FileText',
-    title: 'Summarize Research PDF',
-    prompt: 'Please provide a comprehensive summary of the attached research paper. Highlight: 1) Core Research Objective, 2) Methodology & Experimental Rigor, 3) Key Quantitative Findings (yields, efficiency, data), 4) Bottlenecks & Limitations, and 5) Real-world Applications.'
+    category: 'review',
+    tag: 'PDF Review',
+    title: 'Summarize Research Paper',
+    description: 'Deep analytical extraction of objectives, experimental methodology, quantitative findings, and bottlenecks.',
+    prompt: 'Please provide a comprehensive summary of the attached research paper. Highlight: 1) Core Research Objective, 2) Methodology & Experimental Rigor, 3) Key Quantitative Findings (yields, efficiency, data), 4) Bottlenecks & Limitations, and 5) Real-world Applications.',
+    requiresUpload: true
   },
   {
     id: 'generate_ideas',
     icon: 'Sparkles',
-    title: 'Generate Novel Research Ideas',
-    prompt: 'Based on the attached document or current bioenergy challenges in Africa, propose 3-5 novel, high-impact research hypotheses or project concepts with proposed methodologies and target environmental/economic impacts.'
+    category: 'ideation',
+    tag: 'Innovation',
+    title: 'Generate Novel Research Concepts',
+    description: 'Synthesize novel, high-impact hypotheses and renewable energy project concepts tailored to African ecosystems.',
+    prompt: 'Based on current bioenergy and clean tech challenges in Africa, propose 3-5 novel, high-impact research hypotheses or project concepts with proposed methodologies and target environmental/economic impacts.'
   },
   {
     id: 'grant_proposal',
     icon: 'Award',
+    category: 'grants',
+    tag: 'Funding & Grants',
     title: 'Draft Grant Proposal Outline',
-    prompt: 'Help me draft a competitive grant proposal outline based on this research theme. Include: Project Title, Abstract, Specific Aims, Work Packages, Expected Deliverables, Commercialization Roadmap, and ESG / Community Impact.'
+    description: 'Generate competitive funding outlines with specific aims, deliverables, budgets, and commercialization plans.',
+    prompt: 'Help me draft a competitive grant proposal outline for a sustainable energy or bioenergy initiative. Include: Project Title, Abstract, Specific Aims, Work Packages, Expected Deliverables, Commercialization Roadmap, and ESG / Community Impact.'
   },
   {
     id: 'data_insights',
     icon: 'BarChart2',
-    title: 'Extract Experimental Insights',
-    prompt: 'Analyze the experimental data, chemical mechanisms, or figures in this document. Identify potential measurement anomalies, efficiency gains, and suggested parameter optimizations.'
+    category: 'data',
+    tag: 'Data Analytics',
+    title: 'Extract Experimental Data & Insights',
+    description: 'Analyze experimental figures, chemical reaction curves, biomass feedstocks, and thermodynamic parameters.',
+    prompt: 'Analyze the experimental data, chemical mechanisms, or figures in this document. Identify potential measurement anomalies, efficiency gains, and suggested parameter optimizations.',
+    requiresUpload: true
+  },
+  {
+    id: 'peer_review',
+    icon: 'BookOpen',
+    category: 'review',
+    tag: 'Peer Review',
+    title: 'Simulate Rigorous Peer Review',
+    description: 'Evaluate methodology integrity, citation strength, statistical significance, and clarity for academic journals.',
+    prompt: 'Act as a senior journal reviewer. Critically assess the attached document or methodology for: 1) Scientific Validity, 2) Statistical Rigor, 3) Novelty of Contribution, 4) Potential Biases, and 5) Recommendations for Publication Readiness.',
+    requiresUpload: true
   },
   {
     id: 'platform_support',
     icon: 'HelpCircle',
-    title: 'Platform Navigation & Publishing Help',
+    category: 'support',
+    tag: 'Platform & Alliances',
+    title: 'Platform Navigation & Alliances Guide',
+    description: 'Step-by-step guidance on publishing papers, joining research alliances, and collaborating with African scholars.',
     prompt: 'How do I publish a peer-reviewed paper on Aurenix Research, connect with other researchers across universities, or form a Strategic Alliance for cross-border funding?'
   }
 ];

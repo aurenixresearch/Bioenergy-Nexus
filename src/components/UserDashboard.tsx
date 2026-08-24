@@ -689,10 +689,10 @@ export default function UserDashboard({
   const liveReads = currentResearcher?.reads || 891;
   const liveRequests = localPartnerships.length + localInquiries.length || 34;
 
-  const totalFundingNum = projects.reduce((sum, p) => sum + (parseInt(p.budget?.replace(/[^0-9]/g, '') || '0')), 0);
+  const totalFundingNum = projects.reduce((sum, p) => sum + (parseInt(String(p.budget || '').replace(/[^0-9]/g, '') || '0')), 0);
   const fundingStr = totalFundingNum > 0 ? `$${totalFundingNum.toLocaleString()}` : '$120K';
 
-  const avgProgressNum = projects.length > 0 ? Math.round(projects.reduce((sum, p) => sum + parseInt(p.progress || '0'), 0) / projects.length) : 0;
+  const avgProgressNum = projects.length > 0 ? Math.round(projects.reduce((sum, p) => sum + (typeof p.progress === 'number' ? p.progress : parseInt(String(p.progress || '0'))), 0) / projects.length) : 0;
   const progressStr = avgProgressNum > 0 ? `${avgProgressNum}%` : '78%';
 
   // 2. Build live activities list chronologically
@@ -705,7 +705,7 @@ export default function UserDashboard({
       title: 'Published New Feasibility Brief',
       description: `You uploaded a custom study: "${paper.title}".`,
       time: 'Recently',
-      detail: `This study, titled "${paper.title}", outlines circular economy developments in ${paper.country || 'the region'}. It is registered under authors: ${paper.authors || user.displayName || 'Me'}.`
+      detail: `This study, titled "${paper.title}", outlines circular economy developments in ${paper.country || 'the region'}. It is registered under authors: ${paper.authors || paper.author || user.displayName || 'Me'}.`
     });
   });
 
@@ -716,7 +716,7 @@ export default function UserDashboard({
       title: 'Innovation Pipeline Launched',
       description: `Project "${p.title}" was successfully registered.`,
       time: 'Recently',
-      detail: `This project is focused on "${p.focusArea}" (TRL: ${p.trlLevel || 'N/A'}). Budget: ${p.budget || 'N/A'}, current status: "${p.status}".`
+      detail: `This project is focused on "${p.focusArea || p.industryPartner || 'Bioenergy'}" (TRL: ${p.trlLevel ?? p.trl ?? 'N/A'}). Budget: ${p.budget || 'N/A'}, current status: "${p.status}".`
     });
   });
 

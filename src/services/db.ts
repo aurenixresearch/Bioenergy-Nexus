@@ -544,6 +544,143 @@ export async function getCustomPapers(): Promise<ResearchPaper[]> {
   }
 }
 
+// Helper to identify individual researcher/professor/student roles and exclude organizations/industry stakeholders
+export function isIndividualResearcherRole(role?: string, profile?: any): boolean {
+  if (!role && !profile) return false;
+  if (profile) {
+    if (
+      profile.isOrganization === true || 
+      profile.organizationType || 
+      profile.accountType === 'organization' || 
+      profile.accountType === 'industry' ||
+      profile.accountType === 'institution' ||
+      profile.accountType === 'ngo' ||
+      profile.accountType === 'government' ||
+      profile.accountType === 'corporate' ||
+      profile.accountType === 'enterprise' ||
+      profile.accountType === 'funder' ||
+      profile.accountType === 'publisher' ||
+      profile.entityType === 'organization' ||
+      profile.entityType === 'industry' ||
+      profile.stakeholderType === 'industry' ||
+      profile.stakeholderType === 'organization' ||
+      profile.stakeholderType === 'corporate' ||
+      profile.stakeholderType === 'ngo' ||
+      profile.stakeholderType === 'institution' ||
+      profile.stakeholderType === 'government' ||
+      profile.userType === 'industry' ||
+      profile.userType === 'organization' ||
+      profile.userType === 'institution' ||
+      profile.userType === 'ngo' ||
+      profile.userType === 'government' ||
+      profile.publisherVerificationLevel
+    ) {
+      return false;
+    }
+  }
+  const r = (role || (profile?.role || profile?.professionalTitle || profile?.currentPosition || '')).toLowerCase().trim();
+  const name = (profile?.fullName || profile?.displayName || profile?.organizationName || '').toLowerCase().trim();
+
+  // If empty role and empty name
+  if (!r && !name) return false;
+
+  // Strict list of non-individual / organization / industry terms to exclude unconditionally
+  const excludedKeywords = [
+    'industry',
+    'organisation',
+    'organization',
+    'enterprise',
+    'company',
+    'corporate',
+    'corporation',
+    'business',
+    'firm',
+    'commercial',
+    'ngo',
+    'non-governmental',
+    'non-profit',
+    'non profit',
+    'civil society',
+    'institution',
+    'institutional',
+    'ministry',
+    'government',
+    'public agency',
+    'parastatal',
+    'funder',
+    'funding',
+    'investor',
+    'donor',
+    'sponsor',
+    'consortium',
+    'publisher',
+    'association',
+    'foundation',
+    'partner',
+    'agency',
+    'development partner'
+  ];
+
+  for (const kw of excludedKeywords) {
+    if (r.includes(kw) || name.includes(kw)) {
+      return false;
+    }
+  }
+
+  // Exact matches for non-researcher roles
+  const nonAcademicExactRoles = [
+    'industry',
+    'industry professional',
+    'industry partner',
+    'institution',
+    'government',
+    'government agency',
+    'ngo',
+    'ngo / development',
+    'other',
+    'funder',
+    'funding body',
+    'publisher',
+    'organization',
+    'organisation'
+  ];
+  if (nonAcademicExactRoles.includes(r)) {
+    return false;
+  }
+
+  // Academic whitelist check (must have genuine academic / scholarly / researcher role)
+  const validAcademicKeywords = [
+    'researcher',
+    'scientist',
+    'professor',
+    'lecturer',
+    'student',
+    'phd',
+    'postdoc',
+    'post-doc',
+    'scholar',
+    'fellow',
+    'faculty',
+    'instructor',
+    'academic',
+    'candidate',
+    'investigator',
+    'graduate',
+    'dean',
+    'chair',
+    'chemist',
+    'biologist',
+    'physicist',
+    'engineer',
+    'analyst',
+    'author',
+    'specialist',
+    'innovator'
+  ];
+
+  return validAcademicKeywords.some(kw => r.includes(kw));
+}
+
 // USER PROFILES
 export function isPublicProfileComplete(profile: any): boolean {
   if (!profile) return false;
@@ -569,6 +706,22 @@ export function isPublicProfileComplete(profile: any): boolean {
 export async function syncUserProfileToResearcher(userId: string, profile: any): Promise<void> {
   if (!userId || !profile) return;
 
+  // If organization or non-individual stakeholder, ensure not in researchers directory
+  if (profile.isOrganization || profile.organizationType || profile.accountType === 'organization' || !isIndividualResearcherRole(profile.role, profile)) {
+    const currentLocal = getLocalResearchers();
+    const filteredLocal = currentLocal.filter(r => r.id !== userId);
+    setLocalResearchers(filteredLocal);
+    if (!isFirestoreOffline && !isDemoModeActive(userId)) {
+      try {
+        const docRef = doc(db, 'researchers', userId);
+        await deleteDoc(docRef);
+      } catch (err) {
+        // ignore
+      }
+    }
+    return;
+  }
+
   const isComplete = isPublicProfileComplete(profile);
   const isPrivate = profile.privacySettings?.visibility === 'Private' || profile.privacySettings?.profileVisibility === 'private';
 
@@ -584,12 +737,12 @@ export async function syncUserProfileToResearcher(userId: string, profile: any):
 
   const researcherData: Researcher = {
     id: userId,
-    fullName: (profile.fullName || profile.displayName || profile.organizationName || 'Researcher').trim(),
-    profilePhoto: profile.profilePicture || profile.photoURL || profile.avatar || profile.organizationLogo || 'https://lh3.googleusercontent.com/d/1utUCWpBRmKjeGRFF1Jo2Z3-ta7B8bgOq',
-    role: profile.professionalTitle || profile.currentPosition || (profile.isOrganization ? 'Research Institution' : (profile.role || 'Researcher')),
-    institution: profile.institution || profile.organization || profile.organizationName || 'Aurenix Research Network',
+    fullName: (profile.fullName || profile.displayName || 'Researcher').trim(),
+    profilePhoto: profile.profilePicture || profile.photoURL || profile.avatar || 'https://lh3.googleusercontent.com/d/1utUCWpBRmKjeGRFF1Jo2Z3-ta7B8bgOq',
+    role: profile.professionalTitle || profile.currentPosition || (profile.role || 'Researcher'),
+    institution: profile.institution || profile.affiliation || profile.university || 'Aurenix Research Network',
     country: profile.country || profile.location || 'Nigeria',
-    bio: profile.bio || profile.professionalBio || profile.organizationDescription || '',
+    bio: profile.bio || profile.professionalBio || '',
     researchInterests: Array.isArray(profile.researchInterests) && profile.researchInterests.length > 0 
       ? profile.researchInterests 
       : (profile.primaryResearchArea ? [profile.primaryResearchArea] : ['Bioenergy']),
@@ -1110,42 +1263,43 @@ export async function approveVerification(userId: string, userProfile: any): Pro
     }
   }
 
-  // 2. Create/add to the researchers collection so they appear on the Explore Researchers page!
-  const newResearcher: Researcher = {
-    id: userId,
-    fullName: userProfile.fullName || 'Verified Researcher',
-    profilePhoto: 'https://lh3.googleusercontent.com/d/1utUCWpBRmKjeGRFF1Jo2Z3-ta7B8bgOq', // default elegant logo/avatar
-    role: userProfile.role || 'Senior Researcher',
-    institution: userProfile.verificationDetails?.institution || userProfile.institution || 'Aurenix Research Network',
-    country: userProfile.country || 'Nigeria',
-    bio: userProfile.verificationDetails?.bio || 'Verified academic contributor to the Aurenix Research repository.',
-    researchInterests: userProfile.verificationDetails?.researchInterests || userProfile.researchInterests || ['Bioenergy'],
-    verified: true,
-    followers: [],
-    following: 0,
-    publicationCount: userProfile.uploadedResearchCount || 3,
-    downloads: 12,
-    views: 45,
-    citations: 2,
-    createdAt: new Date().toISOString(),
-    orcid: userProfile.verificationDetails?.orcid || '',
-    googleScholar: userProfile.verificationDetails?.googleScholar || '',
-  };
+  // 2. If user is an individual researcher/professor/student, add to researchers collection
+  if (!userProfile.isOrganization && !userProfile.organizationType && userProfile.accountType !== 'organization' && isIndividualResearcherRole(userProfile.role || userProfile.professionalTitle, userProfile)) {
+    const newResearcher: Researcher = {
+      id: userId,
+      fullName: userProfile.fullName || 'Verified Researcher',
+      profilePhoto: userProfile.profilePicture || userProfile.photoURL || 'https://lh3.googleusercontent.com/d/1utUCWpBRmKjeGRFF1Jo2Z3-ta7B8bgOq',
+      role: userProfile.role || userProfile.professionalTitle || 'Senior Researcher',
+      institution: userProfile.verificationDetails?.institution || userProfile.institution || 'Aurenix Research Network',
+      country: userProfile.country || 'Nigeria',
+      bio: userProfile.verificationDetails?.bio || userProfile.bio || 'Verified academic contributor to the Aurenix Research repository.',
+      researchInterests: userProfile.verificationDetails?.researchInterests || userProfile.researchInterests || ['Bioenergy'],
+      verified: true,
+      followers: [],
+      following: 0,
+      publicationCount: userProfile.uploadedResearchCount || 3,
+      downloads: 12,
+      views: 45,
+      citations: 2,
+      createdAt: new Date().toISOString(),
+      orcid: userProfile.verificationDetails?.orcid || '',
+      googleScholar: userProfile.verificationDetails?.googleScholar || '',
+    };
 
-  if (isDemoModeActive(userId)) {
-    const researchers = getLocalResearchers();
-    // Prevent duplicate entries
-    const filtered = researchers.filter(r => r.id !== userId);
-    setLocalResearchers([...filtered, newResearcher]);
-  } else {
-    try {
-      const docRef = doc(db, 'researchers', userId);
-      await setDoc(docRef, newResearcher, { merge: true });
-    } catch (error) {
-      console.warn('Error creating researcher entry in Firestore, saving to local list:', error);
+    if (isDemoModeActive(userId)) {
       const researchers = getLocalResearchers();
       const filtered = researchers.filter(r => r.id !== userId);
       setLocalResearchers([...filtered, newResearcher]);
+    } else {
+      try {
+        const docRef = doc(db, 'researchers', userId);
+        await setDoc(docRef, sanitizeForFirestore(newResearcher), { merge: true });
+      } catch (error) {
+        console.warn('Error creating researcher entry in Firestore, saving to local list:', error);
+        const researchers = getLocalResearchers();
+        const filtered = researchers.filter(r => r.id !== userId);
+        setLocalResearchers([...filtered, newResearcher]);
+      }
     }
   }
 }
@@ -1187,17 +1341,19 @@ export async function getResearchers(): Promise<Researcher[]> {
     for (const u of users) {
       const uId = u.id || u.uid;
       if (!uId) continue;
+      if (u.isOrganization === true || u.organizationType || u.accountType === 'organization') continue;
+      if (!isIndividualResearcherRole(u.role || u.professionalTitle || u.currentPosition, u)) continue;
       if (isPublicProfileComplete(u)) {
         const uPapers = customPapers.filter(p => p.userId === uId || (u.email && p.userEmail === u.email)).length;
         const existing = existingMap.get(uId);
         const mapped: Researcher = {
           id: uId,
-          fullName: (u.fullName || u.displayName || u.organizationName || 'Researcher').trim(),
-          profilePhoto: u.profilePicture || u.photoURL || u.avatar || u.organizationLogo || 'https://lh3.googleusercontent.com/d/1utUCWpBRmKjeGRFF1Jo2Z3-ta7B8bgOq',
-          role: u.professionalTitle || u.currentPosition || (u.isOrganization ? 'Research Institution' : (u.role || 'Researcher')),
-          institution: u.institution || u.organization || u.organizationName || 'Aurenix Research Network',
+          fullName: (u.fullName || u.displayName || 'Researcher').trim(),
+          profilePhoto: u.profilePicture || u.photoURL || u.avatar || 'https://lh3.googleusercontent.com/d/1utUCWpBRmKjeGRFF1Jo2Z3-ta7B8bgOq',
+          role: u.professionalTitle || u.currentPosition || (u.role || 'Researcher'),
+          institution: u.institution || u.organization || u.affiliation || 'Aurenix Research Network',
           country: u.country || u.location || 'Nigeria',
-          bio: u.bio || u.professionalBio || u.organizationDescription || '',
+          bio: u.bio || u.professionalBio || '',
           researchInterests: Array.isArray(u.researchInterests) && u.researchInterests.length > 0 
             ? u.researchInterests 
             : (u.primaryResearchArea ? [u.primaryResearchArea] : ['Bioenergy']),
@@ -1225,7 +1381,9 @@ export async function getResearchers(): Promise<Researcher[]> {
   if (isDemoModeActive()) {
     const researcherMap = new Map<string, Researcher>();
     for (const r of localResearchers) {
-      researcherMap.set(r.id, r);
+      if (isIndividualResearcherRole(r.role, r)) {
+        researcherMap.set(r.id, r);
+      }
     }
 
     // Scan localStorage for all user profiles in demo mode
@@ -1249,7 +1407,7 @@ export async function getResearchers(): Promise<Researcher[]> {
       } catch {}
     }
 
-    const result = Array.from(researcherMap.values());
+    const result = Array.from(researcherMap.values()).filter(r => isIndividualResearcherRole(r.role, r));
     setLocalResearchers(result);
     return result;
   }
@@ -1262,7 +1420,7 @@ export async function getResearchers(): Promise<Researcher[]> {
 
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      researcherMap.set(docSnap.id, {
+      const rObj: Researcher = {
         id: docSnap.id,
         fullName: data.fullName || '',
         profilePhoto: data.profilePhoto || '',
@@ -1286,7 +1444,10 @@ export async function getResearchers(): Promise<Researcher[]> {
         website: data.website,
         qualifications: data.qualifications || [],
         experienceYears: data.experienceYears || 0
-      });
+      };
+      if (isIndividualResearcherRole(rObj.role, rObj)) {
+        researcherMap.set(docSnap.id, rObj);
+      }
     });
 
     // Also load users from users collection to discover any complete profiles
@@ -1309,7 +1470,7 @@ export async function getResearchers(): Promise<Researcher[]> {
       }
     }
 
-    const result = Array.from(researcherMap.values());
+    const result = Array.from(researcherMap.values()).filter(r => isIndividualResearcherRole(r.role, r));
     setLocalResearchers(result);
     return result;
   } catch (error) {
@@ -1318,7 +1479,7 @@ export async function getResearchers(): Promise<Researcher[]> {
       return getResearchers();
     }
     console.warn('Error fetching researchers from Firestore, falling back to local storage:', error);
-    return getLocalResearchers();
+    return getLocalResearchers().filter(r => isIndividualResearcherRole(r.role, r));
   }
 }
 
@@ -1571,12 +1732,15 @@ export interface InnovationProject {
   userId: string;
   title: string;
   trl: number;
-  status: 'Draft' | 'Active' | 'Completed' | 'Archived';
-  fundingStatus: 'Pending' | 'Approved' | 'Funded';
+  status: 'Draft' | 'Active' | 'Completed' | 'Archived' | 'Published' | 'Under Review';
+  fundingStatus: 'Pending' | 'Approved' | 'Funded' | 'Rejected' | 'In Progress';
   progress: number;
   industryPartner: string;
   laboratoryPartner: string;
   description?: string;
+  focusArea?: string;
+  trlLevel?: number;
+  budget?: number | string;
   lastUpdated: string;
 }
 
@@ -2119,12 +2283,62 @@ export async function deleteCommunityPost(userId: string, postId: string): Promi
 
 const LOCAL_TESTIMONIALS_KEY = 'aurenix_local_testimonials_v1';
 
+const DEFAULT_SEED_TESTIMONIALS: Testimonial[] = [
+  {
+    id: 'testim_seed_1',
+    userId: 'scholar-elena-rostova',
+    fullName: 'Dr. Elena Rostova',
+    occupation: 'Senior Biofuel Process Engineer',
+    institution: 'Nordic Clean Energy Institute',
+    country: 'Sweden',
+    message: 'Aurenix Research Hub has transformed how our lab cross-references pyrolysis yields and thermodynamic models. The open data exchange and synthesis tools have saved us months of redundant bench testing.',
+    rating: 5,
+    approved: true,
+    featured: true,
+    createdAt: '2026-01-15T10:00:00.000Z',
+    updatedAt: '2026-01-15T10:00:00.000Z'
+  },
+  {
+    id: 'testim_seed_2',
+    userId: 'scholar-kwame-mensah',
+    fullName: 'Prof. Kwame Mensah',
+    occupation: 'Chair of Agricultural Biotechnology',
+    institution: 'University of Ghana & WACCI',
+    country: 'Ghana',
+    message: 'The ability to find international partners and co-publish lignocellulosic biomass research has enabled our department to secure regional bioenergy transition grants effectively.',
+    rating: 5,
+    approved: true,
+    featured: true,
+    createdAt: '2026-02-10T14:30:00.000Z',
+    updatedAt: '2026-02-10T14:30:00.000Z'
+  },
+  {
+    id: 'testim_seed_3',
+    userId: 'scholar-marcus-vance',
+    fullName: 'Dr. Marcus Vance',
+    occupation: 'Lead Catalysis Scientist',
+    institution: 'Renewable Fuels Consortium',
+    country: 'United Kingdom',
+    message: 'The precision of the biochemical calculators and the real-time AI research assistant provide an indispensable workbench for peer-reviewed experimental validation.',
+    rating: 5,
+    approved: true,
+    featured: true,
+    createdAt: '2026-03-01T09:15:00.000Z',
+    updatedAt: '2026-03-01T09:15:00.000Z'
+  }
+];
+
 function getLocalTestimonials(): Testimonial[] {
   try {
     const raw = localStorage.getItem(LOCAL_TESTIMONIALS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) {
+      localStorage.setItem(LOCAL_TESTIMONIALS_KEY, JSON.stringify(DEFAULT_SEED_TESTIMONIALS));
+      return DEFAULT_SEED_TESTIMONIALS;
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_SEED_TESTIMONIALS;
   } catch {
-    return [];
+    return DEFAULT_SEED_TESTIMONIALS;
   }
 }
 
@@ -2170,7 +2384,6 @@ export async function submitTestimonial(
       setLocalTestimonials(list);
       return testimonialItem;
     }
-    console.warn('Firestore submitTestimonial error:', error);
     const list = getLocalTestimonials();
     list.unshift(testimonialItem);
     setLocalTestimonials(list);
@@ -2191,9 +2404,11 @@ export async function getApprovedTestimonials(): Promise<Testimonial[]> {
     snapshot.forEach(d => {
       items.push({ id: d.id, ...d.data() } as Testimonial);
     });
+    if (items.length === 0) {
+      return getLocalTestimonials().filter(t => t.approved);
+    }
     return items;
-  } catch (error) {
-    console.warn('Firestore getApprovedTestimonials error, falling back to local:', error);
+  } catch {
     return getLocalTestimonials().filter(t => t.approved);
   }
 }
@@ -2210,9 +2425,11 @@ export async function getAllTestimonialsAdmin(): Promise<Testimonial[]> {
     snapshot.forEach(d => {
       items.push({ id: d.id, ...d.data() } as Testimonial);
     });
+    if (items.length === 0) {
+      return getLocalTestimonials();
+    }
     return items;
-  } catch (error) {
-    console.warn('Firestore getAllTestimonialsAdmin error, falling back to local:', error);
+  } catch {
     return getLocalTestimonials();
   }
 }

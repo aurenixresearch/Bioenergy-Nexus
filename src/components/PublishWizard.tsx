@@ -33,8 +33,8 @@ export default function PublishWizard({ onClose, onSubmit, initialData, userProf
   const [abstract, setAbstract] = useState(initialData?.abstract || '');
   const [category, setCategory] = useState<ResearchPaper['category']>(initialData?.category || 'Bioenergy Technology');
   const [keywords, setKeywords] = useState<string>(initialData?.keywords?.join(', ') || '');
-  const [status, setStatus] = useState<'Ongoing' | 'Completed' | 'Under Review' | 'Published'>(
-    initialData?.status === 'Draft' ? 'Published' : (initialData?.status || 'Published')
+  const [status, setStatus] = useState<'Ongoing' | 'Completed' | 'Under Review' | 'Published' | 'Draft'>(
+    (initialData?.status as any) || 'Published'
   );
   const [language, setLanguage] = useState(initialData?.language || 'English');
   const [readingTime, setReadingTime] = useState(initialData?.readingTime || '15 mins');
@@ -119,7 +119,7 @@ export default function PublishWizard({ onClose, onSubmit, initialData, userProf
   const [selectedTags, setSelectedTags] = useState<string[]>(initialData?.tags || []);
 
   // Step 7 - Visibility
-  const [visibility, setVisibility] = useState<'Public' | 'Registered Users' | 'Collaborators Only' | 'Private Draft'>(initialData?.visibility || 'Public');
+  const [visibility, setVisibility] = useState<'Public' | 'Registered Users' | 'Collaborators Only' | 'Private Draft'>((initialData?.visibility as any) || 'Public');
 
   // Step 8 - License
   const [license, setLicense] = useState<'Copyright' | 'Creative Commons' | 'Open Access'>(initialData?.license || 'Open Access');

@@ -29,12 +29,11 @@ import { RESEARCH_PAPERS } from './data';
 
 // Safe lazy loading helper with retry & cache recovery
 function safeLazy<T extends React.ComponentType<any>>(
-  factory: () => Promise<{ default: T } | { [key: string]: any }>
+  factory: () => Promise<{ default: T }>
 ) {
   return lazy(async () => {
     try {
-      const res = await factory();
-      return 'default' in res ? res : { default: res };
+      return await factory();
     } catch (error) {
       console.warn('Lazy module load failed, attempting chunk reload:', error);
       const hasReloaded = sessionStorage.getItem('nexus_chunk_reloaded');
@@ -80,87 +79,98 @@ function ViewLoadingFallback() {
   return null;
 }
 
-function parsePath(path: string) {
+export interface AppRouteState {
+  view: string;
+  researcherId: string | null;
+  paperId: string | null;
+  projectId: string | null;
+  allianceId: string | null;
+  insightSlug: string | null;
+  areaSlug: string | null;
+  policyId?: string | null;
+}
+
+function parsePath(path: string): AppRouteState {
   // 1. /researchers/:researcherId
   let match = path.match(/^\/researchers\/([^/]+)$/);
   if (match) {
-    return { view: 'researchers' as const, researcherId: match[1], paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+    return { view: 'researchers', researcherId: match[1], paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
   }
   
   // 2. /researchers
   if (path === '/researchers') {
-    return { view: 'researchers' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+    return { view: 'researchers', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
   }
   
   // 3. /research/:paperId
   match = path.match(/^\/research\/([^/]+)$/);
   if (match) {
-    return { view: 'research' as const, researcherId: null, paperId: match[1], projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+    return { view: 'research', researcherId: null, paperId: match[1], projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
   }
   
   // 4. /research
   if (path === '/research') {
-    return { view: 'research' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+    return { view: 'research', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
   }
 
   // 5. /projects/:projectId
   match = path.match(/^\/projects\/([^/]+)$/);
   if (match) {
-    return { view: 'dashboard' as const, researcherId: null, paperId: null, projectId: match[1], allianceId: null, insightSlug: null, areaSlug: null };
+    return { view: 'dashboard', researcherId: null, paperId: null, projectId: match[1], allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
   }
 
   // 6. /alliances/:allianceId
   match = path.match(/^\/alliances\/([^/]+)$/);
   if (match) {
-    return { view: 'collaboration' as const, researcherId: null, paperId: null, projectId: null, allianceId: match[1], insightSlug: null, areaSlug: null };
+    return { view: 'collaboration', researcherId: null, paperId: null, projectId: null, allianceId: match[1], insightSlug: null, areaSlug: null, policyId: null };
   }
 
   // 7. /messages/:targetUserId
   match = path.match(/^\/messages\/([^/]+)$/);
   if (match) {
-    return { view: 'messages' as const, researcherId: match[1], paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+    return { view: 'messages', researcherId: match[1], paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
   }
 
   // 8. /insights/:slug
   match = path.match(/^\/insights\/([^/]+)$/);
   if (match) {
-    return { view: 'insights' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: match[1], areaSlug: null };
+    return { view: 'insights', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: match[1], areaSlug: null, policyId: null };
   }
   if (path === '/insights') {
-    return { view: 'insights' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+    return { view: 'insights', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
   }
 
   // 9. /research-areas/:areaSlug
   match = path.match(/^\/research-areas\/([^/]+)$/);
   if (match) {
-    return { view: 'research-areas' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: match[1] };
+    return { view: 'research-areas', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: match[1], policyId: null };
   }
   if (path === '/research-areas') {
-    return { view: 'research-areas' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null };
+    return { view: 'research-areas', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
   }
 
   // 10. /legal/:policyId or /legal
   match = path.match(/^\/legal\/([^/]+)$/);
   if (match) {
-    return { view: 'legal' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: match[1] };
+    return { view: 'legal', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: match[1] };
   }
   if (path === '/legal' || path === '/legal/') {
-    return { view: 'legal' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: 'hub' };
+    return { view: 'legal', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: 'hub' };
   }
 
   // Root homepage
   if (path === '/' || path === '') {
-    return { view: 'home' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
+    return { view: 'home', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
   }
 
   // Standard views
   const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas', 'legal', 'community', 'ai-assistant'];
   const viewName = path.substring(1);
   if (views.includes(viewName)) {
-    return { view: viewName as any, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: 'terms' };
+    return { view: viewName, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: 'terms' };
   }
   
-  return { view: 'notfound' as const, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
+  return { view: 'notfound', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
 }
 
 const DEMO_GUEST_USER = {
@@ -190,7 +200,7 @@ export default function App() {
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Routing State Manager
-  const [routeState, setRouteState] = useState(() => parseUrl());
+  const [routeState, setRouteState] = useState<AppRouteState>(() => parseUrl());
   const currentView = routeState.view;
   const selectedResearcherId = routeState.researcherId;
   const selectedPaperId = routeState.paperId;
@@ -212,7 +222,7 @@ export default function App() {
     let effectiveView = view === 'saved_studies' ? 'saved' : (view === 'collaborations' ? 'collaboration' : view);
 
     if (effectiveView === 'initializing') {
-      setRouteState({ view: 'initializing', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null });
+      setRouteState({ view: 'initializing', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null });
       return;
     }
 
@@ -590,11 +600,11 @@ export default function App() {
     }
   }, [currentView, user, authLoading]);
 
-  // Home Page Guard check: Signed-in users must never view or access the home page
+  // Home Page Guard check: Signed-in users are directed to dashboard
   useEffect(() => {
     if (authLoading) return;
     if (user && currentView === 'home') {
-      console.warn(`[ROUTE GUARD] Signed-in user attempted to view Home page. Redirecting to dashboard.`);
+      console.log(`[ROUTE GUARD] Signed-in user directed to dashboard from home route.`);
       setView('dashboard');
     }
   }, [currentView, user, authLoading]);
@@ -1493,7 +1503,7 @@ export default function App() {
                 initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0 }}
-                className="w-full max-w-7xl mx-auto p-2 sm:p-6"
+                className="w-full h-[calc(100dvh-64px)] sm:h-[calc(100dvh-72px)] flex flex-col overflow-hidden"
               >
                 <SeoManager
                   title="Aurenix Research Intelligence & AI Support — Paper Summarizer & Brainstorming"

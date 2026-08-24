@@ -27,8 +27,8 @@ export default function ProjectDetailsPage({
   // Form states
   const [title, setTitle] = useState('');
   const [trl, setTrl] = useState(4);
-  const [status, setStatus] = useState<'Draft' | 'Published' | 'Under Review' | 'Completed'>('Draft');
-  const [fundingStatus, setFundingStatus] = useState<'Pending' | 'Approved' | 'Rejected' | 'In Progress'>('Pending');
+  const [status, setStatus] = useState<InnovationProject['status']>('Draft');
+  const [fundingStatus, setFundingStatus] = useState<InnovationProject['fundingStatus']>('Pending');
   const [progress, setProgress] = useState(30);
   const [industryPartner, setIndustryPartner] = useState('');
   const [laboratoryPartner, setLaboratoryPartner] = useState('');

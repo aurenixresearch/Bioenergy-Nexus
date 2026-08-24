@@ -28,8 +28,7 @@ export const TrustedLeadersBanner: React.FC = () => {
   const cardHover = shouldReduceMotion ? {} : {
     scale: 1.04,
     y: -4,
-    boxShadow: "0 12px 24px -6px rgba(16, 185, 129, 0.18)",
-    transition: { duration: 0.25, ease: "easeOut" }
+    boxShadow: "0 12px 24px -6px rgba(16, 185, 129, 0.18)"
   };
 
   return (
@@ -63,7 +62,8 @@ export const TrustedLeadersBanner: React.FC = () => {
                 viewport={{ once: true, margin: "-30px" }}
                 animate={disableFloat ? { opacity: 1, y: 0 } : { y: [0, -6, 0] }}
                 transition={{
-                  initial: { duration: 0.6, delay: 0.05, ease: "easeOut" },
+                  duration: 0.6,
+                  delay: 0.05,
                   y: { duration: 5.2, repeat: Infinity, ease: "easeInOut", delay: 0.6 }
                 }}
                 whileHover={cardHover}
@@ -84,7 +84,8 @@ export const TrustedLeadersBanner: React.FC = () => {
                 viewport={{ once: true, margin: "-30px" }}
                 animate={disableFloat ? { opacity: 1, y: 0 } : { y: [0, -5, 0] }}
                 transition={{
-                  initial: { duration: 0.6, delay: 0.1, ease: "easeOut" },
+                  duration: 0.6,
+                  delay: 0.1,
                   y: { duration: 5.8, repeat: Infinity, ease: "easeInOut", delay: 0.8 }
                 }}
                 whileHover={cardHover}
@@ -110,7 +111,8 @@ export const TrustedLeadersBanner: React.FC = () => {
                 viewport={{ once: true, margin: "-30px" }}
                 animate={disableFloat ? { opacity: 1, y: 0 } : { y: [0, -7, 0] }}
                 transition={{
-                  initial: { duration: 0.6, delay: 0.15, ease: "easeOut" },
+                  duration: 0.6,
+                  delay: 0.15,
                   y: { duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.3 }
                 }}
                 whileHover={cardHover}
@@ -132,7 +134,8 @@ export const TrustedLeadersBanner: React.FC = () => {
                 viewport={{ once: true, margin: "-30px" }}
                 animate={disableFloat ? { opacity: 1, y: 0 } : { y: [0, -5, 0] }}
                 transition={{
-                  initial: { duration: 0.6, delay: 0.2, ease: "easeOut" },
+                  duration: 0.6,
+                  delay: 0.2,
                   y: { duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 0.9 }
                 }}
                 whileHover={cardHover}
@@ -158,7 +161,8 @@ export const TrustedLeadersBanner: React.FC = () => {
                 viewport={{ once: true, margin: "-30px" }}
                 animate={disableFloat ? { opacity: 1, y: 0 } : { y: [0, -6, 0] }}
                 transition={{
-                  initial: { duration: 0.6, delay: 0.25, ease: "easeOut" },
+                  duration: 0.6,
+                  delay: 0.25,
                   y: { duration: 5.4, repeat: Infinity, ease: "easeInOut", delay: 0.4 }
                 }}
                 whileHover={cardHover}
@@ -180,7 +184,8 @@ export const TrustedLeadersBanner: React.FC = () => {
                 viewport={{ once: true, margin: "-30px" }}
                 animate={disableFloat ? { opacity: 1, y: 0 } : { y: [0, -6, 0] }}
                 transition={{
-                  initial: { duration: 0.6, delay: 0.3, ease: "easeOut" },
+                  duration: 0.6,
+                  delay: 0.3,
                   y: { duration: 6.2, repeat: Infinity, ease: "easeInOut", delay: 0.2 }
                 }}
                 whileHover={cardHover}
@@ -202,7 +207,8 @@ export const TrustedLeadersBanner: React.FC = () => {
                 viewport={{ once: true, margin: "-30px" }}
                 animate={disableFloat ? { opacity: 1, y: 0 } : { y: [0, -8, 0] }}
                 transition={{
-                  initial: { duration: 0.6, delay: 0.35, ease: "easeOut" },
+                  duration: 0.6,
+                  delay: 0.35,
                   y: { duration: 6.5, repeat: Infinity, ease: "easeInOut" }
                 }}
                 whileHover={cardHover}
@@ -224,7 +230,8 @@ export const TrustedLeadersBanner: React.FC = () => {
                 viewport={{ once: true, margin: "-30px" }}
                 animate={disableFloat ? { opacity: 1, y: 0 } : { y: [0, -6, 0] }}
                 transition={{
-                  initial: { duration: 0.6, delay: 0.4, ease: "easeOut" },
+                  duration: 0.6,
+                  delay: 0.4,
                   y: { duration: 5.9, repeat: Infinity, ease: "easeInOut", delay: 0.5 }
                 }}
                 whileHover={cardHover}
@@ -246,7 +253,8 @@ export const TrustedLeadersBanner: React.FC = () => {
                 viewport={{ once: true, margin: "-30px" }}
                 animate={disableFloat ? { opacity: 1, y: 0 } : { y: [0, -5, 0] }}
                 transition={{
-                  initial: { duration: 0.6, delay: 0.45, ease: "easeOut" },
+                  duration: 0.6,
+                  delay: 0.45,
                   y: { duration: 5.6, repeat: Infinity, ease: "easeInOut", delay: 0.7 }
                 }}
                 whileHover={cardHover}
@@ -268,7 +276,8 @@ export const TrustedLeadersBanner: React.FC = () => {
                 viewport={{ once: true, margin: "-30px" }}
                 animate={disableFloat ? { opacity: 1, y: 0 } : { y: [0, -5, 0] }}
                 transition={{
-                  initial: { duration: 0.6, delay: 0.5, ease: "easeOut" },
+                  duration: 0.6,
+                  delay: 0.5,
                   y: { duration: 6.1, repeat: Infinity, ease: "easeInOut", delay: 0.3 }
                 }}
                 whileHover={cardHover}
@@ -287,7 +296,8 @@ export const TrustedLeadersBanner: React.FC = () => {
                 viewport={{ once: true, margin: "-30px" }}
                 animate={disableFloat ? { opacity: 1, scale: 1, rotate: 3 } : { y: [0, -6, 0] }}
                 transition={{
-                  initial: { duration: 0.6, delay: 0.55, ease: "easeOut" },
+                  duration: 0.6,
+                  delay: 0.55,
                   y: { duration: 5.3, repeat: Infinity, ease: "easeInOut", delay: 0.4 }
                 }}
                 whileHover={shouldReduceMotion ? {} : { scale: 1.05, rotate: 0, y: -4, boxShadow: "0 12px 24px -6px rgba(16, 185, 129, 0.18)" }}
@@ -316,7 +326,8 @@ export const TrustedLeadersBanner: React.FC = () => {
                 viewport={{ once: true, margin: "-30px" }}
                 animate={disableFloat ? { opacity: 1, y: 0 } : { y: [0, -6, 0] }}
                 transition={{
-                  initial: { duration: 0.6, delay: 0.6, ease: "easeOut" },
+                  duration: 0.6,
+                  delay: 0.6,
                   y: { duration: 5.7, repeat: Infinity, ease: "easeInOut", delay: 0.4 }
                 }}
                 whileHover={cardHover}
@@ -334,7 +345,8 @@ export const TrustedLeadersBanner: React.FC = () => {
                 viewport={{ once: true, margin: "-30px" }}
                 animate={disableFloat ? { opacity: 1, y: 0 } : { y: [0, -5, 0] }}
                 transition={{
-                  initial: { duration: 0.6, delay: 0.65, ease: "easeOut" },
+                  duration: 0.6,
+                  delay: 0.65,
                   y: { duration: 5.2, repeat: Infinity, ease: "easeInOut", delay: 0.8 }
                 }}
                 whileHover={cardHover}

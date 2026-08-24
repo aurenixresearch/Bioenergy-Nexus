@@ -723,7 +723,9 @@ export default function MessagesPage({
                       <div className="flex items-center justify-between gap-1 mb-1">
                         <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
                           <span>{profile?.fullName || 'Scholar Researcher'}</span>
-                          <UserCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" title="Mutual Connection" />
+                          <span title="Mutual Connection">
+                            <UserCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          </span>
                         </h4>
                         <span className="text-[10px] font-medium text-slate-400 shrink-0">
                           {formatConvDate(conv.lastMessageTimestamp)}

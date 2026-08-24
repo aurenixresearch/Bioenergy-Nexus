@@ -1945,7 +1945,7 @@ export default function ProfilePage({ user, onNavigateToView, theme }: ProfilePa
                           <div key={paper.id} className="p-3 bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between gap-3">
                             <div className="min-w-0 flex-1">
                               <span className="font-bold text-slate-900 dark:text-white text-xs block truncate">{paper.title}</span>
-                              <span className="text-[10px] text-slate-500 block truncate">{paper.journal || paper.category} • {paper.year}</span>
+                              <span className="text-[10px] text-slate-500 block truncate">{paper.journal || paper.category} • {paper.year || paper.publishedYear}</span>
                             </div>
                             <button
                               type="button"
