@@ -1196,10 +1196,10 @@ export default function SignInPage({
               // ==========================================
               <motion.div
                 key="standard_signin_view"
-                initial={{ opacity: 0, y: -15 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 15 }}
-                transition={{ duration: 0.25 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.15 }}
                 className="space-y-8"
                 id="standard_signin_content"
               >

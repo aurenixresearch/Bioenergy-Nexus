@@ -25,6 +25,7 @@ import Footer from './components/Footer';
 import CookieConsent from './components/CookieConsent';
 import SeoManager from './components/seo/SeoManager';
 import ErrorBoundary from './components/ErrorBoundary';
+import SignInPage from './components/SignInPage';
 import { RESEARCH_PAPERS } from './data';
 
 // Safe lazy loading helper with retry & cache recovery
@@ -47,7 +48,6 @@ function safeLazy<T extends React.ComponentType<any>>(
 }
 
 // Route-based code splitting
-const SignInPage = safeLazy(() => import('./components/SignInPage'));
 const OnboardingPage = safeLazy(() => import('./components/OnboardingPage'));
 const AboutSection = safeLazy(() => import('./components/AboutSection'));
 const ResearchSection = safeLazy(() => import('./components/ResearchSection'));
@@ -76,7 +76,14 @@ const ResearchAiAssistant = safeLazy(() => import('./components/ai/ResearchAiAss
 import FloatingAiWidget from './components/ai/FloatingAiWidget';
 
 function ViewLoadingFallback() {
-  return null;
+  return (
+    <div className="w-full min-h-[60vh] flex items-center justify-center bg-slate-50/50 dark:bg-slate-950/50">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 rounded-full border-2 border-emerald-600 border-t-transparent animate-spin" />
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Loading view...</span>
+      </div>
+    </div>
+  );
 }
 
 export interface AppRouteState {
