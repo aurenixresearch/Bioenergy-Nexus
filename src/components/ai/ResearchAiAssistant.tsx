@@ -408,7 +408,7 @@ export default function ResearchAiAssistant({
 
   return (
     <div
-      className="h-full w-full flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden relative"
+      className="h-full w-full flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden relative box-border min-h-0"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -434,7 +434,7 @@ export default function ResearchAiAssistant({
       </AnimatePresence>
 
       {/* Top Header Bar */}
-      <header className="px-3 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 sm:gap-3 shrink-0 z-20">
+      <header className="w-full px-3 sm:px-6 py-2.5 sm:py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 sm:gap-4 shrink-0 z-20">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             type="button"
@@ -559,7 +559,7 @@ export default function ResearchAiAssistant({
       </header>
 
       {/* Main Content Area (Sidebar + Message Thread) */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 w-full flex overflow-hidden relative min-h-0">
         {/* Mobile/Tablet Backdrop for Sidebar */}
         <AnimatePresence>
           {isSidebarOpen && (
@@ -581,7 +581,7 @@ export default function ResearchAiAssistant({
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -280, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed lg:relative inset-y-0 left-0 z-40 lg:z-10 w-72 sm:w-80 lg:w-72 h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 overflow-hidden shadow-2xl lg:shadow-none"
+              className="fixed lg:relative inset-y-0 left-0 z-40 lg:z-10 w-72 sm:w-80 lg:w-72 2xl:w-80 h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 overflow-hidden shadow-2xl lg:shadow-none min-h-0"
             >
               {/* Search chats & mobile close */}
               <div className="p-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
@@ -709,11 +709,11 @@ export default function ResearchAiAssistant({
         </AnimatePresence>
 
         {/* Center Chat Messages Thread */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-950 w-full">
+        <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-950 w-full min-w-0 min-h-0">
           {/* Scrollable Message List / Welcome Screen */}
-          <div className="flex-1 overflow-y-auto p-3 sm:p-5 md:p-8 space-y-5 sm:space-y-6 custom-scrollbar bg-white dark:bg-slate-950 w-full">
+          <div className="flex-1 overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 custom-scrollbar bg-white dark:bg-slate-950 w-full min-h-0">
             {(!currentSession?.messages || currentSession.messages.length <= 1) && (
-              <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto py-2 space-y-6">
+              <div className="w-full max-w-full 2xl:max-w-[1800px] mx-auto py-1 sm:py-2 space-y-5 sm:space-y-6">
                 {/* Welcome Hero Banner */}
                 <div className="w-full p-5 sm:p-7 md:p-8 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-emerald-900/95 via-emerald-950 to-slate-950 text-white border border-emerald-800/60 shadow-xl relative overflow-hidden">
                   <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -869,7 +869,7 @@ export default function ResearchAiAssistant({
 
             {/* Conversation Messages Thread - full width spread */}
             {currentSession?.messages && currentSession.messages.length > 1 && (
-              <div className="space-y-6 w-full max-w-6xl 2xl:max-w-7xl mx-auto">
+              <div className="space-y-5 sm:space-y-6 w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-1 sm:px-2">
                 {currentSession.messages.map((msg, index) => {
                   const isUser = msg.role === 'user';
                   const isCopied = copiedMessageId === msg.id;
@@ -917,7 +917,7 @@ export default function ResearchAiAssistant({
                           {isUser ? (
                             <p className="whitespace-pre-wrap text-white">{msg.text}</p>
                           ) : (
-                            <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none w-full text-slate-900 dark:text-slate-100 prose-p:text-slate-900 dark:prose-p:text-slate-100 prose-p:leading-relaxed prose-headings:text-slate-950 dark:prose-headings:text-white prose-headings:font-black prose-strong:text-slate-950 dark:prose-strong:text-white prose-strong:font-bold prose-li:text-slate-900 dark:prose-li:text-slate-200 prose-ul:text-slate-900 prose-ol:text-slate-900 prose-pre:bg-slate-950 prose-pre:text-slate-100 prose-pre:rounded-xl prose-pre:p-4 prose-code:text-emerald-800 dark:prose-code:text-emerald-300 prose-code:bg-emerald-50/80 dark:prose-code:bg-emerald-950/60 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-blockquote:text-slate-900 dark:prose-blockquote:text-slate-200 prose-blockquote:border-l-4 prose-blockquote:border-emerald-600 prose-blockquote:bg-emerald-50/50 dark:prose-blockquote:bg-emerald-950/20 prose-blockquote:p-3 prose-blockquote:rounded-r-lg prose-table:w-full prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:text-slate-950 dark:prose-th:text-white prose-th:bg-slate-100 dark:prose-th:bg-slate-800 prose-td:border prose-td:border-slate-200 dark:prose-td:border-slate-800 prose-td:text-slate-900 dark:prose-td:text-slate-200 prose-th:p-3 prose-td:p-3">
+                            <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none w-full text-slate-900 dark:text-slate-100 prose-p:text-slate-900 dark:prose-p:text-slate-100 prose-p:leading-relaxed prose-headings:text-slate-950 dark:prose-headings:text-white prose-headings:font-black prose-strong:text-slate-950 dark:prose-strong:text-white prose-strong:font-bold prose-li:text-slate-900 dark:prose-li:text-slate-200 prose-ul:text-slate-900 prose-ol:text-slate-900 prose-pre:bg-slate-950 prose-pre:text-slate-100 prose-pre:rounded-xl prose-pre:p-4 prose-code:text-emerald-800 dark:prose-code:text-emerald-300 prose-code:bg-emerald-50/80 dark:prose-code:bg-emerald-950/60 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-blockquote:text-slate-900 dark:prose-blockquote:text-slate-200 prose-blockquote:border-l-4 prose-blockquote:border-emerald-600 prose-blockquote:bg-emerald-50/50 dark:prose-blockquote:bg-emerald-950/20 prose-blockquote:p-3 prose-blockquote:rounded-r-lg prose-table:w-full prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:text-slate-950 dark:prose-th:text-white prose-th:bg-slate-100 dark:prose-th:bg-slate-800 prose-td:border prose-td:border-slate-200 dark:border-slate-800 prose-td:text-slate-900 dark:prose-td:text-slate-200 prose-th:p-3 prose-td:p-3">
                               <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
                             </div>
                           )}
@@ -958,7 +958,7 @@ export default function ResearchAiAssistant({
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex gap-3 sm:gap-4 w-full max-w-6xl 2xl:max-w-7xl mx-auto justify-start"
+                className="flex gap-3 sm:gap-4 w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto justify-start px-1 sm:px-2"
               >
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-800 to-teal-600 text-white flex items-center justify-center shadow-xs shrink-0 animate-pulse">
                   <Sparkles className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
@@ -981,8 +981,8 @@ export default function ResearchAiAssistant({
 
           {/* Quick Follow-up Chips (only shown if messages exist) */}
           {currentSession?.messages && currentSession.messages.length > 1 && (
-            <div className="w-full px-4 sm:px-6 py-2.5 bg-slate-50/70 dark:bg-slate-900/70 border-t border-slate-100 dark:border-slate-800/80">
-              <div className="w-full max-w-6xl 2xl:max-w-7xl mx-auto overflow-x-auto custom-scrollbar flex items-center gap-2">
+            <div className="w-full px-3 sm:px-6 lg:px-8 py-2.5 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-xs border-t border-slate-100 dark:border-slate-800/80 shrink-0 z-10">
+              <div className="w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto overflow-x-auto custom-scrollbar flex items-center gap-2">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0">Quick Ask:</span>
                 <button
                   type="button"
@@ -1010,8 +1010,8 @@ export default function ResearchAiAssistant({
           )}
 
           {/* Bottom Input Area */}
-          <div className="p-3 sm:p-5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 w-full">
-            <div className="w-full max-w-6xl 2xl:max-w-7xl mx-auto flex flex-col gap-2.5">
+          <div className="p-3 sm:p-4 lg:p-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 w-full shrink-0 z-10">
+            <div className="w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto flex flex-col gap-2.5">
               {/* Attachment Preview Chips */}
               {attachments.length > 0 && (
                 <div className="flex flex-wrap gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700">

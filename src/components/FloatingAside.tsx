@@ -289,12 +289,6 @@ export default function FloatingAside({
   }, [allNavItems, searchQuery]);
 
   const handleNavClick = (viewId: string) => {
-    if (viewId === 'ai-assistant') {
-      window.dispatchEvent(new CustomEvent('open-ai-assistant'));
-      setIsOpen(false);
-      setSearchQuery('');
-      return;
-    }
     setView(viewId);
     setIsOpen(false);
     setSearchQuery('');

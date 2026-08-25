@@ -740,7 +740,11 @@ export default function App() {
             : '0px'
         }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="flex-grow flex flex-col justify-between min-h-screen w-full"
+        className={`flex-grow flex flex-col ${
+          currentView === 'ai-assistant'
+            ? 'h-[100dvh] max-h-[100dvh] overflow-hidden'
+            : 'justify-between min-h-screen'
+        } w-full`}
         id="app_layout_wrapper"
       >
         {/* Dynamic Navigation */}
@@ -768,7 +772,7 @@ export default function App() {
         )}
 
         {/* Main Container */}
-        <main className="flex-grow min-h-[85vh]">
+        <main className={`flex-grow ${currentView === 'ai-assistant' ? 'flex-1 h-full min-h-0 overflow-hidden flex flex-col' : 'min-h-[85vh]'}`}>
           <ErrorBoundary>
             <Suspense fallback={<ViewLoadingFallback />}>
           {/* Bypassing AnimatePresence prevents the fatal React 19 "Expected static flag was missing" reconciler assertion crash while preserving mounting fade-ins */}
@@ -1510,7 +1514,7 @@ export default function App() {
                 initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0 }}
-                className="w-full h-[calc(100dvh-64px)] sm:h-[calc(100dvh-72px)] flex flex-col overflow-hidden"
+                className="w-full h-full flex-1 flex flex-col overflow-hidden min-h-0"
               >
                 <SeoManager
                   title="Aurenix Research Intelligence & AI Support — Paper Summarizer & Brainstorming"
@@ -1547,7 +1551,7 @@ export default function App() {
       </main>
 
         {/* Footer */}
-        {!user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && <Footer onNavClick={handlePageSelect} />}
+        {!user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && currentView !== 'ai-assistant' && <Footer onNavClick={handlePageSelect} />}
       </motion.div>
 
       {/* Global Cookie Consent System */}
