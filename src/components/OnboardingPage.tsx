@@ -13,7 +13,11 @@ import {
   Sparkles,
   Loader2,
   ShieldCheck,
-  LogOut
+  LogOut,
+  User,
+  AtSign,
+  Mail,
+  CheckCircle2
 } from 'lucide-react';
 import { createUserProfile } from '../services/db';
 import { recordPolicyAcceptance } from '../services/policyService';
@@ -74,63 +78,28 @@ const ROLES = [
 
 export default function OnboardingPage({ user, onComplete, onSignOut }: OnboardingPageProps) {
   const [step, setStep] = useState(1);
+  
+  // Basic Account info from Google
+  const [fullName, setFullName] = useState(user?.displayName || '');
+  const [username, setUsername] = useState(
+    user?.displayName 
+      ? user.displayName.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) 
+      : (user?.email?.split('@')[0] || '')
+  );
+
+  // Role, Country, Institution
   const [role, setRole] = useState('');
   const [country, setCountry] = useState('');
   const [countrySearch, setCountrySearch] = useState('');
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const [institution, setInstitution] = useState('');
+
+  // Interests & Legal Terms
   const [researchInterests, setResearchInterests] = useState<string[]>([]);
   const [termsChecked, setTermsChecked] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  // Auto-initialize profile with needsOnboarding: false as soon as the page is viewed.
-  // This guarantees that the user will never be prompted for onboarding again, satisfying the requested behavior.
-  React.useEffect(() => {
-    if (!user?.uid) return;
-
-    const initializeOnboardingAsAsked = async () => {
-      try {
-        await createUserProfile(user.uid, {
-          fullName: user.displayName || 'Google Scholar',
-          email: user.email || '',
-          role: 'Researcher', // safe defaults
-          country: 'Nigeria',
-          institution: '',
-          researchInterests: [],
-          termsAccepted: true,
-          needsOnboarding: false
-        });
-      } catch (err) {
-        console.error('Error auto-initializing onboarding document on backend:', err);
-      }
-    };
-
-    initializeOnboardingAsAsked();
-  }, [user]);
-
-  const handleSkip = async () => {
-    setIsLoading(true);
-    setErrorMsg(null);
-    try {
-      await createUserProfile(user.uid, {
-        fullName: user.displayName || 'Google Scholar',
-        email: user.email || '',
-        role: role || 'Researcher',
-        country: country || 'Nigeria',
-        institution: institution || '',
-        researchInterests: researchInterests,
-        termsAccepted: true,
-        needsOnboarding: false
-      });
-      onComplete();
-    } catch (err: any) {
-      console.error('Error during onboarding skip:', err);
-      setErrorMsg(err.message || 'Failed to skip onboarding.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleToggleInterest = (interest: string) => {
     if (researchInterests.includes(interest)) {
@@ -142,13 +111,14 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
     }
   };
 
-  const isStep1Valid = role !== '' && country !== '';
-  const isStep2Valid = termsChecked;
+  const isStep1Valid = fullName.trim().length > 0;
+  const isStep2Valid = role !== '' && country !== '';
+  const isStep3Valid = termsChecked;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isStep1Valid || !isStep2Valid) {
-      setErrorMsg('Please ensure all required fields are filled out.');
+    if (!isStep1Valid || !isStep2Valid || !isStep3Valid) {
+      setErrorMsg('Please ensure all required fields and agreements are completed.');
       return;
     }
 
@@ -156,23 +126,31 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
     setErrorMsg(null);
 
     try {
+      const sanitizedName = fullName.trim() || user?.displayName || 'Google Scholar';
+      const sanitizedUsername = username.trim() || sanitizedName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+      // Update profile with the selected role, origin, institution, interests and terms
       await createUserProfile(user.uid, {
-        fullName: user.displayName || 'Google Scholar',
+        fullName: sanitizedName,
+        username: sanitizedUsername,
         email: user.email || '',
-        role,
-        country,
-        institution,
-        researchInterests,
-        termsAccepted: termsChecked,
-        needsOnboarding: false
+        role: role,
+        country: country,
+        institution: institution.trim(),
+        researchInterests: researchInterests,
+        termsAccepted: true,
+        needsOnboarding: false,
+        profilePicture: user?.photoURL || ''
       });
 
+      // Record legal compliance acceptance audit
       await recordPolicyAcceptance(
         user.uid, 
         user.email || '', 
-        user.displayName || 'Scholar User'
+        sanitizedName
       );
 
+      // Successfully finished onboarding
       onComplete();
     } catch (err: any) {
       console.error('Error during Google onboarding submission:', err);
@@ -205,27 +183,33 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
 
       <div className="max-w-xl w-full" id="onboarding_container">
         {/* Header decoration */}
-        <div className="text-center mb-8" id="onboarding_header">
+        <div className="text-center mb-6" id="onboarding_header">
           <div className="inline-flex p-3.5 bg-emerald-50 rounded-2xl mx-auto shadow-xs mb-3 border border-emerald-100/50">
             <Sparkles className="w-6 h-6 text-emerald-600 animate-pulse" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-slate-900 tracking-tight">
-            Complete Your Profile
+            Complete Your Scholar Profile
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-md mx-auto mt-1">
-            Hi, <span className="font-semibold text-slate-800">{user?.displayName || 'Scholar'}</span>! To complete your Google registration, configure your research network credentials below.
+            Hi, <span className="font-semibold text-slate-800">{user?.displayName || 'Google Scholar'}</span>! You're signed in via Google. Please complete the registration questions to configure your research credentials before accessing the dashboard.
           </p>
         </div>
 
         {/* Progress indicator */}
-        <div className="mb-6 px-1 space-y-1.5" id="onboarding_progress">
-          <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            <span>Scholar Registration</span>
-            <span className="text-emerald-700">Step {step} of 2</span>
+        <div className="mb-6 px-1 space-y-2" id="onboarding_progress">
+          <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
+            <span>Onboarding Journey</span>
+            <span className="text-emerald-700">Step {step} of 3</span>
           </div>
-          <div className="flex gap-2.5 h-1.5">
-            <div className={`h-full flex-grow rounded-full transition-all duration-300 ${step >= 1 ? 'bg-emerald-600 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-slate-200'}`}></div>
-            <div className={`h-full flex-grow rounded-full transition-all duration-300 ${step >= 2 ? 'bg-emerald-600 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-slate-200'}`}></div>
+          <div className="flex gap-2" id="onboarding_step_bar">
+            <div className={`h-1.5 flex-grow rounded-full transition-all duration-300 ${step >= 1 ? 'bg-emerald-600 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-slate-200'}`}></div>
+            <div className={`h-1.5 flex-grow rounded-full transition-all duration-300 ${step >= 2 ? 'bg-emerald-600 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-slate-200'}`}></div>
+            <div className={`h-1.5 flex-grow rounded-full transition-all duration-300 ${step >= 3 ? 'bg-emerald-600 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-slate-200'}`}></div>
+          </div>
+          <div className="grid grid-cols-3 text-center text-[9px] font-bold text-slate-400 uppercase tracking-wide">
+            <span className={step === 1 ? 'text-emerald-700' : ''}>1. Account</span>
+            <span className={step === 2 ? 'text-emerald-700' : ''}>2. Role & Origin</span>
+            <span className={step === 3 ? 'text-emerald-700' : ''}>3. Interests & Terms</span>
           </div>
         </div>
 
@@ -247,7 +231,9 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
         {/* Main interactive form card */}
         <form onSubmit={handleSubmit} id="onboarding_form">
           <AnimatePresence mode="wait">
-            {step === 1 ? (
+            
+            {/* STEP 1: Google Account Verification & Identity */}
+            {step === 1 && (
               <motion.div
                 key="onboarding_step_1"
                 initial={{ opacity: 0, x: -15 }}
@@ -257,6 +243,104 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                 className="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-8 space-y-6 shadow-[0_8px_30px_rgb(0,0,0,0.03)]"
                 id="onboarding_step_1_card"
               >
+                <div className="space-y-4">
+                  <div className="border-b border-slate-100 pb-2 flex items-center justify-between">
+                    <h2 className="text-[11px] font-bold text-slate-400 tracking-widest uppercase">
+                      SECTION 1: BASIC ACCOUNT INFORMATION
+                    </h2>
+                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                      Google Verified
+                    </span>
+                  </div>
+
+                  {/* Connected Google Account Badge */}
+                  <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/60 flex items-center gap-3">
+                    {user?.photoURL ? (
+                      <img 
+                        src={user.photoURL} 
+                        alt={user.displayName || 'Google Avatar'} 
+                        className="w-11 h-11 rounded-xl object-cover border border-slate-200 shrink-0" 
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-base border border-emerald-200 shrink-0">
+                        {(user?.displayName || user?.email || 'G').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-slate-900 truncate">
+                        {user?.displayName || 'Google Scholar'}
+                      </p>
+                      <p className="text-[11px] text-slate-500 truncate flex items-center gap-1">
+                        <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                        {user?.email || 'No email attached'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Full Name Confirmation */}
+                  <div className="space-y-1.5 text-left">
+                    <label className="block text-[10px] font-bold text-slate-500 tracking-wider uppercase">
+                      Full Name <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => { setFullName(e.target.value); setErrorMsg(null); }}
+                        placeholder="Blessing Williams"
+                        className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 rounded-xl text-sm outline-none transition-all text-slate-800 font-medium"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Username */}
+                  <div className="space-y-1.5 text-left">
+                    <label className="block text-[10px] font-bold text-slate-500 tracking-wider uppercase">
+                      Username (Optional)
+                    </label>
+                    <div className="relative">
+                      <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => { setUsername(e.target.value); setErrorMsg(null); }}
+                        placeholder="blessing_w"
+                        className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 rounded-xl text-sm outline-none transition-all text-slate-800 font-medium"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 1 Actions */}
+                <div className="pt-2 border-t border-slate-100 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    disabled={!isStep1Valid}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer text-xs sm:text-sm tracking-wider uppercase"
+                  >
+                    <span>Next: Role & Origin</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* STEP 2: User Role & Origin / Location & Institution */}
+            {step === 2 && (
+              <motion.div
+                key="onboarding_step_2"
+                initial={{ opacity: 0, x: 15 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -15 }}
+                transition={{ duration: 0.25 }}
+                className="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-8 space-y-6 shadow-[0_8px_30px_rgb(0,0,0,0.03)]"
+                id="onboarding_step_2_card"
+              >
                 {/* SECTION 2: USER ROLE */}
                 <div className="space-y-4">
                   <div className="border-b border-slate-100 pb-2">
@@ -265,22 +349,13 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                     </h2>
                   </div>
 
-                  <div className="space-y-3">
-                    <label className="block text-[11px] font-bold text-slate-500 tracking-wider uppercase">
-                      I AM A: <span className="text-rose-500">*</span>
+                  <div className="space-y-2.5 text-left">
+                    <label className="block text-[10px] font-bold text-slate-500 tracking-wider uppercase">
+                      I am a: <span className="text-rose-500">*</span>
                     </label>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      {ROLES.map((r, idx) => {
+                    <div className="grid grid-cols-2 gap-2">
+                      {ROLES.map((r) => {
                         const isSelected = role === r.id;
-                        let customSpanStyle: React.CSSProperties = {};
-                        if (idx === 2) {
-                          customSpanStyle = { fontSize: '9px', fontWeight: 'bold' };
-                        } else if (idx === 4) {
-                          customSpanStyle = { fontSize: '9px', paddingLeft: '-12px', fontWeight: 'bold' };
-                        } else if (idx === 5) {
-                          customSpanStyle = { fontSize: '9px', fontWeight: 'bold' };
-                        }
-
                         return (
                           <motion.button
                             key={r.id}
@@ -288,14 +363,14 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => { setRole(r.id); setErrorMsg(null); }}
-                            className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all flex items-center gap-2.5 cursor-pointer min-w-0 ${
+                            className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2 cursor-pointer min-w-0 ${
                               isSelected 
-                                ? 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-2 ring-emerald-500/10 font-bold' 
+                                ? 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-2 ring-emerald-500/20 font-bold' 
                                 : 'bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/5 text-slate-700 font-semibold'
                             }`}
                           >
-                            <span className="text-lg sm:text-xl shrink-0">{r.emoji}</span>
-                            <span className="text-xs leading-tight min-w-0 flex-1 break-words" style={customSpanStyle}>{r.label}</span>
+                            <span className="text-lg shrink-0">{r.emoji}</span>
+                            <span className="text-xs leading-tight min-w-0 flex-1 break-words">{r.label}</span>
                           </motion.button>
                         );
                       })}
@@ -311,18 +386,18 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                     </h2>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="block text-[11px] font-bold text-slate-500 tracking-wider uppercase">
-                      COUNTRY <span className="text-rose-500">*</span>
+                  <div className="space-y-1.5 text-left">
+                    <label className="block text-[10px] font-bold text-slate-500 tracking-wider uppercase">
+                      Country <span className="text-rose-500">*</span>
                     </label>
 
                     <div className="relative">
                       <button
                         type="button"
                         onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
-                        className="w-full flex items-center justify-between pl-4 pr-10 py-3 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm text-left transition-all outline-none"
+                        className="w-full flex items-center justify-between pl-4 pr-10 py-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm text-left transition-all outline-none"
                       >
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-2">
                           <Globe className="w-4 h-4 text-slate-400" />
                           <span className={country ? 'text-slate-800 font-semibold' : 'text-slate-400'}>
                             {country || 'Select your country'}
@@ -338,11 +413,11 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 5 }}
-                            className="absolute left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden max-h-60 flex flex-col"
+                            className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden max-h-60 flex flex-col"
                           >
                             {/* Dropdown Search */}
-                            <div className="p-2.5 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
-                              <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                            <div className="p-2 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
+                              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                               <input
                                 type="text"
                                 value={countrySearch}
@@ -353,7 +428,7 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                               />
                               {countrySearch.length > 0 && (
                                 <button type="button" onClick={() => setCountrySearch('')}>
-                                  <X className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600" />
+                                  <X className="w-3 h-3 text-slate-400" />
                                 </button>
                               )}
                             </div>
@@ -363,8 +438,8 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                               {/* African Nations group */}
                               {filteredAfrican.length > 0 && (
                                 <div>
-                                  <div className="bg-emerald-50/50 text-emerald-800 font-bold px-3 py-2 uppercase text-[9px] tracking-wider flex items-center gap-1.5 sticky top-0 backdrop-blur-xs">
-                                    <Compass className="w-3.5 h-3.5 text-emerald-600" />
+                                  <div className="bg-emerald-50/50 text-emerald-800 font-bold px-3 py-1.5 uppercase text-[9px] tracking-wider flex items-center gap-1 sticky top-0">
+                                    <Compass className="w-3 h-3 text-emerald-600" />
                                     African Nations
                                   </div>
                                   {filteredAfrican.map((c) => (
@@ -377,10 +452,10 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                                         setCountrySearch('');
                                         setErrorMsg(null);
                                       }}
-                                      className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center justify-between text-slate-700 font-semibold"
+                                      className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center justify-between text-slate-700 font-semibold"
                                     >
                                       <span>{c}</span>
-                                      {country === c && <Check className="w-4 h-4 text-emerald-600" />}
+                                      {country === c && <Check className="w-3.5 h-3.5 text-emerald-600" />}
                                     </button>
                                   ))}
                                 </div>
@@ -389,7 +464,7 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                               {/* Other Nations group */}
                               {filteredOther.length > 0 && (
                                 <div>
-                                  <div className="bg-slate-100/80 text-slate-500 font-bold px-3 py-2 uppercase text-[9px] tracking-wider sticky top-0 backdrop-blur-xs">
+                                  <div className="bg-slate-100/80 text-slate-500 font-bold px-3 py-1.5 uppercase text-[9px] tracking-wider sticky top-0">
                                     Other Countries
                                   </div>
                                   {filteredOther.map((c) => (
@@ -402,17 +477,17 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                                         setCountrySearch('');
                                         setErrorMsg(null);
                                       }}
-                                      className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center justify-between text-slate-700 font-semibold"
+                                      className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center justify-between text-slate-700 font-semibold"
                                     >
                                       <span>{c}</span>
-                                      {country === c && <Check className="w-4 h-4 text-emerald-600" />}
+                                      {country === c && <Check className="w-3.5 h-3.5 text-emerald-600" />}
                                     </button>
                                   ))}
                                 </div>
                               )}
 
                               {filteredAfrican.length === 0 && filteredOther.length === 0 && (
-                                <p className="p-4 text-slate-400 italic text-center">No countries match your search.</p>
+                                <p className="p-3 text-slate-400 italic text-center">No countries matched search.</p>
                               )}
                             </div>
                           </motion.div>
@@ -430,53 +505,56 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                     </h2>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="block text-[11px] font-bold text-slate-500 tracking-wider uppercase">
-                      INSTITUTION OR ORGANIZATION
+                  <div className="space-y-1.5 text-left">
+                    <label className="block text-[10px] font-bold text-slate-500 tracking-wider uppercase">
+                      Institution or Organization
                     </label>
                     <div className="relative">
-                      <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                      <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input
                         type="text"
                         value={institution}
                         onChange={(e) => setInstitution(e.target.value)}
                         placeholder="e.g. University of Lagos"
-                        className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 rounded-xl text-sm outline-none transition-all text-slate-800"
+                        className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 rounded-xl text-sm outline-none transition-all text-slate-800"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Action footer */}
-                <div className="pt-4 border-t border-slate-100 flex justify-between items-center gap-4">
+                {/* Step 2 Actions */}
+                <div className="flex gap-3 pt-2 border-t border-slate-100">
                   <button
                     type="button"
-                    onClick={handleSkip}
-                    className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-wider cursor-pointer bg-transparent border-none outline-none"
-                    title="You can complete your profile details later"
+                    onClick={() => setStep(1)}
+                    className="w-1/2 py-3 border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm tracking-wider uppercase transition-colors"
                   >
-                    Skip for Now
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Back</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setStep(2)}
-                    disabled={!isStep1Valid}
-                    className="py-3 px-6 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer text-xs sm:text-sm tracking-wider uppercase"
+                    onClick={() => setStep(3)}
+                    disabled={!isStep2Valid}
+                    className="w-1/2 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer text-xs sm:text-sm tracking-wider uppercase"
                   >
-                    <span>Next</span>
+                    <span>Next: Interests</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
               </motion.div>
-            ) : (
+            )}
+
+            {/* STEP 3: Research Interests & Terms Checkbox */}
+            {step === 3 && (
               <motion.div
-                key="onboarding_step_2"
+                key="onboarding_step_3"
                 initial={{ opacity: 0, x: 15 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -15 }}
                 transition={{ duration: 0.25 }}
                 className="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-8 space-y-6 shadow-[0_8px_30px_rgb(0,0,0,0.03)]"
-                id="onboarding_step_2_card"
+                id="onboarding_step_3_card"
               >
                 {/* SECTION 5: RESEARCH INTERESTS */}
                 <div className="space-y-4">
@@ -486,11 +564,11 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                     </h2>
                   </div>
 
-                  <div className="space-y-3">
-                    <p className="text-[11px] text-slate-400 italic">
+                  <div className="space-y-2 text-left">
+                    <p className="text-[10px] text-slate-400 italic">
                       Select up to 10 key research fields of interest to filter your scientific feed:
                     </p>
-                    <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto p-1.5 scrollbar-thin">
+                    <div className="flex flex-wrap gap-1.5 max-h-56 overflow-y-auto p-1 scrollbar-thin">
                       {INTERESTS.map((interest) => {
                         const isSelected = researchInterests.includes(interest);
                         return (
@@ -498,14 +576,14 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                             key={interest}
                             type="button"
                             onClick={() => handleToggleInterest(interest)}
-                            className={`px-3.5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
+                            className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all cursor-pointer flex items-center gap-1 ${
                               isSelected 
                                 ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs' 
-                                : 'bg-slate-50 hover:bg-emerald-50/20 border-slate-200 text-slate-600 hover:border-emerald-300'
+                                : 'bg-white border-slate-200 text-slate-600 hover:border-emerald-300 hover:bg-emerald-50/5'
                             }`}
                           >
                             {interest}
-                            {isSelected && <X className="w-3.5 h-3.5 text-white shrink-0" />}
+                            {isSelected && <X className="w-3 h-3 text-white shrink-0 ml-0.5" />}
                           </button>
                         );
                       })}
@@ -514,76 +592,72 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
                 </div>
 
                 {/* SECTION 6: TERMS AND PRIVACY */}
-                <div className="space-y-4 pt-4 border-t border-slate-100">
-                  <div>
-                    <h2 className="text-[11px] font-bold text-slate-400 tracking-widest uppercase">
-                      SECTION 6: TERMS AND PRIVACY
-                    </h2>
-                  </div>
-
-                  <div className="space-y-3">
-                    <label className="flex items-start gap-3 text-xs font-semibold text-slate-600 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={termsChecked}
-                        onChange={(e) => setTermsChecked(e.target.checked)}
-                        className="rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 w-5 h-5 cursor-pointer shrink-0 mt-0.5"
-                        required
-                      />
-                      <span className="leading-relaxed text-slate-500">
-                        I agree to the{' '}
-                        <a 
-                          href="#" 
-                          onClick={(e) => { e.preventDefault(); window.open('#', '_blank'); }} 
-                          className="text-emerald-700 hover:text-emerald-900 underline font-bold"
-                        >
-                          Terms of Service
-                        </a>{' '}
-                        and{' '}
-                        <a 
-                          href="#" 
-                          onClick={(e) => { e.preventDefault(); window.open('#', '_blank'); }} 
-                          className="text-emerald-700 hover:text-emerald-900 underline font-bold"
-                        >
-                          Privacy Policy
-                        </a>. <span className="text-rose-500">*</span>
-                      </span>
-                    </label>
-                  </div>
+                <div className="space-y-3 text-left pt-3 border-t border-slate-100">
+                  <h2 className="text-[11px] font-bold text-slate-400 tracking-widest uppercase pb-1">
+                    SECTION 6: TERMS AND PRIVACY
+                  </h2>
+                  <label className="flex items-start gap-2.5 text-xs font-semibold text-slate-600 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={termsChecked}
+                      onChange={(e) => setTermsChecked(e.target.checked)}
+                      className="rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 w-4.5 h-4.5 cursor-pointer shrink-0 mt-0.5"
+                      required
+                    />
+                    <span className="leading-relaxed text-slate-500">
+                      I agree to the{' '}
+                      <a 
+                        href="/legal/terms" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-emerald-700 hover:text-emerald-900 underline font-bold"
+                      >
+                        Terms and Conditions
+                      </a>,{' '}
+                      <a 
+                        href="/legal/privacy" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-emerald-700 hover:text-emerald-900 underline font-bold"
+                      >
+                        Privacy Policy
+                      </a>, and{' '}
+                      <a 
+                        href="/legal/community" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-emerald-700 hover:text-emerald-900 underline font-bold"
+                      >
+                        Community Guidelines
+                      </a>. <span className="text-rose-500">*</span>
+                    </span>
+                  </label>
                 </div>
 
-                {/* Action footer */}
-                <div className="pt-4 border-t border-slate-100 flex gap-4">
+                {/* Step 3 Actions */}
+                <div className="flex gap-3 pt-2 border-t border-slate-100">
                   <button
                     type="button"
-                    onClick={() => setStep(1)}
-                    className="w-1/4 py-3 border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm tracking-wider uppercase transition-colors"
+                    onClick={() => setStep(2)}
+                    className="w-1/3 py-3 border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm tracking-wider uppercase transition-colors"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     <span>Back</span>
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={handleSkip}
-                    className="w-1/4 py-3 border border-transparent hover:bg-slate-100 text-slate-400 hover:text-slate-600 font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm tracking-wider uppercase transition-colors"
-                  >
-                    <span>Skip</span>
-                  </button>
-
+                  
                   <motion.button
                     type="submit"
                     disabled={!termsChecked || isLoading}
                     whileHover={termsChecked && !isLoading ? { scale: 1.01, boxShadow: '0 4px 14px rgba(16, 185, 129, 0.25)' } : {}}
                     whileTap={termsChecked && !isLoading ? { scale: 0.99 } : {}}
-                    className="w-2/4 py-3 bg-gradient-to-t from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 disabled:bg-slate-300 disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-extrabold rounded-xl flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all border-t border-white/10 text-[10px] sm:text-xs tracking-tight uppercase whitespace-nowrap px-2"
+                    className="w-2/3 py-3 bg-gradient-to-t from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 disabled:bg-slate-300 disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-extrabold rounded-xl flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all border-t border-white/10 text-[10px] sm:text-xs tracking-tight uppercase whitespace-nowrap px-2"
                     id="onboarding_submit_btn"
                   >
                     {isLoading ? (
-                      <Loader2 className="w-4.5 h-4.5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <>
-                        <span>Create Research Account</span>
+                        <span>Complete Scholar Registration</span>
                         <ArrowRight className="w-3.5 h-3.5 shrink-0" />
                       </>
                     )}

@@ -600,21 +600,31 @@ export default function App() {
   // Protected User Routes guard check
   useEffect(() => {
     if (authLoading) return;
-    const protectedViews = ['dashboard', 'profile', 'settings', 'messages', 'notifications', 'onboarding'];
-    if (protectedViews.includes(currentView) && !user) {
-      console.warn(`[ROUTE GUARD] Unauthenticated attempt to access protected route "${currentView}". Redirecting to home.`);
-      setView('home');
+    const protectedViews = ['dashboard', 'profile', 'settings', 'messages', 'notifications'];
+    if (protectedViews.includes(currentView)) {
+      if (!user) {
+        console.warn(`[ROUTE GUARD] Unauthenticated attempt to access protected route "${currentView}". Redirecting to home.`);
+        setView('home');
+      } else if (needsOnboarding || (userProfile && (userProfile.needsOnboarding || !userProfile.role || !userProfile.country))) {
+        console.warn(`[ROUTE GUARD] User has not completed onboarding. Redirecting to onboarding questions.`);
+        setView('onboarding');
+      }
     }
-  }, [currentView, user, authLoading]);
+  }, [currentView, user, authLoading, needsOnboarding, userProfile]);
 
-  // Home Page Guard check: Signed-in users are directed to dashboard
+  // Home Page Guard check: Signed-in users are directed to dashboard or onboarding
   useEffect(() => {
     if (authLoading) return;
     if (user && currentView === 'home') {
-      console.log(`[ROUTE GUARD] Signed-in user directed to dashboard from home route.`);
-      setView('dashboard');
+      if (needsOnboarding || (userProfile && (userProfile.needsOnboarding || !userProfile.role || !userProfile.country))) {
+        console.log(`[ROUTE GUARD] Signed-in user directed to onboarding from home route.`);
+        setView('onboarding');
+      } else {
+        console.log(`[ROUTE GUARD] Signed-in user directed to dashboard from home route.`);
+        setView('dashboard');
+      }
     }
-  }, [currentView, user, authLoading]);
+  }, [currentView, user, authLoading, needsOnboarding, userProfile]);
 
   // Sync user info
   const refreshAllUserData = async (userId: string) => {
@@ -630,11 +640,10 @@ export default function App() {
       setActivePartnerships(partnerships || []);
       setUserProfileState(profile || null);
 
-      if (profile && profile.needsOnboarding) {
+      const userNeedsOnboarding = Boolean(!profile || profile.needsOnboarding === true || !profile.role || !profile.country);
+      if (userNeedsOnboarding) {
         setNeedsOnboarding(true);
-        if (sessionStorage.getItem('nexus_system_initialized') === 'true') {
-          setView('onboarding');
-        }
+        setView('onboarding');
       } else {
         setNeedsOnboarding(false);
         // Do not force route to dashboard if current view is already 'admin'
@@ -668,8 +677,8 @@ export default function App() {
       }
       if (res && res.user) {
         setUser(res.user);
+        await refreshAllUserData(res.user.uid);
       }
-      setView('dashboard');
     } catch (err: any) {
       console.warn('Google Sign-In failed or was restricted:', err);
       const errStr = String(err);
