@@ -110,6 +110,10 @@ export function isDemoModeActive(userId?: string): boolean {
   if (userId && (userId === 'sandbox-guest-user' || userId === 'demo-scholar-guest' || userId.startsWith('sandbox-') || userId.startsWith('demo-'))) {
     return true;
   }
+  // If an authenticated, real Firebase user is active and online, prioritize real Firestore
+  if (auth.currentUser && !auth.currentUser.isAnonymous && auth.currentUser.uid === userId && !isFirestoreOffline) {
+    return false;
+  }
   return localStorage.getItem('nexus_demo_mode') === 'true' || 
          localStorage.getItem('nexus_demo_user') !== null || 
          isFirestoreOffline;
@@ -793,8 +797,25 @@ export async function createUserProfile(userId: string, profile: any): Promise<v
     researchInterests: profile.researchInterests || [],
     termsAccepted: profile.termsAccepted !== undefined ? Boolean(profile.termsAccepted) : true,
     needsOnboarding: profile.needsOnboarding !== undefined ? Boolean(profile.needsOnboarding) : false,
+    onboardingCompleted: true,
     ...profile,
   };
+
+  // Always store in local storage as well for instant responsiveness & offline fallback
+  try {
+    const localUpdated = {
+      ...sanitizedProfile,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem(`nexus_demo_profile_${userId}`, JSON.stringify(localUpdated));
+    localStorage.setItem(`onboarding_completed_${userId}`, 'true');
+    if (sanitizedProfile.email) {
+      localStorage.setItem(`onboarding_completed_${sanitizedProfile.email.toLowerCase()}`, 'true');
+    }
+  } catch (e) {
+    console.warn('Could not cache user profile to localStorage:', e);
+  }
 
   if (isDemoModeActive(userId)) {
     const updated = {
@@ -802,7 +823,6 @@ export async function createUserProfile(userId: string, profile: any): Promise<v
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    localStorage.setItem(`nexus_demo_profile_${userId}`, JSON.stringify(updated));
     await syncUserProfileToResearcher(userId, updated);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId, profile: updated } }));
@@ -815,6 +835,8 @@ export async function createUserProfile(userId: string, profile: any): Promise<v
     const docRef = doc(db, path, userId);
     const cleanPayload = sanitizeForFirestore({
       ...sanitizedProfile,
+      onboardingCompleted: true,
+      needsOnboarding: false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -833,10 +855,7 @@ export async function createUserProfile(userId: string, profile: any): Promise<v
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    try {
-      localStorage.setItem(`nexus_demo_profile_${userId}`, JSON.stringify(updated));
-      await syncUserProfileToResearcher(userId, updated);
-    } catch {}
+    await syncUserProfileToResearcher(userId, updated);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: { userId, profile: updated } }));
     }
@@ -902,6 +921,8 @@ export async function saveUserProfileByAdmin(userId: string, data: any): Promise
 }
 
 export async function getUserProfile(userId: string): Promise<any> {
+  const localCompleted = typeof window !== 'undefined' && localStorage.getItem(`onboarding_completed_${userId}`) === 'true';
+
   if (isDemoModeActive(userId)) {
     const data = localStorage.getItem(`nexus_demo_profile_${userId}`);
     if (!data && userId === 'sandbox-admin-bola') {
@@ -915,12 +936,26 @@ export async function getUserProfile(userId: string): Promise<any> {
         researchInterests: ['Bioenergy', 'Circular Economy', 'Nuclear Energy'],
         termsAccepted: true,
         verified: true,
-        verificationStatus: 'verified'
+        verificationStatus: 'verified',
+        needsOnboarding: false,
+        onboardingCompleted: true
       };
       localStorage.setItem(`nexus_demo_profile_${userId}`, JSON.stringify(defaultAdminProfile));
       return defaultAdminProfile;
     }
-    return data ? JSON.parse(data) : null;
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.onboardingCompleted || parsed.needsOnboarding === false || (parsed.role && parsed.country) || localCompleted) {
+          parsed.needsOnboarding = false;
+          parsed.onboardingCompleted = true;
+        }
+        return parsed;
+      } catch (e) {
+        console.error('Error parsing local profile:', e);
+      }
+    }
+    return null;
   }
 
   const path = 'users';
@@ -928,7 +963,46 @@ export async function getUserProfile(userId: string): Promise<any> {
     const docRef = doc(db, path, userId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() };
+      const data = docSnap.data();
+      const isCompleted = data.onboardingCompleted === true || data.needsOnboarding === false || (Boolean(data.role) && Boolean(data.country)) || localCompleted;
+      return { 
+        id: docSnap.id, 
+        ...data,
+        needsOnboarding: isCompleted ? false : (data.needsOnboarding ?? true),
+        onboardingCompleted: isCompleted
+      };
+    }
+
+    // Check if the user already completed onboarding in local storage fallback
+    const cachedData = typeof window !== 'undefined' ? localStorage.getItem(`nexus_demo_profile_${userId}`) : null;
+    if (cachedData) {
+      try {
+        const parsed = JSON.parse(cachedData);
+        if (parsed && (parsed.role && parsed.country || parsed.onboardingCompleted || localCompleted)) {
+          return {
+            id: userId,
+            ...parsed,
+            needsOnboarding: false,
+            onboardingCompleted: true
+          };
+        }
+      } catch {}
+    }
+
+    if (localCompleted) {
+      const currentUser = auth.currentUser;
+      return {
+        id: userId,
+        needsOnboarding: false,
+        onboardingCompleted: true,
+        fullName: currentUser?.displayName || 'Google Scholar',
+        email: currentUser?.email || '',
+        role: 'Researcher',
+        country: 'Nigeria',
+        institution: '',
+        researchInterests: [],
+        termsAccepted: true
+      };
     }
 
     // Check if the user is authenticated via Firebase but does not have a profile document yet (e.g. Google Sign-In registration)
@@ -937,6 +1011,7 @@ export async function getUserProfile(userId: string): Promise<any> {
       return {
         id: userId,
         needsOnboarding: true,
+        onboardingCompleted: false,
         fullName: currentUser.displayName || 'Google Scholar',
         email: currentUser.email || '',
         role: '',
@@ -955,7 +1030,12 @@ export async function getUserProfile(userId: string): Promise<any> {
     }
     console.warn('Error fetching user profile from Firestore, trying local storage fallback:', error);
     const data = localStorage.getItem(`nexus_demo_profile_${userId}`);
-    return data ? JSON.parse(data) : null;
+    if (data) {
+      try {
+        return JSON.parse(data);
+      } catch {}
+    }
+    return null;
   }
 }
 

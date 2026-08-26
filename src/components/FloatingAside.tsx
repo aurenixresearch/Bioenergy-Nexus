@@ -190,7 +190,7 @@ export default function FloatingAside({
         category: 'workspace'
       },
       {
-        label: 'AI Research & Support',
+        label: 'Aurenix AI Support System',
         id: 'ai-assistant',
         icon: Sparkles,
         isAi: true,
@@ -290,6 +290,9 @@ export default function FloatingAside({
 
   const handleNavClick = (viewId: string) => {
     setView(viewId);
+    if (viewId === 'ai-assistant') {
+      window.dispatchEvent(new CustomEvent('open-ai-assistant'));
+    }
     setIsOpen(false);
     setSearchQuery('');
   };
@@ -718,7 +721,7 @@ export default function FloatingAside({
                   }`}
                 >
                   <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
-                  <span className="text-[10px] leading-tight truncate max-w-full">AI Assistant</span>
+                  <span className="text-[10px] leading-tight truncate max-w-full">AI Support</span>
                 </button>
 
                 <button

@@ -140,8 +140,19 @@ export default function OnboardingPage({ user, onComplete, onSignOut }: Onboardi
         researchInterests: researchInterests,
         termsAccepted: true,
         needsOnboarding: false,
+        onboardingCompleted: true,
         profilePicture: user?.photoURL || ''
       });
+
+      // Mark completion in persistent browser storage so it is never re-prompted
+      try {
+        localStorage.setItem(`onboarding_completed_${user.uid}`, 'true');
+        if (user.email) {
+          localStorage.setItem(`onboarding_completed_${user.email.toLowerCase()}`, 'true');
+        }
+      } catch (e) {
+        console.warn('Could not set local storage onboarding flag:', e);
+      }
 
       // Record legal compliance acceptance audit
       await recordPolicyAcceptance(

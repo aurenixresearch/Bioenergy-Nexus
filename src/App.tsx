@@ -520,18 +520,51 @@ export default function App() {
     try {
       const docRef = doc(db, 'users', userId);
       const unsubscribeSnap = onSnapshot(docRef, (docSnap) => {
+        const isLocalCompleted = typeof window !== 'undefined' && localStorage.getItem(`onboarding_completed_${userId}`) === 'true';
+
         if (docSnap.exists()) {
           const profileData = { id: docSnap.id, ...docSnap.data() } as any;
           console.log(`[REAL-TIME ROLE AUDIT] Role loaded from Firestore for ${userId}: "${profileData?.role}"`);
+          
+          const isCompleted = 
+            profileData.onboardingCompleted === true || 
+            profileData.needsOnboarding === false || 
+            (Boolean(profileData.role) && Boolean(profileData.country)) || 
+            isLocalCompleted;
+
+          if (isCompleted) {
+            profileData.needsOnboarding = false;
+            profileData.onboardingCompleted = true;
+            setNeedsOnboarding(false);
+          }
           setUserProfileState(profileData);
         } else {
           console.warn(`[REAL-TIME ROLE AUDIT] No Firestore document found for user: ${userId}`);
-          // If no doc exists but user is authenticated, construct a default onboarding/transient profile
           const currentUser = auth.currentUser;
-          if (currentUser && currentUser.uid === userId && !currentUser.isAnonymous) {
+          const localProfileStr = typeof window !== 'undefined' ? localStorage.getItem(`nexus_demo_profile_${userId}`) : null;
+          
+          if (isLocalCompleted || localProfileStr) {
+            let localProf: any = {};
+            try { if (localProfileStr) localProf = JSON.parse(localProfileStr); } catch {}
+            setUserProfileState({
+              id: userId,
+              needsOnboarding: false,
+              onboardingCompleted: true,
+              fullName: currentUser?.displayName || localProf.fullName || 'Google Scholar',
+              email: currentUser?.email || localProf.email || '',
+              role: localProf.role || 'Researcher',
+              country: localProf.country || 'Nigeria',
+              institution: localProf.institution || '',
+              researchInterests: localProf.researchInterests || [],
+              termsAccepted: true,
+              ...localProf
+            });
+            setNeedsOnboarding(false);
+          } else if (currentUser && currentUser.uid === userId && !currentUser.isAnonymous) {
             const transientProfile = {
               id: userId,
               needsOnboarding: true,
+              onboardingCompleted: false,
               fullName: currentUser.displayName || 'Google Scholar',
               email: currentUser.email || '',
               role: '',
@@ -542,6 +575,7 @@ export default function App() {
             };
             console.log(`[REAL-TIME ROLE AUDIT] Constructing transient profile for onboarding: "${transientProfile.role}"`);
             setUserProfileState(transientProfile);
+            setNeedsOnboarding(true);
           }
         }
       }, (error) => {
@@ -556,7 +590,11 @@ export default function App() {
       const handleProfileUpdated = (e: Event) => {
         const customEvent = e as CustomEvent;
         if (customEvent.detail && customEvent.detail.userId === userId) {
-          setUserProfileState(customEvent.detail.profile);
+          const prof = customEvent.detail.profile;
+          if (prof && (prof.onboardingCompleted || prof.needsOnboarding === false || (prof.role && prof.country))) {
+            setNeedsOnboarding(false);
+          }
+          setUserProfileState(prof);
         }
       };
       window.addEventListener('user-profile-updated', handleProfileUpdated as EventListener);
@@ -605,9 +643,17 @@ export default function App() {
       if (!user) {
         console.warn(`[ROUTE GUARD] Unauthenticated attempt to access protected route "${currentView}". Redirecting to home.`);
         setView('home');
-      } else if (needsOnboarding || (userProfile && (userProfile.needsOnboarding || !userProfile.role || !userProfile.country))) {
-        console.warn(`[ROUTE GUARD] User has not completed onboarding. Redirecting to onboarding questions.`);
-        setView('onboarding');
+      } else {
+        const isCompleted = 
+          userProfile?.onboardingCompleted === true || 
+          userProfile?.needsOnboarding === false || 
+          (Boolean(userProfile?.role) && Boolean(userProfile?.country)) ||
+          (typeof window !== 'undefined' && localStorage.getItem(`onboarding_completed_${user.uid}`) === 'true');
+
+        if (!isCompleted && needsOnboarding) {
+          console.warn(`[ROUTE GUARD] User has not completed onboarding. Redirecting to onboarding questions.`);
+          setView('onboarding');
+        }
       }
     }
   }, [currentView, user, authLoading, needsOnboarding, userProfile]);
@@ -616,7 +662,13 @@ export default function App() {
   useEffect(() => {
     if (authLoading) return;
     if (user && currentView === 'home') {
-      if (needsOnboarding || (userProfile && (userProfile.needsOnboarding || !userProfile.role || !userProfile.country))) {
+      const isCompleted = 
+        userProfile?.onboardingCompleted === true || 
+        userProfile?.needsOnboarding === false || 
+        (Boolean(userProfile?.role) && Boolean(userProfile?.country)) ||
+        (typeof window !== 'undefined' && localStorage.getItem(`onboarding_completed_${user.uid}`) === 'true');
+
+      if (!isCompleted && needsOnboarding) {
         console.log(`[ROUTE GUARD] Signed-in user directed to onboarding from home route.`);
         setView('onboarding');
       } else {
@@ -640,7 +692,13 @@ export default function App() {
       setActivePartnerships(partnerships || []);
       setUserProfileState(profile || null);
 
-      const userNeedsOnboarding = Boolean(!profile || profile.needsOnboarding === true || !profile.role || !profile.country);
+      const isLocalCompleted = typeof window !== 'undefined' && localStorage.getItem(`onboarding_completed_${userId}`) === 'true';
+      const userNeedsOnboarding = Boolean(
+        (!profile && !isLocalCompleted) || 
+        (profile?.needsOnboarding === true && !isLocalCompleted) || 
+        (!profile?.role && !profile?.country && !isLocalCompleted && profile?.onboardingCompleted !== true)
+      );
+
       if (userNeedsOnboarding) {
         setNeedsOnboarding(true);
         setView('onboarding');
@@ -665,6 +723,8 @@ export default function App() {
   const handleSignIn = async () => {
     try {
       setAuthError(null);
+      localStorage.removeItem('nexus_demo_mode');
+      localStorage.removeItem('nexus_demo_user');
       let res;
       try {
         res = await signInWithPopup(auth, googleProvider);
@@ -1432,6 +1492,12 @@ export default function App() {
                   user={user}
                   onComplete={async () => {
                     setNeedsOnboarding(false);
+                    try {
+                      localStorage.setItem(`onboarding_completed_${user.uid}`, 'true');
+                      if (user.email) {
+                        localStorage.setItem(`onboarding_completed_${user.email.toLowerCase()}`, 'true');
+                      }
+                    } catch {}
                     await refreshAllUserData(user.uid);
                     setView('dashboard');
                   }}
@@ -1534,6 +1600,7 @@ export default function App() {
                   user={user || (DEMO_GUEST_USER as any)}
                   userProfile={userProfile}
                   onNavigateToView={setView}
+                  onClose={() => setView(user ? 'dashboard' : 'home')}
                 />
               </motion.div>
             )}
