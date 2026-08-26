@@ -223,24 +223,21 @@ export default function SignInPage({
     setIsLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1200));
       setSuccessMsg('Your password has been securely updated! Logging in...');
       
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
 
-      setTimeout(async () => {
-        const targetEmail = email || 'blessing.williams@aurenix-research.org';
-        const matchingDemo = demoProfiles.find(p => p.email === targetEmail) || demoProfiles[0];
-        
-        await onGuestSignIn({
-          uid: matchingDemo.uid,
-          email: matchingDemo.email,
-          displayName: matchingDemo.displayName
-        });
-        setIsLoading(false);
-      }, 1000);
+      const targetEmail = email || 'blessing.williams@aurenix-research.org';
+      const matchingDemo = demoProfiles.find(p => p.email === targetEmail) || demoProfiles[0];
+      
+      await onGuestSignIn({
+        uid: matchingDemo.uid,
+        email: matchingDemo.email,
+        displayName: matchingDemo.displayName
+      });
+      setIsLoading(false);
 
     } catch (err: any) {
       console.error('Password Reset Error:', err);
@@ -354,10 +351,7 @@ export default function SignInPage({
       await recordPolicyAcceptance(registeredUser.uid, regEmail, fullName);
 
       setSuccessMsg('Account registered successfully! Configuring research environment...');
-      
-      setTimeout(() => {
-        onSuccess(registeredUser);
-      }, 1200);
+      onSuccess(registeredUser);
 
     } catch (err: any) {
       console.error('Onboarding Registration Failure:', err);

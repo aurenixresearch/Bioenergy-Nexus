@@ -616,7 +616,10 @@ export default function OrganizationDashboard({
         </div>
 
         {/* 4. NAVIGATION TABS */}
-        <div className="border-b border-slate-200 flex items-center gap-1 sm:gap-2 overflow-x-auto pb-px">
+        <div 
+          className="w-full border-b border-slate-200 flex items-center gap-1.5 sm:gap-2 overflow-x-auto scroll-smooth py-1 sm:py-0 pb-px [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x px-1 sm:px-0"
+          id="org_dashboard_navigation_tabs"
+        >
           {[
             { id: 'alliances', label: 'Active Alliances', count: activeAlliancesList.length, icon: Building2 },
             { id: 'drafts', label: 'Drafts', count: draftAlliancesList.length, icon: FilePlus },
@@ -631,17 +634,18 @@ export default function OrganizationDashboard({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as OrgTab)}
-                className={`px-4 py-3 text-xs font-bold flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+                id={`org_tab_${tab.id}`}
+                className={`shrink-0 min-h-[42px] sm:min-h-[46px] px-3 py-2 sm:px-4 sm:py-3 text-xs font-bold flex items-center gap-1.5 sm:gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer select-none rounded-t-xl ${
                   isSelected 
-                    ? 'border-emerald-600 text-emerald-700 bg-white/60 rounded-t-xl' 
-                    : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300'
+                    ? 'border-emerald-600 text-emerald-700 bg-emerald-50/60 sm:bg-white/60 shadow-2xs' 
+                    : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-100/60'
                 }`}
               >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
+                <Icon className={`w-4 h-4 shrink-0 transition-colors ${isSelected ? 'text-emerald-600' : 'text-slate-400'}`} />
+                <span className="truncate">{tab.label}</span>
                 {tab.count !== undefined && (
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                    isSelected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                  <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold transition-colors ${
+                    isSelected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200/70 text-slate-600'
                   }`}>
                     {tab.count}
                   </span>

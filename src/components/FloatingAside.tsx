@@ -34,6 +34,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { subscribeToUnreadCount } from '../services/messagingDb';
+import { preloadRoute } from '../utils/routePreloader';
 
 interface FloatingAsideProps {
   user: FirebaseUser | null;
@@ -414,6 +415,8 @@ export default function FloatingAside({
                       key={item.id}
                       type="button"
                       onClick={() => handleNavClick(item.id)}
+                      onMouseEnter={() => preloadRoute(item.id)}
+                      onTouchStart={() => preloadRoute(item.id)}
                       title={collapsed ? item.label : undefined}
                       className={`w-full flex items-center transition-all duration-150 cursor-pointer text-left rounded-xl overflow-hidden border-0 ${
                         collapsed ? 'px-2 py-3 justify-center' : 'px-3 py-2.5'

@@ -27,6 +27,7 @@ import SeoManager from './components/seo/SeoManager';
 import ErrorBoundary from './components/ErrorBoundary';
 import SignInPage from './components/SignInPage';
 import { RESEARCH_PAPERS } from './data';
+import { initBackgroundPreloading, preloadRoute } from './utils/routePreloader';
 
 // Safe lazy loading helper with retry & cache recovery
 function safeLazy<T extends React.ComponentType<any>>(
@@ -77,10 +78,16 @@ import FloatingAiWidget from './components/ai/FloatingAiWidget';
 
 function ViewLoadingFallback() {
   return (
-    <div className="w-full min-h-[60vh] flex items-center justify-center bg-slate-50/50 dark:bg-slate-950/50">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 rounded-full border-2 border-emerald-600 border-t-transparent animate-spin" />
-        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Loading view...</span>
+    <div className="w-full min-h-[70vh] py-8 px-4 sm:px-8 max-w-[96%] sm:max-w-[94%] lg:max-w-[92%] 2xl:max-w-[1400px] mx-auto animate-pulse text-left space-y-6">
+      <div className="space-y-3 max-w-2xl">
+        <div className="h-7 bg-slate-200/70 dark:bg-slate-800/60 rounded-xl w-1/3" />
+        <div className="h-4 bg-slate-200/50 dark:bg-slate-800/40 rounded-lg w-2/3" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+        <div className="h-48 bg-slate-200/50 dark:bg-slate-800/40 rounded-2xl" />
+        <div className="h-48 bg-slate-200/50 dark:bg-slate-800/40 rounded-2xl" />
+        <div className="h-48 bg-slate-200/50 dark:bg-slate-800/40 rounded-2xl" />
       </div>
     </div>
   );
@@ -221,15 +228,19 @@ export default function App() {
 
   const navigateTo = (path: string) => {
     window.history.pushState(null, '', path);
-    setRouteState(parseUrl());
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    React.startTransition(() => {
+      setRouteState(parseUrl());
+    });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const setView = (view: string) => {
     let effectiveView = view === 'saved_studies' ? 'saved' : (view === 'collaborations' ? 'collaboration' : view);
 
     if (effectiveView === 'initializing') {
-      setRouteState({ view: 'initializing', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null });
+      React.startTransition(() => {
+        setRouteState({ view: 'initializing', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null });
+      });
       return;
     }
 
@@ -285,8 +296,13 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Preload views in idle background
+    initBackgroundPreloading();
+
     const handlePopState = () => {
-      setRouteState(parseUrl());
+      React.startTransition(() => {
+        setRouteState(parseUrl());
+      });
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -1327,14 +1343,15 @@ export default function App() {
             {currentView === 'profile' && (
               <motion.div
                 key="profile-page"
-                initial={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0.96, y: 2 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0 }}
+                transition={{ duration: 0.15 }}
               >
                 <ProfilePage 
                   user={user || (DEMO_GUEST_USER as any)}
                   onNavigateToView={setView}
                   theme={theme}
+                  initialProfile={userProfile}
                 />
               </motion.div>
             )}
@@ -1342,15 +1359,16 @@ export default function App() {
             {currentView === 'settings' && (
               <motion.div
                 key="settings-page"
-                initial={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0.96, y: 2 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0 }}
+                transition={{ duration: 0.15 }}
               >
                 <SettingsPage 
                   user={user || (DEMO_GUEST_USER as any)}
                   onNavigateToView={setView}
                   theme={theme}
                   onToggleTheme={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
+                  initialProfile={userProfile}
                 />
               </motion.div>
             )}

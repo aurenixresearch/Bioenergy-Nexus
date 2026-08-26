@@ -68,9 +68,23 @@ export default function ExploreResearchers({
   onNavigateToProfile
 }: ExploreResearchersProps) {
   // Data State
-  const [researchers, setResearchers] = useState<Researcher[]>([]);
+  const [researchers, setResearchers] = useState<Researcher[]>(() => {
+    try {
+      const saved = localStorage.getItem('nexus_demo_researchers');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [publications, setPublications] = useState<Publication[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexus_demo_researchers');
+      return !(saved && JSON.parse(saved).length > 0);
+    } catch {
+      return true;
+    }
+  });
   const [refreshing, setRefreshing] = useState(false);
   
   // Search & Filter State

@@ -41,6 +41,7 @@ interface SettingsPageProps {
   onNavigateToView: (view: 'dashboard' | 'profile' | 'research') => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
+  initialProfile?: any;
 }
 
 type SettingsSection = 
@@ -59,11 +60,64 @@ type SettingsSection =
   | 'help' 
   | 'danger';
 
-export default function SettingsPage({ user, onNavigateToView, theme, onToggleTheme }: SettingsPageProps) {
-  const [profileData, setProfileData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+export default function SettingsPage({ user, onNavigateToView, theme, onToggleTheme, initialProfile }: SettingsPageProps) {
+  const [profileData, setProfileData] = useState<any>(initialProfile || null);
+  const [loading, setLoading] = useState(!initialProfile);
   const [activeSection, setActiveSection] = useState<SettingsSection>('account');
-  const [formData, setFormData] = useState<any>(null);
+  const [formData, setFormData] = useState<any>(() => {
+    if (!initialProfile) return null;
+    return {
+      ...initialProfile,
+      settings: {
+        security: { twoFactorEnabled: false, ...initialProfile?.settings?.security },
+        notifications: {
+          email: true, push: false, inApp: true,
+          collaborationInvitations: true, fundingOpportunities: true,
+          allianceMatches: true, aiRecommendations: true, newFollowers: true,
+          messages: true, comments: true, publicationCitations: true,
+          projectUpdates: true, innovationChallenges: true, deadlines: true,
+          weeklyResearchDigest: true,
+          ...initialProfile?.settings?.notifications
+        },
+        privacy: {
+          visibility: 'Public', email: true, phone: false,
+          institution: true, publications: true, projects: true,
+          collaborations: true, followers: true, achievements: true,
+          ...initialProfile?.settings?.privacy
+        },
+        collaborationPreferences: {
+          lookingFor: ['Funding', 'Laboratory Access'],
+          availability: 'Open to Collaborate',
+          ...initialProfile?.settings?.collaborationPreferences
+        },
+        aiMatchPreferences: {
+          countries: ['Nigeria'],
+          researchAreas: ['Bioenergy'],
+          trl: [5, 6, 7],
+          fundingRange: '$100k - $250k',
+          collaborationType: ['R&D'],
+          languages: ['English'],
+          ...initialProfile?.settings?.aiMatchPreferences
+        },
+        researchPreferences: {
+          defaultVisibility: 'Public',
+          citationStyle: 'IEEE',
+          defaultLanguage: 'English',
+          ...initialProfile?.settings?.researchPreferences
+        },
+        appearance: {
+          mode: 'light',
+          fontSize: 'Medium',
+          accessibility: {},
+          ...initialProfile?.settings?.appearance
+        },
+        connectedAccounts: {
+          googleConnected: true,
+          ...initialProfile?.settings?.connectedAccounts
+        }
+      }
+    };
+  });
   const [alertMsg, setAlertMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const mobileNavScrollRef = useRef<HTMLDivElement>(null);

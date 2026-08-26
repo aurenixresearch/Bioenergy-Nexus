@@ -3,6 +3,7 @@ import { Menu, X, User, LogOut, ArrowRight, Sun, Moon } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { motion } from 'motion/react';
 import NotificationBell from './notifications/NotificationBell';
+import { preloadRoute } from '../utils/routePreloader';
 
 interface NavbarProps {
   user: FirebaseUser | null;
@@ -94,6 +95,8 @@ export default function Navbar({
                   <button
                     key={item.id}
                     onClick={() => handleNavClick(item.id)}
+                    onMouseEnter={() => preloadRoute(item.id)}
+                    onTouchStart={() => preloadRoute(item.id)}
                     className={`relative px-2 xl:px-2.5 2xl:px-3.5 py-2 text-xs 2xl:text-sm font-bold tracking-tight transition-colors duration-150 cursor-pointer whitespace-nowrap ${
                       isNavActive(item.id)
                         ? 'text-emerald-700 font-extrabold'
@@ -225,6 +228,7 @@ export default function Navbar({
             <button
               key={item.id}
               onClick={() => handleNavClick(item.id)}
+              onTouchStart={() => preloadRoute(item.id)}
               className={`block w-full text-left px-4 py-3 rounded-xl text-base font-semibold transition-colors ${
                 isNavActive(item.id)
                   ? 'text-emerald-700 font-bold bg-emerald-50'
