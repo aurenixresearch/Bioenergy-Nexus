@@ -350,6 +350,9 @@ export default function ExploreResearchers({
     } catch (err) {
       console.error('Error tracking paper view metric:', err);
     }
+    window.history.pushState(null, '', `/research/${pubId}`);
+    window.dispatchEvent(new Event('popstate'));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Top Authors (Highest Publications)
@@ -697,7 +700,10 @@ export default function ExploreResearchers({
                               </div>
 
                               {/* Title */}
-                              <h4 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                              <h4 
+                                onClick={() => handleViewPublication(pub.id)}
+                                className="text-sm sm:text-base font-bold text-slate-900 leading-tight hover:text-emerald-700 cursor-pointer transition-colors"
+                              >
                                 {pub.title}
                               </h4>
 
@@ -735,9 +741,9 @@ export default function ExploreResearchers({
                                 <div className="flex items-center gap-2">
                                   <button
                                     onClick={() => handleViewPublication(pub.id)}
-                                    className="px-3.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-[10px] font-bold transition-all border border-slate-200 cursor-pointer"
+                                    className="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-[10px] font-bold transition-all border border-emerald-200 cursor-pointer"
                                   >
-                                    Inspect Abstract
+                                    Read Research Paper &rarr;
                                   </button>
                                   <button
                                     onClick={() => handleDownloadPublication(pub.id, pub.pdfUrl)}

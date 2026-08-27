@@ -1216,11 +1216,18 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                           <div key={paper.id} className="p-4 bg-white dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 rounded-2xl space-y-2 shadow-xs">
                             <div className="flex items-start justify-between gap-3">
                               <div>
-                                <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-snug">
+                                <h4 
+                                  onClick={() => {
+                                    window.history.pushState(null, '', `/research/${paper.id}`);
+                                    window.dispatchEvent(new Event('popstate'));
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className="text-sm font-bold text-slate-900 dark:text-white leading-snug hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer transition-colors"
+                                >
                                   {paper.title}
                                 </h4>
                                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                  Published {paper.publishedYear} • {paper.category}
+                                  Published {paper.publishedYear || new Date(paper.createdAt || '').getFullYear() || 'Recent'} • {paper.category || 'Bioenergy Technology'}
                                 </p>
                               </div>
                               <button 
@@ -1238,16 +1245,16 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                               </p>
                             )}
 
-                            {paper.downloadUrl && (
-                              <a 
-                                href={paper.downloadUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-xs text-emerald-600 font-bold hover:underline pt-1"
-                              >
-                                <ExternalLink className="w-3 h-3" /> View Publication
-                              </a>
-                            )}
+                            <button 
+                              onClick={() => {
+                                window.history.pushState(null, '', `/research/${paper.id}`);
+                                window.dispatchEvent(new Event('popstate'));
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                              className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-bold hover:underline pt-1 cursor-pointer"
+                            >
+                              <BookOpen className="w-3.5 h-3.5" /> Read Full Publication
+                            </button>
                           </div>
                         ))}
                       </div>

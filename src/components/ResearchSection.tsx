@@ -361,13 +361,21 @@ export default function ResearchSection({
 
   const categories = ['All', 'Bioenergy Technology', 'Waste-to-Energy', 'Environmental Sustainability', 'Climate & Energy Policy'];
 
-  // Filter papers
+  // Filter papers: all published papers (both old and new) are completely visible to every user and visitor
   const filteredPapers = allPapers.filter((paper) => {
+    // Only exclude if explicitly an unreleased draft belonging to a different author
+    if (paper.isDraft === true && (!user || paper.userId !== user.uid)) {
+      return false;
+    }
     const query = (searchTerm || '').toLowerCase().trim();
     const matchesSearch = !query ||
       (paper?.title || '').toLowerCase().includes(query) ||
       (paper?.abstract || '').toLowerCase().includes(query) ||
-      (paper?.author || '').toLowerCase().includes(query);
+      (paper?.author || '').toLowerCase().includes(query) ||
+      (paper?.leadResearcher || '').toLowerCase().includes(query) ||
+      (paper?.institution || '').toLowerCase().includes(query) ||
+      (Array.isArray(paper?.keywords) && paper.keywords.some((k: string) => k.toLowerCase().includes(query))) ||
+      (Array.isArray(paper?.tags) && paper.tags.some((t: string) => t.toLowerCase().includes(query)));
     
     const matchesCategory = selectedCategory === 'All' || paper?.category === selectedCategory;
     

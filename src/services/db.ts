@@ -532,8 +532,15 @@ export async function getCustomPapers(): Promise<ResearchPaper[]> {
         ...data,
       } as ResearchPaper);
     });
-    // Merge both for complete sandboxing
-    const result = [...papers, ...localPapers];
+    // Merge both for complete sandboxing and deduplicate by paper id
+    const paperMap = new Map<string, ResearchPaper>();
+    for (const p of localPapers) {
+      if (p && p.id) paperMap.set(p.id, p);
+    }
+    for (const p of papers) {
+      if (p && p.id) paperMap.set(p.id, p);
+    }
+    const result = Array.from(paperMap.values());
     customPapersCache = { timestamp: Date.now(), data: result };
     return result;
   } catch (error) {
@@ -1617,29 +1624,25 @@ export async function getPublications(): Promise<Publication[]> {
     .filter(p => !p.isDraft && p.status !== 'Draft')
     .map(p => ({
       id: p.id,
-      researcherId: p.userId || p.id,
+      researcherId: p.userId || p.leadResearcher || p.author || p.id,
       title: p.title || 'Untitled Research Paper',
       abstract: p.abstract || '',
       category: p.category || 'Bioenergy Technology',
-      keywords: p.keywords || [],
+      keywords: p.keywords || p.tags || [],
       pdfUrl: p.downloadUrl || p.uploads?.pdf || '#',
       coverImage: p.uploads?.coverImage,
       downloads: p.downloadsCount || 0,
       views: p.viewsCount || 0,
       citations: 0,
-      createdAt: p.createdAt || new Date().toISOString()
+      createdAt: p.createdAt || (p.publishedYear ? `${p.publishedYear}-01-01T00:00:00.000Z` : new Date().toISOString())
     }));
 
   if (isDemoModeActive()) {
     const local = getLocalPublications();
-    const existingIds = new Set(local.map(l => l.id));
-    const merged = [...local];
-    for (const cp of customPubs) {
-      if (!existingIds.has(cp.id)) {
-        merged.push(cp);
-      }
-    }
-    return merged;
+    const pubMap = new Map<string, Publication>();
+    for (const l of local) pubMap.set(l.id, l);
+    for (const cp of customPubs) pubMap.set(cp.id, cp);
+    return Array.from(pubMap.values());
   }
 
   const path = 'publications';
@@ -1665,13 +1668,10 @@ export async function getPublications(): Promise<Publication[]> {
       });
     });
 
-    const existingIds = new Set(list.map(l => l.id));
-    for (const cp of customPubs) {
-      if (!existingIds.has(cp.id)) {
-        list.push(cp);
-      }
-    }
-    return list;
+    const pubMap = new Map<string, Publication>();
+    for (const l of list) pubMap.set(l.id, l);
+    for (const cp of customPubs) pubMap.set(cp.id, cp);
+    return Array.from(pubMap.values());
   } catch (error) {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
@@ -1679,14 +1679,10 @@ export async function getPublications(): Promise<Publication[]> {
     }
     console.warn('Error fetching publications from Firestore, falling back to local storage:', error);
     const local = getLocalPublications();
-    const existingIds = new Set(local.map(l => l.id));
-    const merged = [...local];
-    for (const cp of customPubs) {
-      if (!existingIds.has(cp.id)) {
-        merged.push(cp);
-      }
-    }
-    return merged;
+    const pubMap = new Map<string, Publication>();
+    for (const l of local) pubMap.set(l.id, l);
+    for (const cp of customPubs) pubMap.set(cp.id, cp);
+    return Array.from(pubMap.values());
   }
 }
 

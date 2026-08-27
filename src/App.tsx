@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider, browserPopupRedirectResolver, db, setFirestoreOffline } from './firebase';
 import { doc, onSnapshot, collection } from 'firebase/firestore';
-import { getSavedPaperIds, getUserInquiries, getUserPartnerships, getUserProfile, isDemoModeActive, getCustomPapers, getInnovationProjects, updateInnovationProject, savePaper, unsavePaper, isOfflineError } from './services/db';
+import { getSavedPaperIds, getUserInquiries, getUserPartnerships, getUserProfile, isDemoModeActive, getCustomPapers, getLocalCustomPapers, getInnovationProjects, updateInnovationProject, savePaper, unsavePaper, isOfflineError } from './services/db';
 import { ConsultationInquiry, PartnershipSubmission, ResearchPaper } from './types';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, ShieldAlert, Sparkles, X, UserCheck, KeyRound, HelpCircle, BookOpen, Users, HeartHandshake, Leaf, Award, Quote, Building, CheckCircle2, FlaskConical } from 'lucide-react';
@@ -342,19 +342,52 @@ export default function App() {
 
   // Load custom papers in real-time & user projects on load / auth state changes
   useEffect(() => {
+    const refreshPapers = async () => {
+      try {
+        const custom = await getCustomPapers();
+        const map = new Map<string, ResearchPaper>();
+        for (const p of RESEARCH_PAPERS) map.set(p.id, p);
+        for (const p of custom) map.set(p.id, p);
+        setAllPapers(Array.from(map.values()));
+      } catch (err) {
+        console.warn('Error refreshing papers in App:', err);
+      }
+    };
+
+    // Initial load
+    refreshPapers();
+
     const customPapersCol = collection(db, 'custom_papers');
     const unsubCustomPapers = onSnapshot(customPapersCol, (snapshot) => {
-      const custom: ResearchPaper[] = [];
+      const customFromFirestore: ResearchPaper[] = [];
       snapshot.forEach((docSnap) => {
-        custom.push({ id: docSnap.id, isCustom: true, ...docSnap.data() } as ResearchPaper);
+        customFromFirestore.push({ id: docSnap.id, isCustom: true, ...docSnap.data() } as ResearchPaper);
       });
-      setAllPapers([...RESEARCH_PAPERS, ...custom]);
+      const localCustom = getLocalCustomPapers();
+      const map = new Map<string, ResearchPaper>();
+      for (const p of RESEARCH_PAPERS) map.set(p.id, p);
+      for (const p of localCustom) map.set(p.id, p);
+      for (const p of customFromFirestore) map.set(p.id, p);
+      setAllPapers(Array.from(map.values()));
     }, (err) => {
       console.warn('custom_papers snapshot error in App:', err);
-      getCustomPapers().then(custom => setAllPapers([...RESEARCH_PAPERS, ...custom])).catch(() => {});
+      refreshPapers();
     });
 
-    return () => unsubCustomPapers();
+    const handlePaperUpdates = () => {
+      refreshPapers();
+    };
+
+    window.addEventListener('custom-papers-updated', handlePaperUpdates);
+    window.addEventListener('research-updated', handlePaperUpdates);
+    window.addEventListener('storage', handlePaperUpdates);
+
+    return () => {
+      unsubCustomPapers();
+      window.removeEventListener('custom-papers-updated', handlePaperUpdates);
+      window.removeEventListener('research-updated', handlePaperUpdates);
+      window.removeEventListener('storage', handlePaperUpdates);
+    };
   }, []);
 
   useEffect(() => {

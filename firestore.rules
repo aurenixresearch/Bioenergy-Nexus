@@ -55,6 +55,18 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
+    // Publications (Public Repository)
+    match /publications/{pubId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // Researchers (Public Scholar Profiles)
+    match /researchers/{researcherId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
     // Projects
     match /projects/{projectId} {
       allow read: if true;
