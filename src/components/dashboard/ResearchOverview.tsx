@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { collection, onSnapshot } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { db, auth } from '../../firebase';
 import { ResearchPaper } from '../../types';
 import { 
   FileText, 
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import ProfileCompletionModal from '../ProfileCompletionModal';
 import { checkProfileCompleteness, ProfileCompletenessResult } from '../../utils/profileValidation';
-import { getUserProfile } from '../../services/db';
+import { getUserProfile, getCustomPapers, getLocalCustomPapers, isDemoModeActive } from '../../services/db';
 
 interface ResearchOverviewProps {
   user: FirebaseUser;
@@ -46,72 +46,100 @@ export default function ResearchOverview({
       return;
     }
 
+    const processPapers = (userPapers: ResearchPaper[]) => {
+      // 1. Recently Uploaded Research:
+      const uploaded = userPapers.filter(
+        (p) =>
+          p.visibility !== 'Private Draft' &&
+          p.status !== 'Draft' &&
+          p.status !== 'Under Review' &&
+          p.status !== 'Pending' &&
+          p.status !== 'In Review'
+      );
+      uploaded.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+
+      // 2. Draft Research:
+      const drafts = userPapers.filter(
+        (p) => p.visibility === 'Private Draft' || p.status === 'Draft' || (p as any).isDraft === true
+      );
+      drafts.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+
+      // 3. Pending Submissions:
+      const pending = userPapers.filter(
+        (p) => p.status === 'Under Review' || p.status === 'Pending' || p.status === 'In Review'
+      );
+      pending.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+
+      setUploadedResearch(uploaded);
+      setDraftResearch(drafts);
+      setPendingSubmissions(pending);
+      setLoading(false);
+    };
+
+    if (isDemoModeActive(user.uid) || !auth.currentUser) {
+      // Offline / sandbox fallback
+      const loadLocal = () => {
+        const local = getLocalCustomPapers();
+        const userPapers = local.filter(
+          (p) => p.userId === user.uid || (user.email && p.userEmail === user.email)
+        );
+        processPapers(userPapers);
+      };
+      loadLocal();
+      const interval = setInterval(loadLocal, 2500);
+      return () => clearInterval(interval);
+    }
+
     // Direct real-time Firebase listener on custom_papers for authenticated user data
-    const unsub = onSnapshot(
-      collection(db, 'custom_papers'),
-      (snapshot) => {
-        const userPapers: ResearchPaper[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          // Filter strictly for documents belonging to the authenticated user
-          if (data.userId === user.uid || (user.email && data.userEmail === user.email)) {
-            userPapers.push({
-              id: docSnap.id,
-              isCustom: true,
-              ...data
-            } as ResearchPaper);
-          }
-        });
+    let unsub: (() => void) | null = null;
+    try {
+      unsub = onSnapshot(
+        collection(db, 'custom_papers'),
+        (snapshot) => {
+          const userPapers: ResearchPaper[] = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data.userId === user.uid || (user.email && data.userEmail === user.email)) {
+              userPapers.push({
+                id: docSnap.id,
+                isCustom: true,
+                ...data
+              } as ResearchPaper);
+            }
+          });
+          processPapers(userPapers);
+        },
+        (_error) => {
+          const local = getLocalCustomPapers();
+          const userPapers = local.filter(
+            (p) => p.userId === user.uid || (user.email && p.userEmail === user.email)
+          );
+          processPapers(userPapers);
+        }
+      );
+    } catch (_error) {
+      const local = getLocalCustomPapers();
+      const userPapers = local.filter(
+        (p) => p.userId === user.uid || (user.email && p.userEmail === user.email)
+      );
+      processPapers(userPapers);
+    }
 
-        // 1. Recently Uploaded Research:
-        // Filter out drafts and pending submissions
-        const uploaded = userPapers.filter(
-          (p) =>
-            p.visibility !== 'Private Draft' &&
-            p.status !== 'Draft' &&
-            p.status !== 'Under Review' &&
-            p.status !== 'Pending' &&
-            p.status !== 'In Review'
-        );
-        // Sort newest to oldest
-        uploaded.sort((a, b) => {
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return dateB - dateA;
-        });
-
-        // 2. Draft Research:
-        const drafts = userPapers.filter(
-          (p) => p.visibility === 'Private Draft' || p.status === 'Draft' || (p as any).isDraft === true
-        );
-        drafts.sort((a, b) => {
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return dateB - dateA;
-        });
-
-        // 3. Pending Submissions:
-        const pending = userPapers.filter(
-          (p) => p.status === 'Under Review' || p.status === 'Pending' || p.status === 'In Review'
-        );
-        pending.sort((a, b) => {
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return dateB - dateA;
-        });
-
-        setUploadedResearch(uploaded);
-        setDraftResearch(drafts);
-        setPendingSubmissions(pending);
-        setLoading(false);
-      },
-      (error) => {
-        console.warn('Firebase research overview query error:', error);
-        setLoading(false);
-      }
-    );
-
-    return () => unsub();
+    return () => {
+      if (unsub) unsub();
+    };
   }, [user]);
 
   const handleViewPaper = (paperId?: string) => {

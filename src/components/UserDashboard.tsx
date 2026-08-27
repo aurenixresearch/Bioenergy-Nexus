@@ -59,7 +59,9 @@ import {
   InnovationProject,
   UserDeadline,
   UserNotification,
-  isDemoModeActive
+  isDemoModeActive,
+  isOrganizationAccount,
+  isOrganizationVerified
 } from '../services/db';
 import { motion } from 'motion/react';
 
@@ -838,8 +840,8 @@ export default function UserDashboard({
     );
   }
 
-  const isOrgAccount = ['Institution', 'Industry', 'Government', 'NGO', 'Other'].includes(userProfile?.userRole || userProfile?.role || '') || !!userProfile?.isOrganization || !!userProfile?.organizationType || userProfile?.accountType === 'institution';
-  const isOrgUnverified = isOrgAccount && (userProfile?.verificationStatus !== 'verified');
+  const isOrgAccount = isOrganizationAccount(userProfile);
+  const isOrgUnverified = isOrgAccount && !isOrganizationVerified(userProfile);
 
   return (
     <div className="bg-white min-h-screen py-10" id="user_dashboard" style={{ backgroundColor: '#ffffff' }}>

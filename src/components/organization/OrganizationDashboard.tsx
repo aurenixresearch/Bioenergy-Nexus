@@ -54,7 +54,7 @@ import {
   getWorkspaces, 
   getProjects 
 } from '../../services/collaborationDb';
-import { getResearchers, createUserProfile, addNotification } from '../../services/db';
+import { getResearchers, createUserProfile, addNotification, isOrganizationAccount, isOrganizationVerified } from '../../services/db';
 import VerificationStatusCard from '../verification/VerificationStatusCard';
 import OrganizationVerificationModal from '../verification/OrganizationVerificationModal';
 import { UserProfile } from '../../types';
@@ -292,6 +292,11 @@ export default function OrganizationDashboard({
 
   // Handle Publish Draft
   const handlePublishDraft = async (alliance: AllianceOpportunity) => {
+    if (!isVerified) {
+      setShowVerificationModal(true);
+      notify('Please complete organization verification before publishing alliances.');
+      return;
+    }
     setActionInProgressId(alliance.id);
     try {
       await updateAlliance(alliance.id, {
@@ -305,6 +310,17 @@ export default function OrganizationDashboard({
     } finally {
       setActionInProgressId(null);
     }
+  };
+
+  // Safe launcher with mandatory verification guard
+  const handleOpenCreateAlliance = (allianceToEdit?: AllianceOpportunity | null) => {
+    if (!isVerified) {
+      setShowVerificationModal(true);
+      notify('Please complete organization verification to launch or edit research alliances.');
+      return;
+    }
+    setEditingAlliance(allianceToEdit || null);
+    setShowCreateModal(true);
   };
 
   // Handle Send Direct Match Boost Invitation
@@ -330,7 +346,7 @@ export default function OrganizationDashboard({
   // Organization Type label helper
   const orgTypeLabel = userProfile?.organizationType || userProfile?.userRole || (userProfile as any)?.role || 'Institution';
   const orgNameDisplay = userProfile?.organizationName || userProfile?.institution || userProfile?.fullName || 'Institutional Partner';
-  const isVerified = userProfile?.verificationStatus === 'verified';
+  const isVerified = isOrganizationVerified(userProfile);
 
   return (
     <div className="bg-slate-50 min-h-screen py-8 text-left font-sans" id="organization_dashboard_root">
@@ -375,10 +391,7 @@ export default function OrganizationDashboard({
 
           <div className="flex items-center gap-2.5 flex-wrap">
             <button
-              onClick={() => {
-                setEditingAlliance(null);
-                setShowCreateModal(true);
-              }}
+              onClick={() => handleOpenCreateAlliance(null)}
               className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer border-0"
               id="org_btn_create_alliance"
             >
@@ -696,10 +709,7 @@ export default function OrganizationDashboard({
                     </select>
 
                     <button
-                      onClick={() => {
-                        setEditingAlliance(null);
-                        setShowCreateModal(true);
-                      }}
+                      onClick={() => handleOpenCreateAlliance(null)}
                       className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer transition shrink-0"
                     >
                       <Plus className="w-3.5 h-3.5" />
@@ -761,10 +771,7 @@ export default function OrganizationDashboard({
                                 </button>
 
                                 <button
-                                  onClick={() => {
-                                    setEditingAlliance(alliance);
-                                    setShowCreateModal(true);
-                                  }}
+                                  onClick={() => handleOpenCreateAlliance(alliance)}
                                   className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs transition cursor-pointer"
                                   title="Edit Alliance"
                                 >
@@ -847,7 +854,7 @@ export default function OrganizationDashboard({
                       </p>
                     </div>
                     <button
-                      onClick={() => setShowCreateModal(true)}
+                      onClick={() => handleOpenCreateAlliance(null)}
                       className="px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-sm hover:bg-emerald-700 transition cursor-pointer"
                     >
                       Create First Alliance
@@ -874,10 +881,7 @@ export default function OrganizationDashboard({
                     <p className="text-xs text-slate-500">Unpublished proposals and alliance briefs saved as drafts.</p>
                   </div>
                   <button
-                    onClick={() => {
-                      setEditingAlliance(null);
-                      setShowCreateModal(true);
-                    }}
+                    onClick={() => handleOpenCreateAlliance(null)}
                     className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer transition"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -909,10 +913,7 @@ export default function OrganizationDashboard({
                             </button>
 
                             <button
-                              onClick={() => {
-                                setEditingAlliance(draft);
-                                setShowCreateModal(true);
-                              }}
+                              onClick={() => handleOpenCreateAlliance(draft)}
                               className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs transition cursor-pointer"
                               title="Edit Draft"
                             >

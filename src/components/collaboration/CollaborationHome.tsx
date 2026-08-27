@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { Project, AllianceOpportunity, Workspace } from './types';
 import { createProject, createAlliance, getWorkspaces } from '../../services/collaborationDb';
-import { getUserProfile } from '../../services/db';
+import { getUserProfile, isOrganizationAccount, isOrganizationVerified } from '../../services/db';
 
 // Subcomponents imports
 import ProjectWizard from './ProjectWizard';
@@ -57,14 +57,15 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
   const [guardActionTitle, setGuardActionTitle] = useState('');
   const [showOrgVerificationModal, setShowOrgVerificationModal] = useState(false);
 
-  const isOrgAccount = ['Institution', 'Industry', 'Government', 'NGO', 'Other'].includes(userProfile?.userRole || userProfile?.role || '') || !!userProfile?.isOrganization || !!userProfile?.organizationType || userProfile?.accountType === 'institution';
+  const isOrgAccount = isOrganizationAccount(userProfile);
+  const isOrgVerified = isOrganizationVerified(userProfile);
 
   const checkVerificationBeforeAction = (actionTitle: string, callback: () => void) => {
     if (!user) {
       onSignIn();
       return;
     }
-    if (isOrgAccount && userProfile?.verificationStatus !== 'verified') {
+    if (isOrgAccount && !isOrgVerified) {
       setGuardActionTitle(actionTitle);
       setShowGuardModal(true);
       return;
@@ -261,6 +262,12 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
           <AllianceWizard 
             onClose={() => setShowAllianceWizard(false)}
             onSave={handleSaveAlliance}
+            user={user}
+            userProfile={userProfile}
+            onStartVerification={() => {
+              setShowAllianceWizard(false);
+              setShowOrgVerificationModal(true);
+            }}
           />
         </div>
       </div>
@@ -491,6 +498,11 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
                   onLaunchWorkspace={(work) => setActiveWorkspace(work)}
                   onRefreshAll={() => {}}
                   onSuccess={triggerSuccessAlert}
+                  onNewAlliance={() => {
+                    checkVerificationBeforeAction('Create Alliance Opportunity', () => {
+                      setShowAllianceWizard(true);
+                    });
+                  }}
                 />
               )}
             </div>
@@ -549,6 +561,12 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
           <AllianceWizard 
             onClose={() => setShowAllianceWizard(false)}
             onSave={handleSaveAlliance}
+            user={user}
+            userProfile={userProfile}
+            onStartVerification={() => {
+              setShowAllianceWizard(false);
+              setShowOrgVerificationModal(true);
+            }}
           />
         )}
       </AnimatePresence>
@@ -559,6 +577,8 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
         onClose={() => setShowGuardModal(false)}
         onCompleteVerification={() => setShowOrgVerificationModal(true)}
         actionTitle={guardActionTitle}
+        orgName={userProfile?.organizationName || userProfile?.institution}
+        orgType={userProfile?.organizationType || userProfile?.role}
       />
 
       {/* ORGANIZATION VERIFICATION MODAL */}

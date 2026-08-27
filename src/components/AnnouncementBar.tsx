@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { collection, onSnapshot, doc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Bell, 
@@ -132,22 +132,30 @@ export default function AnnouncementBar({
     };
     window.addEventListener('storage', handleStorageEvent);
 
-    // 4. Firestore real-time onSnapshot listener
+    // 4. Firestore real-time onSnapshot listener (only for authenticated non-demo sessions)
     let unsubProfile: (() => void) | null = null;
-    try {
-      unsubProfile = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
-        if (docSnap.exists()) {
-          setLiveProfile({ id: docSnap.id, ...docSnap.data() });
-        } else {
+    if (!isDemoModeActive(user.uid) && auth.currentUser) {
+      try {
+        unsubProfile = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
+          if (docSnap.exists()) {
+            setLiveProfile({ id: docSnap.id, ...docSnap.data() });
+          } else {
+            getUserProfile(user.uid).then(p => {
+              if (p) setLiveProfile(p);
+            }).catch(() => {});
+          }
+        }, (_err) => {
+          // Graceful fallback for permission/offline state
           getUserProfile(user.uid).then(p => {
             if (p) setLiveProfile(p);
           }).catch(() => {});
-        }
-      }, (err) => {
-        console.warn('AnnouncementBar profile snapshot notice:', err);
-      });
-    } catch (err) {
-      console.warn('Could not attach Firestore onSnapshot for profile:', err);
+        });
+      } catch (_err) {
+        // Fallback silently to direct fetcher
+        getUserProfile(user.uid).then(p => {
+          if (p) setLiveProfile(p);
+        }).catch(() => {});
+      }
     }
 
     // 5. Polling fallback for demo/offline sandbox mode
@@ -242,28 +250,28 @@ export default function AnnouncementBar({
 
     // 4. Firestore real-time custom_papers collection onSnapshot listener
     let unsubPapers: (() => void) | null = null;
-    try {
-      unsubPapers = onSnapshot(collection(db, 'custom_papers'), (snapshot) => {
-        const papers: ResearchPaper[] = [];
-        snapshot.forEach((docSnap) => {
-          papers.push({ id: docSnap.id, isCustom: true, ...docSnap.data() } as ResearchPaper);
+    if (!isDemoModeActive(user.uid) && auth.currentUser) {
+      try {
+        unsubPapers = onSnapshot(collection(db, 'custom_papers'), (snapshot) => {
+          const papers: ResearchPaper[] = [];
+          snapshot.forEach((docSnap) => {
+            papers.push({ id: docSnap.id, isCustom: true, ...docSnap.data() } as ResearchPaper);
+          });
+          // Merge with local storage fallback if any
+          const local = getLocalCustomPapers();
+          const merged = [...papers];
+          local.forEach(lp => {
+            if (!merged.some(p => p.id === lp.id)) {
+              merged.push(lp);
+            }
+          });
+          processCustomPapers(merged);
+        }, (_err) => {
+          processCustomPapers(getLocalCustomPapers());
         });
-        // Merge with local storage fallback if any
-        const local = getLocalCustomPapers();
-        const merged = [...papers];
-        local.forEach(lp => {
-          if (!merged.some(p => p.id === lp.id)) {
-            merged.push(lp);
-          }
-        });
-        processCustomPapers(merged);
-      }, (err) => {
-        console.warn('AnnouncementBar custom_papers snapshot notice:', err);
+      } catch (_err) {
         processCustomPapers(getLocalCustomPapers());
-      });
-    } catch (err) {
-      console.warn('Could not attach Firestore onSnapshot for custom_papers:', err);
-      processCustomPapers(getLocalCustomPapers());
+      }
     }
 
     // 5. Polling fallback for demo/offline sandbox mode

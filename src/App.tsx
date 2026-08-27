@@ -803,7 +803,7 @@ export default function App() {
     <div className="bg-slate-50 min-h-screen font-sans flex flex-col justify-between" id="app_root">
       
       {/* Collapsible Floating Aside Section (visible when logged in) */}
-      {user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && (
+      {user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && currentView !== 'ai-assistant' && (
         <FloatingAside 
           user={user}
           userProfile={userProfile}
@@ -820,20 +820,20 @@ export default function App() {
       {/* Main layout container */}
       <motion.div
         animate={{ 
-          paddingLeft: user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin'
+          paddingLeft: user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && currentView !== 'ai-assistant'
             ? (isMobile ? '0px' : (isCollapsed ? '80px' : '280px'))
             : '0px'
         }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className={`flex-grow flex flex-col ${
           currentView === 'ai-assistant'
-            ? 'h-[100dvh] max-h-[100dvh] overflow-hidden'
+            ? 'w-screen h-screen w-[100vw] h-[100vh] h-[100dvh] max-h-[100dvh] overflow-hidden p-0 m-0'
             : 'justify-between min-h-screen'
         } w-full`}
         id="app_layout_wrapper"
       >
         {/* Dynamic Navigation */}
-        {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && (
+        {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && currentView !== 'ai-assistant' && (
           <>
             <Navbar 
               user={user}
@@ -857,7 +857,7 @@ export default function App() {
         )}
 
         {/* Main Container */}
-        <main className={`flex-grow ${currentView === 'ai-assistant' ? 'flex-1 h-full min-h-0 overflow-hidden flex flex-col' : 'min-h-[85vh]'}`}>
+        <main className={`flex-grow ${currentView === 'ai-assistant' ? 'w-full h-full flex-1 min-h-0 overflow-hidden flex flex-col p-0 m-0' : 'min-h-[85vh]'}`}>
           <ErrorBoundary>
             <Suspense fallback={<ViewLoadingFallback />}>
           {/* Bypassing AnimatePresence prevents the fatal React 19 "Expected static flag was missing" reconciler assertion crash while preserving mounting fade-ins */}

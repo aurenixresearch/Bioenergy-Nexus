@@ -24,6 +24,7 @@ interface StakeholderDashboardProps {
   onLaunchWorkspace: (workspace: Workspace) => void;
   onRefreshAll: () => void;
   onSuccess: (msg: string) => void;
+  onNewAlliance?: () => void;
 }
 
 type StakeholderTab = 
@@ -37,7 +38,8 @@ export default function StakeholderDashboard({
   user, 
   onLaunchWorkspace, 
   onRefreshAll, 
-  onSuccess 
+  onSuccess,
+  onNewAlliance
 }: StakeholderDashboardProps) {
   const [activeTab, setActiveTab] = useState<StakeholderTab>('received');
   
@@ -237,8 +239,12 @@ export default function StakeholderDashboard({
                 </div>
                 <button
                   onClick={() => {
-                    const btn = document.getElementById('btn_publish_collab_alliance');
-                    if (btn) btn.click();
+                    if (onNewAlliance) {
+                      onNewAlliance();
+                    } else {
+                      const btn = document.getElementById('btn_publish_collab_alliance');
+                      if (btn) btn.click();
+                    }
                   }}
                   className="px-3.5 py-1.5 bg-slate-950 hover:bg-slate-800 text-white rounded-xl text-xs font-bold cursor-pointer"
                 >
@@ -275,8 +281,12 @@ export default function StakeholderDashboard({
                   </div>
                   <button
                     onClick={() => {
-                      const btn = document.getElementById('btn_publish_collab_alliance');
-                      if (btn) btn.click();
+                      if (onNewAlliance) {
+                        onNewAlliance();
+                      } else {
+                        const btn = document.getElementById('btn_publish_collab_alliance');
+                        if (btn) btn.click();
+                      }
                     }}
                     className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold cursor-pointer"
                   >

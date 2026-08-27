@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles } from 'lucide-react';
 import ResearchAiAssistant from './ResearchAiAssistant';
 
+export type AiWidgetSizeMode = 'compact' | 'docked' | 'window' | 'fullscreen';
+
 interface FloatingAiWidgetProps {
   user?: any;
   userProfile?: any;
@@ -18,12 +20,36 @@ export default function FloatingAiWidget({
 }: FloatingAiWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnreadNotice, setHasUnreadNotice] = useState(true);
+  
+  // Persisted size mode
+  const [sizeMode, setSizeMode] = useState<AiWidgetSizeMode>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('aris_ai_window_size_mode') as AiWidgetSizeMode;
+      if (saved && ['compact', 'docked', 'window', 'fullscreen'].includes(saved)) {
+        return saved;
+      }
+      return window.innerWidth < 768 ? 'fullscreen' : 'window';
+    }
+    return 'window';
+  });
+
+  const handleSetSizeMode = (mode: AiWidgetSizeMode) => {
+    setSizeMode(mode);
+    try {
+      localStorage.setItem('aris_ai_window_size_mode', mode);
+    } catch {
+      // ignore
+    }
+  };
 
   // Listen for global custom event to open the AI assistant
   useEffect(() => {
-    const handleOpenEvent = () => {
+    const handleOpenEvent = (e: any) => {
       setIsOpen(true);
       setHasUnreadNotice(false);
+      if (e?.detail?.sizeMode && ['compact', 'docked', 'window', 'fullscreen'].includes(e.detail.sizeMode)) {
+        handleSetSizeMode(e.detail.sizeMode);
+      }
     };
 
     window.addEventListener('open-ai-assistant', handleOpenEvent);
@@ -46,9 +72,9 @@ export default function FloatingAiWidget({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
-  // Lock background scroll when full-page modal is open on mobile/tablets
+  // Lock background scroll when modal is window or fullscreen
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && (sizeMode === 'fullscreen' || sizeMode === 'window')) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -56,7 +82,7 @@ export default function FloatingAiWidget({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isOpen]);
+  }, [isOpen, sizeMode]);
 
   // Hide floating button if user is already on the dedicated full-page ai-assistant view
   if (currentView === 'ai-assistant') {
@@ -102,30 +128,128 @@ export default function FloatingAiWidget({
         </motion.div>
       )}
 
-      {/* Full Page AI Assistant Modal Overlay */}
+      {/* AI Assistant Modal with Multi-Size Framework */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.99 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.99 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="fixed inset-0 z-50 w-full h-[100dvh] max-h-[100dvh] bg-white dark:bg-slate-950 flex flex-col overflow-hidden"
-          >
-            <div className="h-full w-full relative flex flex-col overflow-hidden">
-              {/* Research AI Assistant Component */}
-              <ResearchAiAssistant
-                user={user}
-                userProfile={userProfile}
-                isFloating={true}
-                onClose={() => setIsOpen(false)}
-                onNavigateToView={(view, id) => {
-                  setIsOpen(false);
-                  onNavigateToView?.(view, id);
-                }}
+          <>
+            {/* Backdrop for Window Mode or Fullscreen Mode */}
+            {(sizeMode === 'window' || sizeMode === 'fullscreen') && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                onClick={() => setIsOpen(false)}
+                className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs"
               />
-            </div>
-          </motion.div>
+            )}
+
+            {/* Backdrop for Docked Mode on mobile */}
+            {sizeMode === 'docked' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsOpen(false)}
+                className="fixed inset-0 z-40 bg-slate-950/40 sm:bg-transparent backdrop-blur-[2px] sm:backdrop-blur-none pointer-events-auto sm:pointer-events-none"
+              />
+            )}
+
+            {/* Container based on sizeMode */}
+            {sizeMode === 'fullscreen' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="fixed inset-0 z-50 w-screen h-screen w-[100vw] h-[100vh] h-[100dvh] max-h-[100dvh] bg-white dark:bg-slate-950 flex flex-col overflow-hidden m-0 p-0 border-0 shadow-none"
+              >
+                <ResearchAiAssistant
+                  user={user}
+                  userProfile={userProfile}
+                  isFloating={true}
+                  sizeMode={sizeMode}
+                  onChangeSizeMode={handleSetSizeMode}
+                  onClose={() => setIsOpen(false)}
+                  onNavigateToView={(view, id) => {
+                    setIsOpen(false);
+                    onNavigateToView?.(view, id);
+                  }}
+                />
+              </motion.div>
+            )}
+
+            {sizeMode === 'window' && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 pointer-events-none">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="w-full max-w-5xl h-[92vh] max-h-[920px] bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
+                >
+                  <ResearchAiAssistant
+                    user={user}
+                    userProfile={userProfile}
+                    isFloating={true}
+                    sizeMode={sizeMode}
+                    onChangeSizeMode={handleSetSizeMode}
+                    onClose={() => setIsOpen(false)}
+                    onNavigateToView={(view, id) => {
+                      setIsOpen(false);
+                      onNavigateToView?.(view, id);
+                    }}
+                  />
+                </motion.div>
+              </div>
+            )}
+
+            {sizeMode === 'docked' && (
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+                className="fixed top-0 right-0 bottom-0 z-50 w-full sm:w-[560px] md:w-[640px] lg:w-[700px] h-screen h-[100dvh] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col"
+              >
+                <ResearchAiAssistant
+                  user={user}
+                  userProfile={userProfile}
+                  isFloating={true}
+                  sizeMode={sizeMode}
+                  onChangeSizeMode={handleSetSizeMode}
+                  onClose={() => setIsOpen(false)}
+                  onNavigateToView={(view, id) => {
+                    setIsOpen(false);
+                    onNavigateToView?.(view, id);
+                  }}
+                />
+              </motion.div>
+            )}
+
+            {sizeMode === 'compact' && (
+              <motion.div
+                initial={{ opacity: 0, y: 25, scale: 0.92 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 25, scale: 0.92 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-50 w-[95vw] sm:w-[480px] md:w-[520px] h-[85vh] sm:h-[720px] max-h-[90vh] sm:max-h-[820px] bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl border-2 border-emerald-500/30 dark:border-slate-700 shadow-2xl overflow-hidden flex flex-col"
+              >
+                <ResearchAiAssistant
+                  user={user}
+                  userProfile={userProfile}
+                  isFloating={true}
+                  sizeMode={sizeMode}
+                  onChangeSizeMode={handleSetSizeMode}
+                  onClose={() => setIsOpen(false)}
+                  onNavigateToView={(view, id) => {
+                    setIsOpen(false);
+                    onNavigateToView?.(view, id);
+                  }}
+                />
+              </motion.div>
+            )}
+          </>
         )}
       </AnimatePresence>
     </>

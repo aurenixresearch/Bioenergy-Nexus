@@ -685,6 +685,48 @@ export function isIndividualResearcherRole(role?: string, profile?: any): boolea
   return validAcademicKeywords.some(kw => r.includes(kw));
 }
 
+// Helper to identify if an account is an organization / institution / corporate / NGO entity (both existing & new records)
+export function isOrganizationAccount(profile?: any): boolean {
+  if (!profile) return false;
+  if (
+    profile.isOrganization === true ||
+    profile.organizationType ||
+    profile.accountType === 'institution' ||
+    profile.accountType === 'organization' ||
+    profile.accountType === 'industry' ||
+    profile.accountType === 'ngo' ||
+    profile.accountType === 'government' ||
+    profile.accountType === 'corporate' ||
+    profile.accountType === 'enterprise' ||
+    profile.accountType === 'funder' ||
+    profile.accountType === 'publisher' ||
+    profile.entityType === 'organization' ||
+    profile.entityType === 'industry' ||
+    profile.stakeholderType ||
+    profile.publisherVerificationLevel
+  ) {
+    return true;
+  }
+  const role = (profile.userRole || profile.role || profile.professionalTitle || '').toLowerCase().trim();
+  const orgKeywords = [
+    'institution', 'industry', 'government', 'ngo', 'other', 'publisher', 
+    'company', 'investor', 'university', 'lab', 'stakeholder', 'corporate', 
+    'enterprise', 'funder', 'government agency', 'organization', 'organisation'
+  ];
+  return orgKeywords.some(kw => role.includes(kw));
+}
+
+// Helper to determine if an organization account has been fully verified
+export function isOrganizationVerified(profile?: any): boolean {
+  if (!profile) return false;
+  return Boolean(
+    profile.verificationStatus === 'verified' ||
+    profile.isVerified === true ||
+    profile.verified === true ||
+    profile.publisherVerificationLevel === 'fully_verified'
+  );
+}
+
 // USER PROFILES
 export function isPublicProfileComplete(profile: any): boolean {
   if (!profile) return false;
