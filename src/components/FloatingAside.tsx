@@ -332,8 +332,8 @@ export default function FloatingAside({
           <div
             className={`rounded-2xl border transition-all duration-300 flex items-center min-w-0 overflow-hidden cursor-pointer ${
               collapsed
-                ? 'p-2 justify-center border-emerald-800/60 bg-gradient-to-b from-emerald-950 via-emerald-900 to-slate-950 shadow-md hover:border-emerald-500/50'
-                : 'p-3 justify-between border-emerald-800/60 bg-gradient-to-r from-emerald-950 via-emerald-900 to-slate-950 text-white shadow-md hover:border-emerald-500/50 hover:shadow-lg'
+                ? 'p-2 justify-center border-slate-200 hover:border-emerald-500/60 bg-white dark:border-emerald-800/60 dark:bg-gradient-to-b dark:from-emerald-950 dark:via-emerald-900 dark:to-slate-950 shadow-xs'
+                : 'p-3 justify-between border-slate-200/90 hover:border-emerald-500/60 bg-white dark:border-emerald-800/60 dark:bg-gradient-to-r dark:from-emerald-950 dark:via-emerald-900 dark:to-slate-950 text-slate-900 dark:text-white shadow-xs hover:shadow-md'
             }`}
             onClick={() => handleNavClick('settings')}
             title={`${userDisplayName} (${userEmail})`}
@@ -344,7 +344,7 @@ export default function FloatingAside({
                   <img
                     src={userAvatarUrl}
                     alt="Profile"
-                    className="w-10 h-10 min-w-[40px] min-h-[40px] aspect-square shrink-0 rounded-full object-cover border-2 border-emerald-400/80 shadow-xs ring-2 ring-emerald-500/30 overflow-hidden"
+                    className="w-10 h-10 min-w-[40px] min-h-[40px] aspect-square shrink-0 rounded-full object-cover border-2 border-emerald-500/80 shadow-xs ring-2 ring-emerald-500/20 overflow-hidden"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
@@ -365,17 +365,17 @@ export default function FloatingAside({
                   collapsed ? 'opacity-0 w-0 pointer-events-none hidden' : 'opacity-100 w-auto'
                 }`}
               >
-                <p className="text-sm font-extrabold truncate leading-tight text-white whitespace-nowrap">
+                <p className="text-sm font-extrabold truncate leading-tight text-slate-900 dark:text-white whitespace-nowrap">
                   {userDisplayName}
                 </p>
-                <p className="text-xs font-semibold truncate leading-tight mt-0.5 text-emerald-300/90 font-mono whitespace-nowrap">
+                <p className="text-xs font-semibold truncate leading-tight mt-0.5 text-emerald-700 dark:text-emerald-300/90 font-mono whitespace-nowrap">
                   {userEmail}
                 </p>
               </div>
             </div>
 
             <span
-              className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-lg uppercase tracking-wider shrink-0 text-emerald-300 bg-emerald-950/80 border border-emerald-500/30 shadow-xs transition-all duration-300 ease-out ${
+              className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-lg uppercase tracking-wider shrink-0 text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-500/30 shadow-xs transition-all duration-300 ease-out ${
                 collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'
               }`}
             >
@@ -386,7 +386,7 @@ export default function FloatingAside({
 
         {/* Navigation list */}
         <div
-          className={`flex-1 overflow-y-auto py-2 space-y-1.5 custom-scrollbar transition-all duration-300 ${
+          className={`flex-1 overflow-y-auto py-2 space-y-1.5 custom-scrollbar transition-all duration-300 bg-white dark:bg-transparent text-slate-800 dark:text-slate-200 border-0 ${
             collapsed ? 'px-2' : 'px-3'
           }`}
         >
@@ -420,7 +420,7 @@ export default function FloatingAside({
                       } ${
                         isActive
                           ? 'bg-emerald-700 dark:bg-emerald-600 text-white font-extrabold shadow-sm'
-                          : 'text-slate-700 dark:text-slate-200 hover:text-emerald-800 dark:hover:text-white hover:bg-emerald-50 dark:hover:bg-slate-800 font-bold bg-transparent'
+                          : 'text-[#222222] dark:text-slate-200 hover:text-emerald-800 dark:hover:text-white hover:bg-emerald-50 dark:hover:bg-slate-800 font-bold bg-transparent'
                       }`}
                     >
                       <div className={`flex items-center gap-3 min-w-0 ${collapsed ? 'justify-center' : 'w-full'}`}>
@@ -430,7 +430,7 @@ export default function FloatingAside({
                               ? 'text-white'
                               : item.isAi
                               ? 'text-emerald-600 dark:text-emerald-400'
-                              : 'text-slate-600 dark:text-slate-300'
+                              : 'text-[#222222] dark:text-slate-300'
                           }`}
                         >
                           <Icon className={`w-5 h-5 shrink-0 ${item.isAi ? 'animate-pulse' : ''}`} />
@@ -447,7 +447,7 @@ export default function FloatingAside({
 
                         <span
                           className={`text-sm font-bold tracking-tight truncate whitespace-nowrap flex-1 transition-all duration-300 ease-out ${
-                            isActive ? 'text-white font-extrabold' : 'text-slate-800 dark:text-slate-200'
+                            isActive ? 'text-white font-extrabold' : 'text-[#222222] dark:text-slate-200'
                           } ${collapsed ? 'opacity-0 w-0 overflow-hidden pointer-events-none hidden' : 'opacity-100 w-auto'}`}
                         >
                           {item.label}
@@ -606,7 +606,7 @@ export default function FloatingAside({
             aria-label="Navigation Menu"
           >
             {/* Top Drawer Header with Brand & Close Button */}
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/90 shrink-0">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shrink-0">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="p-1.5 bg-emerald-700 text-white rounded-xl shadow-xs">
@@ -625,7 +625,7 @@ export default function FloatingAside({
                 <motion.button
                   whileTap={{ scale: 0.92 }}
                   onClick={() => setIsOpen(false)}
-                  className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors cursor-pointer border-0 shrink-0"
+                  className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-0 shrink-0"
                   aria-label="Close navigation menu"
                 >
                   <X className="w-5 h-5" />
@@ -635,7 +635,7 @@ export default function FloatingAside({
               {/* User Identity Card */}
               <div
                 onClick={() => handleNavClick('settings')}
-                className="p-3 rounded-xl bg-gradient-to-r from-emerald-950 via-emerald-900 to-slate-950 text-white border border-emerald-700/50 shadow-sm flex items-center justify-between cursor-pointer hover:border-emerald-400/60 transition-all group"
+                className="p-3 rounded-xl bg-white dark:bg-gradient-to-r dark:from-emerald-950 dark:via-emerald-900 dark:to-slate-950 text-slate-900 dark:text-white border border-slate-200 dark:border-emerald-700/50 shadow-xs flex items-center justify-between cursor-pointer hover:border-emerald-500/60 transition-all group"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="relative shrink-0">
@@ -643,7 +643,7 @@ export default function FloatingAside({
                       <img
                         src={userAvatarUrl}
                         alt="Profile"
-                        className="w-9 h-9 rounded-full object-cover border-2 border-emerald-400/80 shadow-xs"
+                        className="w-9 h-9 rounded-full object-cover border-2 border-emerald-500/80 shadow-xs"
                         referrerPolicy="no-referrer"
                       />
                     ) : (
@@ -651,25 +651,25 @@ export default function FloatingAside({
                         {userDisplayName ? userDisplayName[0] : 'A'}
                       </div>
                     )}
-                    <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-950 flex items-center justify-center text-[8px] font-bold text-white">
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-950 flex items-center justify-center text-[8px] font-bold text-white">
                       ✓
                     </span>
                   </div>
                   <div className="min-w-0 flex flex-col">
-                    <span className="text-xs font-black truncate text-white leading-tight">
+                    <span className="text-xs font-black truncate text-slate-900 dark:text-white leading-tight">
                       {userDisplayName}
                     </span>
-                    <span className="text-[10px] font-medium truncate text-emerald-300/90 font-mono mt-0.5">
+                    <span className="text-[10px] font-medium truncate text-emerald-700 dark:text-emerald-300/90 font-mono mt-0.5">
                       {userEmail}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1.5 shrink-0 pl-1">
-                  <span className="px-2 py-0.5 text-[9px] font-mono font-black rounded-md uppercase tracking-wider text-emerald-200 bg-emerald-900/90 border border-emerald-500/40">
+                  <span className="px-2 py-0.5 text-[9px] font-mono font-black rounded-md uppercase tracking-wider text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-900/90 border border-emerald-200 dark:border-emerald-500/40">
                     {tierBadge}
                   </span>
-                  <ChevronRight className="w-3.5 h-3.5 text-emerald-300/60 group-hover:text-white group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-emerald-300/60 group-hover:text-emerald-600 dark:group-hover:text-white group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
 
@@ -704,7 +704,7 @@ export default function FloatingAside({
                   className={`p-2 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all cursor-pointer border ${
                     currentView === 'dashboard'
                       ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-600 text-emerald-800 dark:text-emerald-300 font-extrabold shadow-2xs'
-                      : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 font-bold hover:border-emerald-500/40'
+                      : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-800 dark:text-slate-300 font-bold hover:border-emerald-500/40 hover:bg-emerald-50/50'
                   }`}
                 >
                   <LayoutDashboard className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
@@ -717,7 +717,7 @@ export default function FloatingAside({
                   className={`p-2 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all cursor-pointer border ${
                     currentView === 'ai-assistant'
                       ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-600 text-emerald-800 dark:text-emerald-300 font-extrabold shadow-2xs'
-                      : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 font-bold hover:border-emerald-500/40'
+                      : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-800 dark:text-slate-300 font-bold hover:border-emerald-500/40 hover:bg-emerald-50/50'
                   }`}
                 >
                   <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
@@ -730,7 +730,7 @@ export default function FloatingAside({
                   className={`relative p-2 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all cursor-pointer border ${
                     currentView === 'messages'
                       ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-600 text-emerald-800 dark:text-emerald-300 font-extrabold shadow-2xs'
-                      : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 font-bold hover:border-emerald-500/40'
+                      : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-800 dark:text-slate-300 font-bold hover:border-emerald-500/40 hover:bg-emerald-50/50'
                   }`}
                 >
                   <MessageSquare className="w-4 h-4 text-teal-600 dark:text-teal-400" />
@@ -745,7 +745,7 @@ export default function FloatingAside({
             )}
 
             {/* Scrollable Navigation Category Groups */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-white dark:bg-slate-900">
               {searchQuery ? (
                 /* Search Results */
                 <div className="space-y-1">
@@ -875,7 +875,7 @@ export default function FloatingAside({
             </div>
 
             {/* Mobile Drawer Bottom Quick Controls & Sign Out */}
-            <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90 shrink-0 space-y-2">
+            <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/90 shrink-0 space-y-2">
               <div className="flex items-center gap-2">
                 {onToggleTheme && (
                   <button

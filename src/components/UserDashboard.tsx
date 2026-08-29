@@ -61,7 +61,8 @@ import {
   UserNotification,
   isDemoModeActive,
   isOrganizationAccount,
-  isOrganizationVerified
+  isOrganizationVerified,
+  getLocalSavedPapers
 } from '../services/db';
 import { motion } from 'motion/react';
 
@@ -403,7 +404,12 @@ export default function UserDashboard({
         setSavedPaperIds(sIds);
       }
     }, (err) => {
-      console.warn('Saved papers snapshot error:', err);
+      console.warn('Saved papers snapshot error, using local fallback:', err);
+      const local = getLocalSavedPapers(user.uid);
+      setSavedIds(local);
+      if (setSavedPaperIds) {
+        setSavedPaperIds(local);
+      }
     });
 
     // 4. Projects snapshot

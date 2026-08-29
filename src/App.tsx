@@ -4,11 +4,12 @@ import {
   signInWithPopup, 
   signInAnonymously,
   signOut, 
-  User as FirebaseUser 
+  User as FirebaseUser,
+  GoogleAuthProvider
 } from 'firebase/auth';
 import { auth, googleProvider, browserPopupRedirectResolver, db, setFirestoreOffline } from './firebase';
 import { doc, onSnapshot, collection } from 'firebase/firestore';
-import { getSavedPaperIds, getUserInquiries, getUserPartnerships, getUserProfile, isDemoModeActive, getCustomPapers, getLocalCustomPapers, getInnovationProjects, updateInnovationProject, savePaper, unsavePaper, isOfflineError } from './services/db';
+import { getSavedPaperIds, getUserInquiries, getUserPartnerships, getUserProfile, isDemoModeActive, getCustomPapers, getLocalCustomPapers, getInnovationProjects, updateInnovationProject, savePaper, unsavePaper, isOfflineError, consolidateDuplicateAccounts } from './services/db';
 import { ConsultationInquiry, PartnershipSubmission, ResearchPaper } from './types';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, ShieldAlert, Sparkles, X, UserCheck, KeyRound, HelpCircle, BookOpen, Users, HeartHandshake, Leaf, Award, Quote, Building, CheckCircle2, FlaskConical } from 'lucide-react';
@@ -310,6 +311,7 @@ export default function App() {
 
   const [userProfile, setUserProfileState] = useState<any | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [pendingLinkingInfo, setPendingLinkingInfo] = useState<{ email: string; credential: any } | null>(null);
 
   // Sidebar collapsed state and mobile check
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -785,6 +787,9 @@ export default function App() {
         }
       }
       if (res && res.user) {
+        if (res.user.email) {
+          await consolidateDuplicateAccounts(res.user.uid, res.user.email);
+        }
         setUser(res.user);
         await refreshAllUserData(res.user.uid);
       }
@@ -792,6 +797,14 @@ export default function App() {
       console.warn('Google Sign-In failed or was restricted:', err);
       const errStr = String(err);
       const errCode = err?.code || '';
+
+      if (errCode === 'auth/account-exists-with-different-credential' || errStr.includes('account-exists-with-different-credential')) {
+        const pendingCred = GoogleAuthProvider.credentialFromError(err);
+        const emailFound = err.customData?.email || err.email || '';
+        setPendingLinkingInfo({ email: emailFound, credential: pendingCred });
+        setView('signin');
+        return;
+      }
 
       if (errCode === 'auth/popup-blocked' || errStr.includes('popup-blocked')) {
         setAuthError('popup-blocked');
@@ -1486,10 +1499,13 @@ export default function App() {
                 <SignInPage 
                   onBack={() => {
                     setAuthError(null);
+                    setPendingLinkingInfo(null);
                     setView('home');
                   }}
                   authError={authError}
                   setAuthError={setAuthError}
+                  pendingLinkingInfo={pendingLinkingInfo}
+                  setPendingLinkingInfo={setPendingLinkingInfo}
                   onSuccess={(authenticatedUser) => {
                     const isSandbox = authenticatedUser?.uid?.startsWith('sandbox-') || authenticatedUser?.uid === 'sandbox-guest-user';
                     if (isSandbox) {

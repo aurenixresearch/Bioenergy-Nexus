@@ -119,30 +119,36 @@ export function isDemoModeActive(userId?: string): boolean {
          isFirestoreOffline;
 }
 
-function getLocalSavedPapers(userId: string): string[] {
+export function getLocalSavedPapers(userId: string): string[] {
+  if (!userId) return [];
   const data = localStorage.getItem(`nexus_demo_saved_papers_${userId}`);
   return data ? JSON.parse(data) : [];
 }
 
-function setLocalSavedPapers(userId: string, papers: string[]) {
+export function setLocalSavedPapers(userId: string, papers: string[]) {
+  if (!userId) return;
   localStorage.setItem(`nexus_demo_saved_papers_${userId}`, JSON.stringify(papers));
 }
 
-function getLocalInquiries(userId: string): ConsultationInquiry[] {
+export function getLocalInquiries(userId: string): ConsultationInquiry[] {
+  if (!userId) return [];
   const data = localStorage.getItem(`nexus_demo_inquiries_${userId}`);
   return data ? JSON.parse(data) : [];
 }
 
-function setLocalInquiries(userId: string, inquiries: ConsultationInquiry[]) {
+export function setLocalInquiries(userId: string, inquiries: ConsultationInquiry[]) {
+  if (!userId) return;
   localStorage.setItem(`nexus_demo_inquiries_${userId}`, JSON.stringify(inquiries));
 }
 
-function getLocalPartnerships(userId: string): PartnershipSubmission[] {
+export function getLocalPartnerships(userId: string): PartnershipSubmission[] {
+  if (!userId) return [];
   const data = localStorage.getItem(`nexus_demo_partnerships_${userId}`);
   return data ? JSON.parse(data) : [];
 }
 
-function setLocalPartnerships(userId: string, partnerships: PartnershipSubmission[]) {
+export function setLocalPartnerships(userId: string, partnerships: PartnershipSubmission[]) {
+  if (!userId) return;
   localStorage.setItem(`nexus_demo_partnerships_${userId}`, JSON.stringify(partnerships));
 }
 
@@ -157,10 +163,10 @@ export function setLocalCustomPapers(papers: ResearchPaper[]) {
 
 // SAVED PAPERS
 export async function savePaper(userId: string, paperId: string): Promise<void> {
-  if (isDemoModeActive(userId)) {
-    const papers = getLocalSavedPapers(userId);
+  if (!userId || isDemoModeActive(userId) || !auth.currentUser) {
+    const papers = getLocalSavedPapers(userId || 'guest');
     if (!papers.includes(paperId)) {
-      setLocalSavedPapers(userId, [...papers, paperId]);
+      setLocalSavedPapers(userId || 'guest', [...papers, paperId]);
     }
     return;
   }
@@ -178,14 +184,22 @@ export async function savePaper(userId: string, paperId: string): Promise<void> 
       setFirestoreOffline(true);
       return savePaper(userId, paperId);
     }
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (errMsg.includes('permission') || errMsg.includes('insufficient')) {
+      const papers = getLocalSavedPapers(userId);
+      if (!papers.includes(paperId)) {
+        setLocalSavedPapers(userId, [...papers, paperId]);
+      }
+      return;
+    }
     handleFirestoreError(error, OperationType.WRITE, `${path}/${userId}_${paperId}`);
   }
 }
 
 export async function unsavePaper(userId: string, paperId: string): Promise<void> {
-  if (isDemoModeActive(userId)) {
-    const papers = getLocalSavedPapers(userId);
-    setLocalSavedPapers(userId, papers.filter(id => id !== paperId));
+  if (!userId || isDemoModeActive(userId) || !auth.currentUser) {
+    const papers = getLocalSavedPapers(userId || 'guest');
+    setLocalSavedPapers(userId || 'guest', papers.filter(id => id !== paperId));
     return;
   }
 
@@ -198,13 +212,19 @@ export async function unsavePaper(userId: string, paperId: string): Promise<void
       setFirestoreOffline(true);
       return unsavePaper(userId, paperId);
     }
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (errMsg.includes('permission') || errMsg.includes('insufficient')) {
+      const papers = getLocalSavedPapers(userId);
+      setLocalSavedPapers(userId, papers.filter(id => id !== paperId));
+      return;
+    }
     handleFirestoreError(error, OperationType.DELETE, `${path}/${userId}_${paperId}`);
   }
 }
 
 export async function getSavedPaperIds(userId: string): Promise<string[]> {
-  if (isDemoModeActive(userId)) {
-    return getLocalSavedPapers(userId);
+  if (!userId || isDemoModeActive(userId) || !auth.currentUser) {
+    return getLocalSavedPapers(userId || 'guest');
   }
 
   const path = 'saved_papers';
@@ -220,6 +240,11 @@ export async function getSavedPaperIds(userId: string): Promise<string[]> {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
       return getSavedPaperIds(userId);
+    }
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (errMsg.includes('permission') || errMsg.includes('insufficient') || !auth.currentUser) {
+      console.warn("Falling back to local saved papers due to auth state or permission restriction.");
+      return getLocalSavedPapers(userId);
     }
     handleFirestoreError(error, OperationType.LIST, path);
   }
@@ -259,8 +284,8 @@ export async function submitInquiry(inquiry: Omit<ConsultationInquiry, 'id' | 's
 }
 
 export async function getUserInquiries(userId: string): Promise<ConsultationInquiry[]> {
-  if (isDemoModeActive(userId)) {
-    return getLocalInquiries(userId);
+  if (!userId || isDemoModeActive(userId) || !auth.currentUser) {
+    return getLocalInquiries(userId || 'guest');
   }
 
   const path = 'consultation_inquiries';
@@ -290,6 +315,10 @@ export async function getUserInquiries(userId: string): Promise<ConsultationInqu
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
       return getUserInquiries(userId);
+    }
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (errMsg.includes('permission') || errMsg.includes('insufficient') || !auth.currentUser) {
+      return getLocalInquiries(userId);
     }
     handleFirestoreError(error, OperationType.LIST, path);
   }
@@ -327,8 +356,8 @@ export async function submitPartnership(partnership: Omit<PartnershipSubmission,
 }
 
 export async function getUserPartnerships(userId: string): Promise<PartnershipSubmission[]> {
-  if (isDemoModeActive(userId)) {
-    return getLocalPartnerships(userId);
+  if (!userId || isDemoModeActive(userId) || !auth.currentUser) {
+    return getLocalPartnerships(userId || 'guest');
   }
 
   const path = 'partnership_submissions';
@@ -357,6 +386,10 @@ export async function getUserPartnerships(userId: string): Promise<PartnershipSu
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
       return getUserPartnerships(userId);
+    }
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (errMsg.includes('permission') || errMsg.includes('insufficient') || !auth.currentUser) {
+      return getLocalPartnerships(userId);
     }
     handleFirestoreError(error, OperationType.LIST, path);
   }
@@ -476,9 +509,21 @@ export async function updateCustomPaper(paperId: string, paper: Partial<Research
   }
 }
 
-export async function deleteCustomPaper(paperId: string): Promise<void> {
-  invalidateCustomPapersCache();
+export async function deleteCustomPaper(paperId: string, requestingUserId?: string, requestingUserEmail?: string): Promise<void> {
   const papers = getLocalCustomPapers();
+  const target = papers.find(p => p.id === paperId);
+  
+  // Enforce ownership: only the user who published it (or admin) can delete it
+  if (target && requestingUserId) {
+    const isOwner = target.userId === requestingUserId || 
+      (Boolean(requestingUserEmail) && Boolean(target.userEmail) && target.userEmail.toLowerCase() === requestingUserEmail.toLowerCase());
+    const isAdmin = ['bola.adeyemi@aurenix-research.org', 'adeyemibola2569@gmail.com', 'egburedipraise@gmail.com', 'aurenixresearch@gmail.com'].includes(requestingUserEmail || '');
+    if (!isOwner && !isAdmin) {
+      throw new Error('Unauthorized: Only the researcher or organization that published this research can delete it.');
+    }
+  }
+
+  invalidateCustomPapersCache();
   const updated = papers.filter(p => p.id !== paperId);
   setLocalCustomPapers(updated);
   if (typeof window !== 'undefined') {
@@ -501,7 +546,7 @@ export async function deleteCustomPaper(paperId: string): Promise<void> {
   } catch (error) {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
-      return deleteCustomPaper(paperId);
+      return;
     }
     handleFirestoreError(error, OperationType.DELETE, `${path}/${paperId}`);
   }
@@ -836,15 +881,89 @@ export async function syncUserProfileToResearcher(userId: string, profile: any):
   }
 }
 
+export async function getUserProfileByEmail(email: string): Promise<any | null> {
+  if (!email || isFirestoreOffline) {
+    return null;
+  }
+  const normalizedEmail = email.toLowerCase().trim();
+  const path = 'users';
+  try {
+    const colRef = collection(db, path);
+    // Query lowercase
+    const q1 = query(colRef, where('email', '==', normalizedEmail));
+    const snap1 = await getDocs(q1);
+    if (!snap1.empty) {
+      const docSnap = snap1.docs[0];
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+    // Query exact as fallback
+    const q2 = query(colRef, where('email', '==', email.trim()));
+    const snap2 = await getDocs(q2);
+    if (!snap2.empty) {
+      const docSnap = snap2.docs[0];
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+  } catch (error) {
+    console.warn('Error querying user profile by email:', error);
+    if (isOfflineError(error)) {
+      setFirestoreOffline(true);
+    }
+  }
+  return null;
+}
+
+export async function consolidateDuplicateAccounts(targetUserId: string, email: string): Promise<void> {
+  if (!targetUserId || !email || isFirestoreOffline) return;
+  const normalizedEmail = email.toLowerCase().trim();
+  try {
+    const colRef = collection(db, 'users');
+    const q = query(colRef, where('email', '==', normalizedEmail));
+    const snap = await getDocs(q);
+    
+    let mergedData: any = {};
+    for (const docSnap of snap.docs) {
+      if (docSnap.id !== targetUserId) {
+        const data = docSnap.data();
+        mergedData = { ...data, ...mergedData };
+      }
+    }
+
+    if (Object.keys(mergedData).length > 0) {
+      const targetDocRef = doc(db, 'users', targetUserId);
+      const cleanMerged = sanitizeForFirestore({
+        ...mergedData,
+        email: normalizedEmail,
+        updatedAt: serverTimestamp()
+      });
+      await setDoc(targetDocRef, cleanMerged, { merge: true });
+      console.log(`[ACCOUNT UNIFICATION] Successfully unified profile data into target UID: ${targetUserId}`);
+    }
+  } catch (err) {
+    console.warn('Could not complete duplicate account consolidation in background:', err);
+  }
+}
+
 export async function createUserProfile(userId: string, profile: any): Promise<void> {
+  // Check if an existing profile exists for this email to prevent wiping data
+  let existingData: any = {};
+  if (profile.email) {
+    try {
+      const existing = await getUserProfileByEmail(profile.email);
+      if (existing) {
+        existingData = existing;
+      }
+    } catch {}
+  }
+
   const sanitizedProfile = {
-    fullName: profile.fullName || '',
-    email: profile.email || '',
-    role: profile.role || '',
-    country: profile.country || '',
-    institution: profile.institution || '',
-    researchInterests: profile.researchInterests || [],
-    termsAccepted: profile.termsAccepted !== undefined ? Boolean(profile.termsAccepted) : true,
+    ...existingData,
+    fullName: profile.fullName || existingData.fullName || '',
+    email: (profile.email || existingData.email || '').toLowerCase(),
+    role: profile.role || existingData.role || '',
+    country: profile.country || existingData.country || '',
+    institution: profile.institution || existingData.institution || '',
+    researchInterests: profile.researchInterests && profile.researchInterests.length > 0 ? profile.researchInterests : (existingData.researchInterests || []),
+    termsAccepted: profile.termsAccepted !== undefined ? Boolean(profile.termsAccepted) : (existingData.termsAccepted ?? true),
     needsOnboarding: profile.needsOnboarding !== undefined ? Boolean(profile.needsOnboarding) : false,
     onboardingCompleted: true,
     ...profile,
@@ -1054,9 +1173,32 @@ export async function getUserProfile(userId: string): Promise<any> {
       };
     }
 
-    // Check if the user is authenticated via Firebase but does not have a profile document yet (e.g. Google Sign-In registration)
+    // Check if the user is authenticated via Firebase but does not have a direct UID doc yet
     const currentUser = auth.currentUser;
-    if (currentUser && currentUser.uid === userId && !currentUser.isAnonymous) {
+    if (currentUser && (currentUser.uid === userId || !userId) && currentUser.email && !currentUser.isAnonymous) {
+      // Check if an existing profile document was registered under this email (e.g. earlier account or Google login)
+      try {
+        const existingProfile = await getUserProfileByEmail(currentUser.email);
+        if (existingProfile) {
+          console.log(`[ACCOUNT UNIFICATION] Found existing unified profile for email: ${currentUser.email}. Linking to current UID: ${userId}`);
+          const consolidated = {
+            ...existingProfile,
+            id: userId,
+            email: currentUser.email.toLowerCase(),
+            fullName: existingProfile.fullName || currentUser.displayName || 'Researcher',
+            onboardingCompleted: true,
+            needsOnboarding: false,
+          };
+          // Persist to current UID document in Firestore
+          try {
+            await setDoc(doc(db, path, userId), sanitizeForFirestore(consolidated), { merge: true });
+          } catch {}
+          return consolidated;
+        }
+      } catch (e) {
+        console.warn('Error checking existing profile by email during getUserProfile:', e);
+      }
+
       return {
         id: userId,
         needsOnboarding: true,

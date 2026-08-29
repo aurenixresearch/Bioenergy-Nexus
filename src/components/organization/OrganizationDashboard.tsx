@@ -36,8 +36,11 @@ import {
   FilePlus, 
   Camera, 
   Loader2, 
-  MessageSquare 
+  MessageSquare,
+  BookOpen,
+  UploadCloud
 } from 'lucide-react';
+import ResearchOverview from '../dashboard/ResearchOverview';
 import { 
   AllianceOpportunity, 
   Application, 
@@ -68,7 +71,7 @@ interface OrganizationDashboardProps {
   onNavigateToSettings?: () => void;
 }
 
-type OrgTab = 'alliances' | 'drafts' | 'proposals' | 'workspaces' | 'match_boost' | 'verification';
+type OrgTab = 'alliances' | 'research_hub' | 'drafts' | 'proposals' | 'workspaces' | 'match_boost' | 'verification';
 
 const RESEARCH_FOCUS_OPTIONS = [
   'Bioenergy & Biofuels',
@@ -635,6 +638,7 @@ export default function OrganizationDashboard({
         >
           {[
             { id: 'alliances', label: 'Active Alliances', count: activeAlliancesList.length, icon: Building2 },
+            { id: 'research_hub', label: 'Research Hub', count: undefined, icon: BookOpen },
             { id: 'drafts', label: 'Drafts', count: draftAlliancesList.length, icon: FilePlus },
             { id: 'proposals', label: 'Proposals Received', count: totalProposalsCount, icon: FileText },
             { id: 'workspaces', label: 'Funded Workspaces', count: activeWorkspacesCount, icon: Activity },
@@ -861,6 +865,40 @@ export default function OrganizationDashboard({
                     </button>
                   </div>
                 )}
+              </motion.div>
+            )}
+
+            {/* ======================================================== */}
+            {/* TAB: RESEARCH HUB & SCIENTIFIC PUBLICATIONS              */}
+            {/* ======================================================== */}
+            {activeTab === 'research_hub' && (
+              <motion.div
+                key="tab-research-hub"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-4"
+              >
+                <ResearchOverview
+                  user={user}
+                  userProfile={userProfile}
+                  onNavigateToView={onNavigateToView}
+                  onUploadResearch={(draft) => {
+                    if (draft && draft.id) {
+                      window.location.hash = `#/research/${draft.id}`;
+                    }
+                    if (onNavigateToView) {
+                      onNavigateToView('research');
+                    } else {
+                      window.location.hash = '#/research';
+                    }
+                    setTimeout(() => {
+                      if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('open-publish-wizard', { detail: { draftData: draft } }));
+                      }
+                    }, 60);
+                  }}
+                />
               </motion.div>
             )}
 

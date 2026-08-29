@@ -438,6 +438,7 @@ export default function ResearchAiAssistant({
 
   return (
     <div
+      id="ai_assistant_workspace"
       className="w-full h-full min-h-0 flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden relative box-border m-0 p-0 border-0 rounded-none shadow-none"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -464,120 +465,140 @@ export default function ResearchAiAssistant({
       </AnimatePresence>
 
       {/* Top Header Bar */}
-      <header className="sticky top-0 w-full px-3 sm:px-6 py-2.5 sm:py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 sm:gap-4 shrink-0 z-20">
+      <header id="ai_assistant_header" className="sticky top-0 w-full px-3.5 sm:px-6 py-2.5 sm:py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2.5 sm:gap-4 shrink-0 z-20">
+        {/* Left Side: Navigation & Brand/Session Identity */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          {/* Back/Exit navigation if available */}
-          {(onClose || onNavigateToView) && (
+          {/* Navigation Controls Group */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Back/Exit navigation if available */}
+            {(onClose || onNavigateToView) && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (onClose) onClose();
+                  else if (onNavigateToView) onNavigateToView(user ? 'dashboard' : 'home');
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white bg-slate-100/90 hover:bg-slate-200/90 dark:bg-slate-800/90 dark:hover:bg-slate-700 transition cursor-pointer border border-slate-200/80 dark:border-slate-700/80 shrink-0"
+                title="Return to platform (Esc)"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">{user ? 'Dashboard' : 'Home'}</span>
+              </button>
+            )}
+
+            {/* Sidebar History Toggle */}
             <button
               type="button"
-              onClick={() => {
-                if (onClose) onClose();
-                else if (onNavigateToView) onNavigateToView(user ? 'dashboard' : 'home');
-              }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition cursor-pointer border border-slate-200 dark:border-slate-700 shrink-0"
-              title="Return to platform (Esc)"
+              onClick={() => setIsSidebarOpen((prev) => !prev)}
+              className={`p-1.5 sm:p-2 rounded-xl transition cursor-pointer shrink-0 border ${
+                isSidebarOpen
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/80'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-800/80 dark:hover:bg-slate-750 border-slate-200/70 dark:border-slate-700/70'
+              }`}
+              title={isSidebarOpen ? 'Hide History & Sessions' : 'Show History & Sessions'}
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="hidden md:inline">{user ? 'Dashboard' : 'Home'}</span>
+              {isSidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
             </button>
-          )}
+          </div>
 
-          <button
-            type="button"
-            onClick={() => setIsSidebarOpen((prev) => !prev)}
-            className="p-2 rounded-xl text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
-            title={isSidebarOpen ? 'Hide History' : 'Show History'}
-          >
-            {isSidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
-          </button>
+          {/* Divider */}
+          <div className="h-5 w-px bg-slate-200 dark:bg-slate-800 shrink-0 hidden sm:block" />
 
-          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs shrink-0 ring-2 ring-emerald-500/20">
-              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+          {/* Brand & Assistant Identity */}
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="relative shrink-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs ring-2 ring-emerald-500/20">
+                <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" title="Online & Ready" />
             </div>
+
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <h2 className="text-xs sm:text-sm md:text-base font-black truncate text-slate-900 dark:text-white">
+                <h2 className="text-xs sm:text-sm font-black truncate text-slate-900 dark:text-white leading-tight">
                   <span className="hidden sm:inline">Aurenix Research Intelligence & AI Support</span>
-                  <span className="sm:hidden">ARIS Research AI</span>
+                  <span className="sm:hidden">ARIS Intelligence</span>
                 </h2>
-                <span className="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                <span className="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 shrink-0">
                   v2.5
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate hidden sm:block">
-                {currentSession ? currentSession.title : 'Scientific Advisor & Research Document Analyst'}
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate hidden sm:flex items-center gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 inline-block" />
+                <span className="truncate">{currentSession ? currentSession.title : 'Scientific Advisor & Research Document Analyst'}</span>
               </p>
             </div>
           </div>
         </div>
 
-        {/* Right Header Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {/* Right Side: Tools, Engine Selector & Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {/* Model Selector Dropdown */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setIsModelDropdownOpen((prev) => !prev)}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition border border-slate-200 dark:border-slate-700 cursor-pointer"
-              title="Select Gemini AI Model"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-750 dark:text-slate-200 transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-2xs"
+              title="Select Gemini AI Engine"
             >
               <Atom className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span className="hidden md:inline">
+              <span className="hidden md:inline font-medium">
                 {AI_MODELS.find((m) => m.id === selectedModel)?.name || 'Gemini 3.7 Flash'}
               </span>
               <span className="md:hidden text-[11px]">
                 {selectedModel.includes('pro') ? '3.7 Pro' : '3.7 Flash'}
               </span>
-              <ChevronDown className="w-3 h-3 opacity-60" />
+              <ChevronDown className="w-3 h-3 opacity-60 ml-0.5" />
             </button>
 
             {isModelDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-60 sm:w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50 text-left">
+              <div className="absolute right-0 mt-2 w-64 sm:w-72 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50 text-left">
                 <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                  Available Gemini Engine
+                  Select Gemini Reasoning Model
                 </div>
-                {AI_MODELS.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedModel(m.id);
-                      setIsModelDropdownOpen(false);
-                      if (currentSession) {
-                        const updated = { ...currentSession, model: m.id };
-                        setCurrentSession(updated);
-                        saveChatSession(updated);
-                      }
-                    }}
-                    className={`w-full flex flex-col p-2 rounded-xl text-left transition cursor-pointer ${
-                      selectedModel === m.id
-                        ? 'bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800'
-                        : 'hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-900 dark:text-white">{m.name}</span>
-                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
-                        {m.tag}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{m.desc}</span>
-                  </button>
-                ))}
+                <div className="space-y-1">
+                  {AI_MODELS.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedModel(m.id);
+                        setIsModelDropdownOpen(false);
+                        if (currentSession) {
+                          const updated = { ...currentSession, model: m.id };
+                          setCurrentSession(updated);
+                          saveChatSession(updated);
+                        }
+                      }}
+                      className={`w-full flex flex-col p-2.5 rounded-xl text-left transition cursor-pointer ${
+                        selectedModel === m.id
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800'
+                          : 'hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">{m.name}</span>
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
+                          {m.tag}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{m.desc}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
           {/* Size Framework Controls (if floating / configurable) */}
           {onChangeSizeMode && (
-            <div className="hidden sm:flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80">
+            <div className="hidden lg:flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 shadow-2xs">
               <button
                 type="button"
                 onClick={() => onChangeSizeMode('compact')}
                 className={`p-1.5 rounded-lg transition cursor-pointer ${
                   sizeMode === 'compact'
-                    ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                    ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-2xs'
                     : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
                 title="Compact Widget Mode"
@@ -589,7 +610,7 @@ export default function ResearchAiAssistant({
                 onClick={() => onChangeSizeMode('docked')}
                 className={`p-1.5 rounded-lg transition cursor-pointer ${
                   sizeMode === 'docked'
-                    ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                    ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-2xs'
                     : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
                 title="Docked Side Panel Mode"
@@ -601,7 +622,7 @@ export default function ResearchAiAssistant({
                 onClick={() => onChangeSizeMode('window')}
                 className={`p-1.5 rounded-lg transition cursor-pointer ${
                   sizeMode === 'window'
-                    ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                    ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-2xs'
                     : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
                 title="Standard Window Mode"
@@ -613,7 +634,7 @@ export default function ResearchAiAssistant({
                 onClick={() => onChangeSizeMode('fullscreen')}
                 className={`p-1.5 rounded-lg transition cursor-pointer ${
                   sizeMode === 'fullscreen'
-                    ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                    ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-2xs'
                     : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
                 title="Full Screen Mode"
@@ -623,38 +644,41 @@ export default function ResearchAiAssistant({
             </div>
           )}
 
-          {/* Export Session */}
-          <button
-            type="button"
-            onClick={handleExportSession}
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer hidden sm:flex"
-            title="Export session as Markdown"
-          >
-            <Download className="w-4 h-4" />
-          </button>
-
-          {/* New Chat Button */}
-          <button
-            type="button"
-            onClick={() => handleCreateNewChat()}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs transition cursor-pointer"
-            title="Start new conversation"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">New Chat</span>
-          </button>
-
-          {/* Close if floating */}
-          {onClose && (
+          {/* Action Group */}
+          <div className="flex items-center gap-1.5">
+            {/* Export Session */}
             <button
               type="button"
-              onClick={onClose}
-              className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-              title="Close Assistant (Esc)"
+              onClick={handleExportSession}
+              className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white bg-slate-100/70 hover:bg-slate-200/80 dark:bg-slate-800/70 dark:hover:bg-slate-700 border border-slate-200/60 dark:border-slate-700/60 transition cursor-pointer hidden sm:flex items-center justify-center"
+              title="Export session as Markdown (.md)"
             >
-              <X className="w-5 h-5" />
+              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
-          )}
+
+            {/* New Chat Button */}
+            <button
+              type="button"
+              onClick={() => handleCreateNewChat()}
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white text-xs font-bold shadow-xs transition cursor-pointer"
+              title="Start a new conversation thread"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">New Chat</span>
+            </button>
+
+            {/* Close if modal/floating */}
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition cursor-pointer"
+                title="Close Assistant (Esc)"
+              >
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -677,6 +701,7 @@ export default function ResearchAiAssistant({
         <AnimatePresence>
           {isSidebarOpen && (
             <motion.aside
+              id="ai_assistant_sidebar"
               initial={{ x: -280, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -280, opacity: 0 }}
@@ -684,7 +709,7 @@ export default function ResearchAiAssistant({
               className="fixed lg:relative inset-y-0 left-0 z-40 lg:z-10 w-72 sm:w-80 lg:w-72 2xl:w-80 h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 overflow-hidden shadow-2xl lg:shadow-none min-h-0"
             >
               {/* Search chats & mobile close */}
-              <div className="p-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+              <div className="p-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 bg-white dark:bg-slate-900">
                 <div className="relative flex-1">
                   <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
@@ -706,7 +731,7 @@ export default function ResearchAiAssistant({
               </div>
 
               {/* Chat Session List */}
-              <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar bg-white dark:bg-slate-900">
                 <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
                   Recent Sessions ({filteredSessions.length})
                 </div>
@@ -719,8 +744,8 @@ export default function ResearchAiAssistant({
                       onClick={() => handleSelectSession(s)}
                       className={`group w-full flex items-center justify-between p-2 rounded-xl text-left cursor-pointer transition ${
                         isActive
-                          ? 'bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-200'
-                          : 'hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-200 shadow-2xs'
+                          : 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -751,16 +776,16 @@ export default function ResearchAiAssistant({
               </div>
 
               {/* Mode Switcher in sidebar */}
-              <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                <div className="text-[10px] font-bold text-slate-400 uppercase mb-2">Advisory Mode</div>
+              <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90">
+                <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Advisory Mode</div>
                 <div className="grid grid-cols-2 gap-1.5">
                   <button
                     type="button"
                     onClick={() => setSelectedMode('research')}
                     className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
                       selectedMode === 'research'
-                        ? 'bg-emerald-700 text-white'
-                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                        ? 'bg-emerald-700 text-white shadow-2xs'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750'
                     }`}
                   >
                     <BookOpen className="w-3 h-3" />
@@ -771,8 +796,8 @@ export default function ResearchAiAssistant({
                     onClick={() => setSelectedMode('ideas')}
                     className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
                       selectedMode === 'ideas'
-                        ? 'bg-emerald-700 text-white'
-                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                        ? 'bg-emerald-700 text-white shadow-2xs'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750'
                     }`}
                   >
                     <Lightbulb className="w-3 h-3" />
@@ -783,8 +808,8 @@ export default function ResearchAiAssistant({
                     onClick={() => setSelectedMode('support')}
                     className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
                       selectedMode === 'support'
-                        ? 'bg-emerald-700 text-white'
-                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                        ? 'bg-emerald-700 text-white shadow-2xs'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750'
                     }`}
                   >
                     <HelpCircle className="w-3 h-3" />
@@ -795,8 +820,8 @@ export default function ResearchAiAssistant({
                     onClick={() => setSelectedMode('general')}
                     className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
                       selectedMode === 'general'
-                        ? 'bg-emerald-700 text-white'
-                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                        ? 'bg-emerald-700 text-white shadow-2xs'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750'
                     }`}
                   >
                     <Layers className="w-3 h-3" />
@@ -809,35 +834,35 @@ export default function ResearchAiAssistant({
         </AnimatePresence>
 
         {/* Center Chat Messages Thread */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-950 w-full min-w-0 min-h-0">
+        <div id="ai_assistant_chat_area" className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-950 w-full min-w-0 min-h-0">
           {/* Scrollable Message List / Welcome Screen */}
           <div className="flex-1 overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 custom-scrollbar bg-white dark:bg-slate-950 w-full min-h-0">
             {(!currentSession?.messages || currentSession.messages.length === 0 || (currentSession.messages.length === 1 && currentSession.messages[0].id.startsWith('msg_welcome_'))) && (
               <div className="w-full max-w-full 2xl:max-w-[1800px] mx-auto py-2 space-y-4">
-                {/* Welcome Hero Banner */}
-                <div className="w-full p-4 sm:p-5 md:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-950 to-slate-900 text-white border border-emerald-800/40 shadow-lg">
+                {/* Welcome Hero Banner - Pristine White Card in Light Mode */}
+                <div className="w-full p-4 sm:p-6 md:p-7 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-2 border-emerald-500/30 dark:border-emerald-800/40 shadow-xl shadow-emerald-950/5">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="space-y-1 max-w-3xl">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-800/80 text-emerald-200 border border-emerald-600/40 text-[11px] font-bold">
-                        <Sparkles className="w-3 h-3 text-amber-300" />
-                        <span>ARIS AI Support</span>
+                    <div className="space-y-1.5 max-w-3xl">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-700/60 text-[11px] font-bold">
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-amber-300" />
+                        <span>ARIS AI Research & Support</span>
                       </div>
-                      <h3 className="text-base sm:text-xl font-bold text-white">
-                        Research & Platform Assistant
+                      <h3 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                        Research Intelligence & Platform Support
                       </h3>
-                      <p className="text-xs sm:text-sm text-emerald-200/90 leading-normal">
-                        Summarize papers, analyze datasets, or ask research questions.
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-emerald-200/90 leading-relaxed font-medium">
+                        Upload research papers to summarize methodology, query experimental data, brainstorm grant-ready hypotheses, or receive instant guidance on Aurenix publishing and researcher collaboration.
                       </p>
                     </div>
 
-                    <div className="shrink-0">
+                    <div className="shrink-0 flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="px-4 py-2 rounded-xl bg-white hover:bg-emerald-50 text-emerald-950 text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                        className="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-md hover:shadow-emerald-700/20 transition cursor-pointer flex items-center gap-2"
                       >
-                        <Paperclip className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>Upload File / PDF</span>
+                        <Paperclip className="w-4 h-4 text-emerald-200" />
+                        <span>Upload PDF / Data</span>
                       </button>
                     </div>
                   </div>
@@ -862,7 +887,7 @@ export default function ResearchAiAssistant({
                           }
                           textareaRef.current?.focus();
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 hover:border-emerald-400 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer group shadow-2xs"
+                        className="px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 hover:border-emerald-400 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold flex items-center gap-2 transition cursor-pointer group shadow-xs"
                       >
                         <span className="w-2 h-2 rounded-full bg-emerald-500 group-hover:scale-125 transition-transform" />
                         <span>{preset.title}</span>
@@ -912,18 +937,18 @@ export default function ResearchAiAssistant({
                           </div>
                         )}
 
-                        {/* Message Bubble */}
+                        {/* Message Bubble - Crisp White Background in Light Mode */}
                         <div
                           className={`p-4 sm:p-6 rounded-2xl text-sm md:text-base leading-relaxed w-full ${
                             isUser
                               ? 'bg-emerald-700 text-white rounded-tr-xs shadow-md font-semibold'
-                              : 'bg-slate-50/90 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-tl-xs shadow-xs'
+                              : 'bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-tl-xs shadow-md'
                           }`}
                         >
                           {isUser ? (
                             <p className="whitespace-pre-wrap text-white">{msg.text}</p>
                           ) : (
-                            <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none w-full text-slate-900 dark:text-slate-100 prose-p:text-slate-900 dark:prose-p:text-slate-100 prose-p:leading-relaxed prose-headings:text-slate-950 dark:prose-headings:text-white prose-headings:font-black prose-strong:text-slate-950 dark:prose-strong:text-white prose-strong:font-bold prose-li:text-slate-900 dark:prose-li:text-slate-200 prose-ul:text-slate-900 prose-ol:text-slate-900 prose-pre:bg-slate-950 prose-pre:text-slate-100 prose-pre:rounded-xl prose-pre:p-4 prose-code:text-emerald-800 dark:prose-code:text-emerald-300 prose-code:bg-emerald-50/80 dark:prose-code:bg-emerald-950/60 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-blockquote:text-slate-900 dark:prose-blockquote:text-slate-200 prose-blockquote:border-l-4 prose-blockquote:border-emerald-600 prose-blockquote:bg-emerald-50/50 dark:prose-blockquote:bg-emerald-950/20 prose-blockquote:p-3 prose-blockquote:rounded-r-lg prose-table:w-full prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:text-slate-950 dark:prose-th:text-white prose-th:bg-slate-100 dark:prose-th:bg-slate-800 prose-td:border prose-td:border-slate-200 dark:border-slate-800 prose-td:text-slate-900 dark:prose-td:text-slate-200 prose-th:p-3 prose-td:p-3">
+                            <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none w-full text-slate-900 dark:text-slate-100 prose-p:text-slate-900 dark:prose-p:text-slate-100 prose-p:leading-relaxed prose-headings:text-slate-950 dark:prose-headings:text-white prose-headings:font-black prose-strong:text-slate-950 dark:prose-strong:text-white prose-strong:font-bold prose-li:text-slate-900 dark:prose-li:text-slate-200 prose-ul:text-slate-900 dark:prose-ul:text-slate-200 prose-ol:text-slate-900 dark:prose-ol:text-slate-200 prose-pre:bg-slate-100 dark:prose-pre:bg-slate-950 prose-pre:text-slate-800 dark:prose-pre:text-slate-100 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-800 prose-pre:rounded-xl prose-pre:p-4 prose-code:text-emerald-800 dark:prose-code:text-emerald-300 prose-code:bg-emerald-50 dark:prose-code:bg-emerald-950/60 prose-code:border prose-code:border-emerald-200/60 dark:prose-code:border-emerald-800/60 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-blockquote:text-slate-800 dark:prose-blockquote:text-slate-200 prose-blockquote:border-l-4 prose-blockquote:border-emerald-600 prose-blockquote:bg-emerald-50/70 dark:prose-blockquote:bg-emerald-950/30 prose-blockquote:p-3.5 prose-blockquote:rounded-r-xl prose-table:w-full prose-table:border-collapse prose-th:border prose-th:border-slate-200 dark:prose-th:border-slate-700 prose-th:text-slate-950 dark:prose-th:text-white prose-th:bg-slate-50 dark:prose-th:bg-slate-800 prose-td:border prose-td:border-slate-200 dark:prose-td:border-slate-800 prose-td:text-slate-800 dark:prose-td:text-slate-200 prose-td:bg-white dark:prose-td:bg-slate-900 prose-th:p-3 prose-td:p-3">
                               <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
                             </div>
                           )}
@@ -969,7 +994,7 @@ export default function ResearchAiAssistant({
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-800 to-teal-600 text-white flex items-center justify-center shadow-xs shrink-0 animate-pulse">
                   <Sparkles className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                 </div>
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-tl-xs shadow-xs flex items-center gap-3">
+                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-tl-xs shadow-md flex items-center gap-3">
                   <div className="flex space-x-1.5">
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-bounce [animation-delay:-0.3s]"></div>
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-bounce [animation-delay:-0.15s]"></div>
@@ -987,27 +1012,27 @@ export default function ResearchAiAssistant({
 
           {/* Quick Follow-up Chips (only shown if messages exist) */}
           {currentSession?.messages && currentSession.messages.length > 1 && (
-            <div className="w-full px-3 sm:px-6 lg:px-8 py-2.5 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-xs border-t border-slate-100 dark:border-slate-800/80 shrink-0 z-10">
+            <div className="w-full px-3 sm:px-6 lg:px-8 py-2.5 bg-white dark:bg-slate-900/90 backdrop-blur-xs border-t border-slate-200 dark:border-slate-800/80 shrink-0 z-10">
               <div className="w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto overflow-x-auto custom-scrollbar flex items-center gap-2">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0">Quick Ask:</span>
                 <button
                   type="button"
                   onClick={() => handleSendMessage('Can you break down the mathematical methodology and statistical significance in detail?')}
-                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-700 hover:border-emerald-600 transition shrink-0 cursor-pointer shadow-2xs"
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 dark:bg-slate-800 border border-slate-200 hover:border-emerald-400 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-700 transition shrink-0 cursor-pointer shadow-xs"
                 >
                   🔬 Methodology & Stats
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSendMessage('What are the key commercialization bottlenecks and policy recommendations?')}
-                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-700 hover:border-emerald-600 transition shrink-0 cursor-pointer shadow-2xs"
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 dark:bg-slate-800 border border-slate-200 hover:border-emerald-400 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-700 transition shrink-0 cursor-pointer shadow-xs"
                 >
                   💡 Bottlenecks & Policy
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSendMessage('Draft an executive summary abstract suitable for an African clean-energy grant.')}
-                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-700 hover:border-emerald-600 transition shrink-0 cursor-pointer shadow-2xs"
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 dark:bg-slate-800 border border-slate-200 hover:border-emerald-400 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-700 transition shrink-0 cursor-pointer shadow-xs"
                 >
                   📝 Grant Abstract
                 </button>
@@ -1016,11 +1041,11 @@ export default function ResearchAiAssistant({
           )}
 
           {/* Bottom Input Area */}
-          <div className="p-3 sm:p-4 lg:p-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 w-full shrink-0 z-10">
+          <div id="ai_assistant_composer" className="p-3 sm:p-4 lg:p-5 bg-white dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 w-full shrink-0 z-10">
             <div className="w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto flex flex-col gap-2.5">
               {/* Attachment Preview Chips */}
               {attachments.length > 0 && (
-                <div className="flex flex-wrap gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <div className="flex flex-wrap gap-2 p-2.5 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs">
                   {attachments.map((att) => (
                     <div
                       key={att.id}
@@ -1043,7 +1068,7 @@ export default function ResearchAiAssistant({
               )}
 
               {/* Text Input Row */}
-              <div className="relative flex items-end gap-2 bg-white dark:bg-slate-800 rounded-2xl sm:rounded-3xl border-2 border-slate-200 dark:border-slate-700 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-500/20 transition p-2.5 shadow-xs">
+              <div className="relative flex items-end gap-2 bg-white dark:bg-slate-800 rounded-2xl sm:rounded-3xl border-2 border-slate-200 dark:border-slate-700 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-500/20 transition p-2.5 shadow-sm">
                 {/* Hidden File Input */}
                 <input
                   type="file"

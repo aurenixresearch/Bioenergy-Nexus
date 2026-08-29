@@ -51,6 +51,40 @@ html, body, * {
   color-scheme: dark;
 }
 
+.dark,
+.dark body,
+.dark #app_root,
+.dark #app_layout_wrapper,
+.dark .min-h-screen,
+.dark main,
+.dark header,
+.dark nav,
+.dark footer,
+.dark aside,
+.dark section,
+.dark article,
+.dark div,
+.dark p,
+.dark span,
+.dark label,
+.dark li,
+.dark td,
+.dark th,
+.dark caption,
+.dark dt,
+.dark dd,
+.dark strong,
+.dark b,
+.dark em,
+.dark i,
+.dark small,
+.dark blockquote,
+.dark cite,
+.dark figcaption,
+.dark summary {
+  color: #e2e8f0;
+}
+
 .dark body,
 .dark #app_root,
 .dark #app_layout_wrapper,
@@ -77,12 +111,15 @@ html, body, * {
 .dark .bg-neutral-100,
 .dark .bg-neutral-200,
 .dark [class*="bg-white"],
-.dark [class*="bg-slate-"],
-.dark [class*="bg-gray-"],
-.dark [class*="bg-zinc-"],
-.dark [class*="bg-neutral-"],
-.dark [class*="bg-amber-50"],
-.dark [class*="bg-blue-50"] {
+.dark [class*="bg-slate-50"],
+.dark [class*="bg-slate-100"],
+.dark [class*="bg-slate-200"],
+.dark [class*="bg-gray-50"],
+.dark [class*="bg-gray-100"],
+.dark [class*="bg-zinc-50"],
+.dark [class*="bg-zinc-100"],
+.dark [class*="bg-neutral-50"],
+.dark [class*="bg-neutral-100"] {
   background-color: #000000 !important;
   background-image: none !important;
   color: #f1f5f9 !important;
@@ -186,75 +223,331 @@ html, body, * {
 .dark .bg-green-100\/50,
 .dark .bg-teal-50,
 .dark .bg-teal-100 {
-  background-color: rgba(16, 185, 129, 0.25) !important; /* gorgeous vibrant translucent light green background */
-  color: #a7f3d0 !important; /* elegant mint green text */
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: #a7f3d0 !important;
   box-shadow: 0 4px 15px rgba(52, 211, 153, 0.08) !important;
 }
 
-/* Ensure text inside these cards is readable and beautifully green */
-.dark .bg-emerald-50 *,
-.dark .bg-emerald-50\/30 *,
-.dark .bg-emerald-50\/50 *,
-.dark .bg-emerald-50\/80 *,
-.dark .bg-emerald-100 *,
-.dark .bg-emerald-200 *,
-.dark .bg-emerald-100\/60 *,
-.dark .bg-emerald-950 *,
-.dark .bg-green-50 *,
-.dark .bg-green-100 *,
-.dark .bg-green-200 *,
-.dark .bg-green-950 *,
-.dark .bg-teal-50 *,
-.dark .bg-teal-100 * {
-  color: #a7f3d0 !important;
+/* Badges & Status Highlights in Dark Mode */
+.dark .bg-amber-50,
+.dark .bg-amber-100,
+.dark .bg-yellow-50,
+.dark .bg-yellow-100,
+.dark .bg-orange-50,
+.dark .bg-orange-100 {
+  background-color: rgba(245, 158, 11, 0.18) !important;
+  color: #fcd34d !important;
 }
 
-.dark .bg-emerald-50 h1, .dark .bg-emerald-50 h2, .dark .bg-emerald-50 h3, .dark .bg-emerald-50 h4,
-.dark .bg-emerald-100 h1, .dark .bg-emerald-100 h2, .dark .bg-emerald-100 h3, .dark .bg-emerald-100 h4,
-.dark .bg-emerald-200 h1, .dark .bg-emerald-200 h2, .dark .bg-emerald-200 h3, .dark .bg-emerald-200 h4,
-.dark .bg-emerald-950 h1, .dark .bg-emerald-950 h2, .dark .bg-emerald-950 h3, .dark .bg-emerald-950 h4,
-.dark .bg-green-50 h1, .dark .bg-green-50 h2, .dark .bg-green-50 h3, .dark .bg-green-50 h4,
-.dark .bg-teal-50 h1, .dark .bg-teal-50 h2, .dark .bg-teal-50 h3, .dark .bg-teal-50 h4 {
-  color: #4ade80 !important; /* bright light green headings */
+.dark .bg-blue-50,
+.dark .bg-blue-100,
+.dark .bg-sky-50,
+.dark .bg-sky-100,
+.dark .bg-indigo-50,
+.dark .bg-indigo-100 {
+  background-color: rgba(59, 130, 246, 0.18) !important;
+  color: #93c5fd !important;
 }
 
-/* Text elements: headings, primary labels */
-.dark .text-slate-900,
-.dark .text-slate-800,
-.dark .text-slate-700,
+.dark .bg-purple-50,
+.dark .bg-purple-100,
+.dark .bg-violet-50,
+.dark .bg-violet-100 {
+  background-color: rgba(168, 85, 247, 0.18) !important;
+  color: #d8b4fe !important;
+}
+
+/* ==========================================================================
+   HIGH-CONTRAST DARK MODE TEXT & TYPOGRAPHY SYSTEM
+   ========================================================================== */
+
+/* 1. Primary Headings, Bold Labels, Card Titles, High-Contrast Text */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6,
 .dark .text-slate-950,
+.dark .text-slate-900,
+.dark .text-slate-850,
+.dark .text-slate-800,
+.dark .text-slate-750,
+.dark .text-slate-700,
+.dark .text-gray-950,
 .dark .text-gray-900,
 .dark .text-gray-850,
+.dark .text-gray-800,
+.dark .text-gray-700,
+.dark .text-zinc-950,
 .dark .text-zinc-900,
-.dark .text-neutral-900 {
+.dark .text-zinc-800,
+.dark .text-zinc-700,
+.dark .text-neutral-950,
+.dark .text-neutral-900,
+.dark .text-neutral-800,
+.dark .text-neutral-700,
+.dark .text-stone-950,
+.dark .text-stone-900,
+.dark .text-stone-800,
+.dark .text-stone-700,
+.dark .text-black,
+.dark [class*="text-slate-9"],
+.dark [class*="text-slate-8"],
+.dark [class*="text-gray-9"],
+.dark [class*="text-gray-8"],
+.dark [class*="text-zinc-9"],
+.dark [class*="text-zinc-8"],
+.dark [class*="text-neutral-9"],
+.dark [class*="text-neutral-8"] {
   color: #f8fafc !important;
 }
 
-/* Text elements: paragraph descriptions, helper subtitles */
+/* 2. Body Copy, Descriptions, Paragraphs, Abstracts & Subtitles */
+.dark p,
 .dark .text-slate-600,
 .dark .text-slate-500,
-.dark .text-slate-400,
 .dark .text-gray-600,
 .dark .text-gray-500,
+.dark .text-zinc-600,
+.dark .text-zinc-500,
+.dark .text-neutral-600,
+.dark .text-neutral-500,
+.dark .text-stone-600,
+.dark .text-stone-500 {
+  color: #cbd5e1 !important;
+}
+
+/* 3. Captions, Timestamps, Muted Metadata & Icon Subtitles */
+.dark .text-slate-400,
 .dark .text-gray-400,
-.dark .text-zinc-500 {
-  color: #a1a1aa !important;
+.dark .text-zinc-400,
+.dark .text-neutral-400,
+.dark .text-stone-400,
+.dark .text-slate-300,
+.dark .text-gray-300,
+.dark .text-zinc-300,
+.dark .text-neutral-300,
+.dark .text-stone-300 {
+  color: #94a3b8 !important;
 }
 
-/* Glowing high-contrast light green accents */
-.dark .text-emerald-600,
-.dark .text-emerald-700,
+/* 4. Emerald, Green, and Mint Accents (High Visibility) */
+.dark .text-emerald-950,
+.dark .text-emerald-900,
+.dark .text-emerald-850,
 .dark .text-emerald-800,
-.dark .text-green-600,
-.dark .text-green-700,
+.dark .text-emerald-700,
+.dark .text-emerald-600,
+.dark .text-emerald-500,
+.dark .text-green-950,
+.dark .text-green-900,
 .dark .text-green-800,
+.dark .text-green-700,
+.dark .text-green-600,
+.dark .text-green-500,
+.dark .text-teal-950,
+.dark .text-teal-900,
+.dark .text-teal-800,
+.dark .text-teal-700,
 .dark .text-teal-600,
-.dark .text-emerald-500 {
-  color: #4ade80 !important; /* bright light green */
+.dark .text-teal-500 {
+  color: #4ade80 !important; /* bright light green with high WCAG contrast */
 }
 
-.dark .text-emerald-950 {
-  color: #bbf7d0 !important;
+.dark .text-emerald-400,
+.dark .text-emerald-300,
+.dark .text-emerald-200,
+.dark .text-emerald-100,
+.dark .text-green-400,
+.dark .text-green-300,
+.dark .text-teal-400,
+.dark .text-teal-300 {
+  color: #6ee7b7 !important;
+}
+
+/* 5. Warning & Review Status (Amber, Yellow, Orange) */
+.dark .text-amber-950,
+.dark .text-amber-900,
+.dark .text-amber-800,
+.dark .text-amber-700,
+.dark .text-amber-600,
+.dark .text-amber-500,
+.dark .text-yellow-950,
+.dark .text-yellow-900,
+.dark .text-yellow-800,
+.dark .text-yellow-700,
+.dark .text-yellow-600,
+.dark .text-yellow-500,
+.dark .text-orange-950,
+.dark .text-orange-900,
+.dark .text-orange-800,
+.dark .text-orange-700,
+.dark .text-orange-600,
+.dark .text-orange-500 {
+  color: #fcd34d !important;
+}
+
+.dark .text-amber-400,
+.dark .text-amber-300,
+.dark .text-yellow-400,
+.dark .text-yellow-300,
+.dark .text-orange-400,
+.dark .text-orange-300 {
+  color: #fde68a !important;
+}
+
+/* 6. Critical Alerts & Errors (Red, Rose) */
+.dark .text-red-950,
+.dark .text-red-900,
+.dark .text-red-800,
+.dark .text-red-700,
+.dark .text-red-600,
+.dark .text-red-500,
+.dark .text-rose-950,
+.dark .text-rose-900,
+.dark .text-rose-800,
+.dark .text-rose-700,
+.dark .text-rose-600,
+.dark .text-rose-500 {
+  color: #fca5a5 !important;
+}
+
+.dark .text-red-400,
+.dark .text-red-300,
+.dark .text-rose-400,
+.dark .text-rose-300 {
+  color: #fecaca !important;
+}
+
+/* 7. Information & Interactive Badges (Blue, Sky, Cyan, Indigo) */
+.dark .text-blue-950,
+.dark .text-blue-900,
+.dark .text-blue-800,
+.dark .text-blue-700,
+.dark .text-blue-600,
+.dark .text-blue-500,
+.dark .text-sky-950,
+.dark .text-sky-900,
+.dark .text-sky-800,
+.dark .text-sky-700,
+.dark .text-sky-600,
+.dark .text-sky-500,
+.dark .text-cyan-950,
+.dark .text-cyan-900,
+.dark .text-cyan-800,
+.dark .text-cyan-700,
+.dark .text-cyan-600,
+.dark .text-cyan-500,
+.dark .text-indigo-950,
+.dark .text-indigo-900,
+.dark .text-indigo-800,
+.dark .text-indigo-700,
+.dark .text-indigo-600,
+.dark .text-indigo-500 {
+  color: #93c5fd !important;
+}
+
+.dark .text-blue-400,
+.dark .text-blue-300,
+.dark .text-sky-400,
+.dark .text-sky-300,
+.dark .text-cyan-400,
+.dark .text-cyan-300,
+.dark .text-indigo-400,
+.dark .text-indigo-300 {
+  color: #bfdbfe !important;
+}
+
+/* 8. AI, Grants & Special Highlights (Purple, Violet, Fuchsia, Pink) */
+.dark .text-purple-950,
+.dark .text-purple-900,
+.dark .text-purple-800,
+.dark .text-purple-700,
+.dark .text-purple-600,
+.dark .text-purple-500,
+.dark .text-violet-950,
+.dark .text-violet-900,
+.dark .text-violet-800,
+.dark .text-violet-700,
+.dark .text-violet-600,
+.dark .text-violet-500,
+.dark .text-fuchsia-950,
+.dark .text-fuchsia-900,
+.dark .text-fuchsia-800,
+.dark .text-fuchsia-700,
+.dark .text-fuchsia-600,
+.dark .text-pink-950,
+.dark .text-pink-900,
+.dark .text-pink-800,
+.dark .text-pink-700,
+.dark .text-pink-600 {
+  color: #d8b4fe !important;
+}
+
+.dark .text-purple-400,
+.dark .text-purple-300,
+.dark .text-violet-400,
+.dark .text-violet-300,
+.dark .text-fuchsia-400,
+.dark .text-pink-400 {
+  color: #e9d5ff !important;
+}
+
+/* 9. Tables, Code, Markdown & Data Presentation */
+.dark th {
+  color: #f8fafc !important;
+  background-color: #0b1410 !important;
+}
+
+.dark td {
+  color: #cbd5e1 !important;
+}
+
+.dark caption,
+.dark summary {
+  color: #94a3b8 !important;
+}
+
+.dark pre,
+.dark code,
+.dark kbd,
+.dark samp {
+  color: #a7f3d0 !important;
+  background-color: #0c1813 !important;
+}
+
+.dark blockquote {
+  color: #e2e8f0 !important;
+  border-left: 3px solid #059669 !important;
+}
+
+.dark mark {
+  background-color: #064e3b !important;
+  color: #a7f3d0 !important;
+}
+
+/* 10. SVGs and Icons */
+.dark svg {
+  color: currentColor;
+}
+
+.dark svg.text-slate-950,
+.dark svg.text-slate-900,
+.dark svg.text-slate-800,
+.dark svg.text-slate-700,
+.dark svg.text-gray-900,
+.dark svg.text-gray-800,
+.dark svg.text-black {
+  color: #f8fafc !important;
+}
+
+.dark svg.text-slate-600,
+.dark svg.text-slate-500,
+.dark svg.text-slate-400,
+.dark svg.text-gray-600,
+.dark svg.text-gray-500 {
+  color: #94a3b8 !important;
 }
 
 /* Core green CTA buttons & controls */
@@ -919,27 +1212,26 @@ div[role="dialog"],
 }
 
 
-/* Timeline Section white in all modes override */
-#experience_timeline,
+/* Timeline Section in dark mode */
 .dark #experience_timeline {
-  background-color: #ffffff !important;
+  background-color: #000000 !important;
 }
 
 .dark #experience_timeline h2 {
-  color: #0f172a !important;
+  color: #f8fafc !important;
 }
 
 .dark #experience_timeline p {
-  color: #475569 !important;
+  color: #cbd5e1 !important;
 }
 
-/* Timeline Cards white in dark mode override */
+/* Timeline Cards in dark mode */
 .dark #experience_timeline .timeline-card,
 .dark .timeline-card {
-  background-color: #ffffff !important;
+  background-color: #0b110e !important;
   background-image: none !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  border-color: rgba(52, 211, 153, 0.15) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
 }
 
 .dark #experience_timeline .timeline-line {
@@ -949,7 +1241,7 @@ div[role="dialog"],
 
 .dark #experience_timeline .timeline-node {
   background-color: #34d399 !important;
-  border-color: #0f172a !important;
+  border-color: #000000 !important;
   box-shadow: 0 0 8px rgba(52, 211, 153, 0.6) !important;
 }
 
@@ -957,30 +1249,30 @@ div[role="dialog"],
 .dark .timeline-card .text-slate-800,
 .dark #experience_timeline .timeline-card .text-slate-900,
 .dark .timeline-card .text-slate-900 {
-  color: #0f172a !important;
+  color: #f8fafc !important;
 }
 
 .dark #experience_timeline .timeline-card .text-slate-500,
 .dark .timeline-card .text-slate-500,
 .dark #experience_timeline .timeline-card .text-slate-600,
 .dark .timeline-card .text-slate-600 {
-  color: #334155 !important;
+  color: #cbd5e1 !important;
 }
 
 .dark #experience_timeline .timeline-card .text-slate-400,
 .dark .timeline-card .text-slate-400 {
-  color: #64748b !important;
+  color: #94a3b8 !important;
 }
 
 .dark #experience_timeline .timeline-card .text-emerald-700,
 .dark .timeline-card .text-emerald-700 {
-  color: #047857 !important;
+  color: #4ade80 !important;
 }
 
 .dark #experience_timeline .timeline-card .bg-slate-100,
 .dark .timeline-card .bg-slate-100 {
-  background-color: #f1f5f9 !important;
-  color: #334155 !important;
+  background-color: #111a15 !important;
+  color: #cbd5e1 !important;
 }
 
 /* Premium Floating Hamburger Menu Styles */
@@ -1019,6 +1311,127 @@ div[role="dialog"],
 .dark #aside_toggle_btn:active {
   transform: scale(0.95) !important;
 }
+
+/* Floating & Desktop Aside Menu Background in Light & Dark Mode */
+#desktop_floating_aside,
+#desktop_floating_aside > div,
+#mobile_aside_drawer,
+#mobile_aside_drawer > div {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #222222 !important;
+}
+
+#desktop_floating_aside {
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+#desktop_floating_aside > div:nth-of-type(1) > div:nth-of-type(2),
+aside#desktop_floating_aside > div:nth-of-type(1) > div:nth-of-type(2) {
+  background-color: #ffffff !important;
+  color: #222222 !important;
+  border-style: none !important;
+}
+
+#desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emerald-600) span,
+#desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emerald-600) svg {
+  color: #222222;
+}
+
+.dark #desktop_floating_aside,
+.dark #mobile_aside_drawer {
+  background-color: #010403 !important;
+  background-image: linear-gradient(180deg, #000000 0%, #021a12 100%) !important;
+  border-color: rgba(52, 211, 153, 0.15) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(52, 211, 153, 0.03) !important;
+  color: #f1f5f9 !important;
+}
+
+.dark #desktop_floating_aside > div,
+.dark #desktop_floating_aside > div:nth-of-type(1) > div:nth-of-type(2),
+.dark aside#desktop_floating_aside > div:nth-of-type(1) > div:nth-of-type(2),
+.dark #mobile_aside_drawer > div {
+  background-color: transparent !important;
+  background-image: none !important;
+  color: #f1f5f9 !important;
+}
+
+/* AI Assistant System Theme Guarantees (Clean White in Light Mode, Dark in Dark Mode) */
+#ai_assistant_workspace,
+#floating_ai_widget,
+.ai-assistant-container {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+#ai_assistant_header {
+  background-color: #ffffff;
+  border-bottom-color: #e2e8f0;
+}
+
+#ai_assistant_sidebar {
+  background-color: #ffffff;
+  border-right-color: #e2e8f0;
+}
+
+#ai_assistant_chat_area {
+  background-color: #ffffff;
+}
+
+#ai_assistant_composer {
+  background-color: #ffffff;
+  border-top-color: #e2e8f0;
+}
+
+/* Dark Mode Overrides for AI Assistant System */
+.dark #ai_assistant_workspace,
+.dark #floating_ai_widget,
+.dark .ai-assistant-container {
+  background-color: #020617;
+  color: #f8fafc;
+}
+
+.dark #ai_assistant_header {
+  background-color: #0f172a;
+  border-bottom-color: #1e293b;
+}
+
+.dark #ai_assistant_sidebar {
+  background-color: #0f172a;
+  border-right-color: #1e293b;
+}
+
+.dark #ai_assistant_chat_area {
+  background-color: #020617;
+}
+
+.dark #ai_assistant_composer {
+  background-color: #0f172a;
+  border-top-color: #1e293b;
+}
+
+/* User Specific Focused Styles for AI Assistant */
+#ai_assistant_chat_area > div:nth-of-type(1) {
+  background-color: #ffffff;
+}
+
+#ai_assistant_sidebar > div:nth-of-type(2) {
+  background-color: #ffffff;
+}
+
+#ai_assistant_chat_area > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
+  background-color: #1d293d;
+}
+
+#ai_assistant_sidebar > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(1) > svg:nth-of-type(1) {
+  background-color: #90b799;
+}
+
+#ai_assistant_sidebar > div:nth-of-type(3) {
+  background-color: #1d293d;
+}
+
+
 
 
 

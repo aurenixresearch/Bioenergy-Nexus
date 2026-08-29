@@ -604,7 +604,7 @@ export default function MessagesPage({
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-md flex-grow overflow-hidden flex flex-col lg:flex-row relative">
 
         {/* ─── LEFT PANEL: CONVERSATIONS & DIRECTORY ─────────────────────────── */}
-        <div className={`w-full lg:w-96 xl:w-[380px] shrink-0 border-r border-slate-100 dark:border-slate-800/80 flex flex-col bg-slate-50/60 dark:bg-slate-900/50 ${selectedConvId ? 'hidden lg:flex' : 'flex'}`}>
+        <div className={`w-full lg:w-96 xl:w-[380px] shrink-0 border-r border-slate-200/80 dark:border-slate-800/80 flex flex-col bg-white dark:bg-slate-900/50 ${selectedConvId ? 'hidden lg:flex' : 'flex'}`}>
           
           {/* Sidebar Header */}
           <div className="p-4 sm:p-5 border-b border-slate-200/70 dark:border-slate-800/80 space-y-4 bg-white dark:bg-slate-900">

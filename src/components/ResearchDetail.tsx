@@ -57,8 +57,15 @@ export default function ResearchDetail({
     conclusion: paper.conclusion || ''
   });
 
-  // Track if current user is owner (or enable always in demo mode to allow full workflow testing)
-  const isOwner = paper.isCustom && (paper.userId === user?.uid || localStorage.getItem('nexus_demo_mode') === 'true');
+  // Track if current user is the owner who published this research
+  const isOwner = Boolean(
+    paper.isCustom &&
+    user &&
+    (
+      paper.userId === user.uid ||
+      (Boolean(user.email) && Boolean(paper.userEmail) && paper.userEmail.toLowerCase() === user.email.toLowerCase())
+    )
+  );
 
   // Load versions
   const [versions, setVersions] = useState<ResearchVersion[]>(paper.versions || [
@@ -123,8 +130,13 @@ export default function ResearchDetail({
   };
 
   const confirmDeleteDetailPaper = async () => {
+    if (!isOwner) {
+      triggerFeedback('Only the author who published this research can delete it.', 'error');
+      setShowDeleteConfirm(false);
+      return;
+    }
     try {
-      await deleteCustomPaper(paper.id);
+      await deleteCustomPaper(paper.id, user?.uid, user?.email || undefined);
       triggerFeedback('Research paper permanently deleted.', 'success');
       setShowDeleteConfirm(false);
       setTimeout(() => {
@@ -138,6 +150,10 @@ export default function ResearchDetail({
   };
 
   const handleSaveEditedDetailPaper = async (paperData: Omit<ResearchPaper, 'id'>) => {
+    if (!isOwner) {
+      triggerFeedback('Only the author who published this research can edit it.', 'error');
+      return;
+    }
     try {
       await updateCustomPaper(paper.id, paperData);
       setIsEditingPaper(false);
@@ -569,8 +585,8 @@ export default function ResearchDetail({
               Download PDF ({downloadsCount})
             </motion.button>
 
-            {/* Edit & Delete Buttons for paper owner / custom paper */}
-            {(paper.isCustom || (user && (paper.userId === user.uid || paper.userEmail === user.email))) && (
+            {/* Edit & Delete Buttons - strictly for the owner who published this research */}
+            {isOwner && (
               <>
                 <motion.button
                   onClick={handleOpenEditModal}

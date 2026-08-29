@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Mail, 
@@ -25,15 +25,23 @@ import {
   Compass,
   CheckCircle2,
   X,
-  LockKeyhole
+  LockKeyhole,
+  Link as LinkIcon,
+  Fingerprint
 } from 'lucide-react';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  updateProfile
+  updateProfile,
+  GoogleAuthProvider,
+  EmailAuthProvider,
+  linkWithCredential,
+  fetchSignInMethodsForEmail,
+  signInWithPopup,
+  AuthCredential
 } from 'firebase/auth';
-import { auth } from '../firebase';
-import { createUserProfile } from '../services/db';
+import { auth, googleProvider, browserPopupRedirectResolver } from '../firebase';
+import { createUserProfile, consolidateDuplicateAccounts, getUserProfileByEmail } from '../services/db';
 import { recordPolicyAcceptance } from '../services/policyService';
 
 interface SignInPageProps {
@@ -43,6 +51,8 @@ interface SignInPageProps {
   onGuestSignIn: (customProfile?: { uid: string; email: string; displayName: string }) => Promise<void>;
   authError?: string | null;
   setAuthError?: (err: string | null) => void;
+  pendingLinkingInfo?: { email: string; credential: any } | null;
+  setPendingLinkingInfo?: (info: { email: string; credential: any } | null) => void;
 }
 
 // African Countries first alphabetically
@@ -99,7 +109,9 @@ export default function SignInPage({
   onGoogleSignIn, 
   onGuestSignIn,
   authError,
-  setAuthError
+  setAuthError,
+  pendingLinkingInfo,
+  setPendingLinkingInfo
 }: SignInPageProps) {
   // Sign-in states
   const [email, setEmail] = useState('');
@@ -110,6 +122,26 @@ export default function SignInPage({
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Account Unification & Linking States
+  const [linkingMode, setLinkingMode] = useState<'none' | 'verify_password_to_link_google' | 'google_account_exists_link_password'>('none');
+  const [linkingEmail, setLinkingEmail] = useState('');
+  const [linkingPassword, setLinkingPassword] = useState('');
+  const [showLinkingPassword, setShowLinkingPassword] = useState(false);
+  const [pendingGoogleCredential, setPendingGoogleCredential] = useState<AuthCredential | null>(null);
+  const [isLinking, setIsLinking] = useState(false);
+  const [linkingError, setLinkingError] = useState<string | null>(null);
+
+  // Listen to pendingLinkingInfo prop
+  useEffect(() => {
+    if (pendingLinkingInfo && pendingLinkingInfo.email) {
+      setLinkingEmail(pendingLinkingInfo.email);
+      setPendingGoogleCredential(pendingLinkingInfo.credential || null);
+      setLinkingMode('verify_password_to_link_google');
+      setLinkingError(null);
+      setErrorMsg(null);
+    }
+  }, [pendingLinkingInfo]);
 
   // Registration Multi-Step/Onboarding states
   const [regStep, setRegStep] = useState(1);
@@ -205,6 +237,174 @@ export default function SignInPage({
     }
   };
 
+  // Dedicated Google Sign-In with Account Unification & Linking Catch
+  const handleGoogleSignInFlow = async () => {
+    setAuthError?.(null);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    setLinkingError(null);
+    setIsGoogleLoading(true);
+
+    try {
+      let res;
+      try {
+        res = await signInWithPopup(auth, googleProvider);
+      } catch (firstErr: any) {
+        if (browserPopupRedirectResolver) {
+          res = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
+        } else {
+          throw firstErr;
+        }
+      }
+
+      if (res && res.user) {
+        // Consolidate profile into one single account identity
+        if (res.user.email) {
+          await consolidateDuplicateAccounts(res.user.uid, res.user.email);
+        }
+        onSuccess(res.user);
+      }
+    } catch (err: any) {
+      console.warn('Google Sign-In caught error:', err);
+      const errCode = err?.code || '';
+      const errStr = String(err);
+
+      // Handle duplicate account / credential collision natively
+      if (errCode === 'auth/account-exists-with-different-credential' || errStr.includes('account-exists-with-different-credential')) {
+        const pendingCred = GoogleAuthProvider.credentialFromError(err);
+        const emailFound = err.customData?.email || err.email || '';
+        setPendingGoogleCredential(pendingCred);
+        setLinkingEmail(emailFound);
+        setLinkingMode('verify_password_to_link_google');
+        setErrorMsg(null);
+        return;
+      }
+
+      if (errCode === 'auth/popup-blocked' || errStr.includes('popup-blocked')) {
+        setAuthError?.('popup-blocked');
+      } else if (
+        errCode === 'auth/popup-closed-by-user' || 
+        errCode === 'auth/cancelled-popup-request' ||
+        errStr.includes('popup-closed-by-user') ||
+        errStr.includes('cancelled-popup-request')
+      ) {
+        setAuthError?.('popup-closed');
+      } else if (errCode === 'auth/unauthorized-domain' || errStr.includes('unauthorized-domain')) {
+        setAuthError?.('unauthorized-domain');
+      } else {
+        setErrorMsg(err?.message || 'Google sign-in could not be completed.');
+      }
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  // Verify Password and Link Pending Google Credential into ONE user account
+  const handleVerifyPasswordAndLinkGoogle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!linkingPassword) {
+      setLinkingError('Please enter your account password.');
+      return;
+    }
+
+    setIsLinking(true);
+    setLinkingError(null);
+
+    try {
+      // 1. Sign in with the primary password credential
+      const userCredential = await signInWithEmailAndPassword(auth, linkingEmail, linkingPassword);
+      
+      // 2. Link the pending Google credential to the existing user
+      if (pendingGoogleCredential) {
+        try {
+          await linkWithCredential(userCredential.user, pendingGoogleCredential);
+          console.log('[ACCOUNT UNIFICATION] Successfully linked Google credential to existing user account.');
+        } catch (linkErr: any) {
+          console.warn('Notice during linkWithCredential:', linkErr);
+          // If already linked, continue seamlessly
+        }
+      }
+
+      // 3. Consolidate profile in Firestore
+      await consolidateDuplicateAccounts(userCredential.user.uid, linkingEmail);
+
+      setSuccessMsg('Account successfully unified! Both Google and Password logins are now active for your account.');
+      setLinkingMode('none');
+      setPendingLinkingInfo?.(null);
+
+      setTimeout(() => {
+        onSuccess(userCredential.user);
+      }, 600);
+
+    } catch (err: any) {
+      console.error('Account Linking Verification Failure:', err);
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setLinkingError('Incorrect password. Please verify the password for this account.');
+      } else {
+        setLinkingError(err.message || 'Failed to authenticate and link account.');
+      }
+    } finally {
+      setIsLinking(false);
+    }
+  };
+
+  // Authenticate with Google and Link Password into ONE user account
+  const handleAuthenticateGoogleAndLinkPassword = async () => {
+    setIsLinking(true);
+    setLinkingError(null);
+
+    try {
+      let googleRes;
+      try {
+        googleRes = await signInWithPopup(auth, googleProvider);
+      } catch (firstErr: any) {
+        if (browserPopupRedirectResolver) {
+          googleRes = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
+        } else {
+          throw firstErr;
+        }
+      }
+
+      if (googleRes && googleRes.user) {
+        // Link the password credential to this Google account
+        const emailCred = EmailAuthProvider.credential(linkingEmail, linkingPassword);
+        try {
+          await linkWithCredential(googleRes.user, emailCred);
+          console.log('[ACCOUNT UNIFICATION] Password credential linked to Google account.');
+        } catch (linkErr: any) {
+          console.warn('Password linking note (might already be linked):', linkErr);
+        }
+
+        // Update profile in Firestore with any registration details
+        await createUserProfile(googleRes.user.uid, {
+          fullName: fullName || googleRes.user.displayName || 'Researcher',
+          email: linkingEmail,
+          role: role || 'Researcher',
+          country: country || 'Nigeria',
+          institution: institution || '',
+          researchInterests: researchInterests || [],
+          termsAccepted: true
+        });
+
+        // Record policy acceptance audit trail
+        await recordPolicyAcceptance(googleRes.user.uid, linkingEmail, fullName || googleRes.user.displayName || 'Scholar');
+
+        setSuccessMsg('Account successfully linked! You can now log in using either Google or Password.');
+        setLinkingMode('none');
+        setPendingLinkingInfo?.(null);
+
+        setTimeout(() => {
+          onSuccess(googleRes.user);
+        }, 600);
+      }
+    } catch (err: any) {
+      console.error('Google Linking Error:', err);
+      setLinkingError(err.message || 'Google authentication could not be completed.');
+    } finally {
+      setIsLinking(false);
+    }
+  };
+
   // Submit Handler for Reset Password
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -274,19 +474,31 @@ export default function SignInPage({
 
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        // Consolidate profile in Firestore
+        await consolidateDuplicateAccounts(userCredential.user.uid, email);
         onSuccess(userCredential.user);
       } catch (authError: any) {
-        if (authError.code === 'auth/user-not-found' || authError.code === 'auth/invalid-credential' || authError.code === 'auth/wrong-password') {
-          console.warn('Real Firebase Auth credential failed. Falling back to sandbox bypass.');
-          const customUser = {
-            uid: 'sandbox-' + email.replace(/[^a-zA-Z0-9]/g, '-'),
-            email: email,
-            displayName: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1)
-          };
-          await onGuestSignIn(customUser);
-        } else {
-          throw authError;
+        console.warn('Standard sign in failed:', authError);
+        const errCode = authError?.code || '';
+
+        // Check if this account was created via Google Sign-In
+        if (errCode === 'auth/user-not-found' || errCode === 'auth/invalid-credential' || errCode === 'auth/wrong-password') {
+          try {
+            const methods = await fetchSignInMethodsForEmail(auth, email);
+            if (methods.includes('google.com') && !methods.includes('password')) {
+              setErrorMsg('This email was registered using Google Sign-In. Please click "Sign In with Google" below.');
+              setIsLoading(false);
+              return;
+            }
+          } catch (e) {
+            // Ignore methods check error
+          }
+          setErrorMsg('Invalid email or password. Please verify your credentials or click Forgot Password.');
+          setIsLoading(false);
+          return;
         }
+
+        throw authError;
       }
     } catch (err: any) {
       console.error('Login Error:', err);
@@ -320,22 +532,31 @@ export default function SignInPage({
           displayName: fullName
         });
       } catch (authError: any) {
-        console.warn('Firebase Auth account creation unavailable/restricted, falling back to Sandbox User Mode:', authError);
-        
-        // Dynamic Sandbox Fallback User
-        registeredUser = {
-          uid: 'sandbox-' + regEmail.replace(/[^a-zA-Z0-9]/g, '-'),
-          email: regEmail,
-          displayName: fullName,
-          isAnonymous: true
-        };
-        
-        // Configure local storage sandbox state
-        localStorage.setItem('nexus_demo_mode', 'true');
-        localStorage.setItem('nexus_demo_user', JSON.stringify(registeredUser));
+        const errCode = authError?.code || '';
+        console.warn('Firebase Auth account creation notice:', authError);
+
+        // Check if account already exists with Google
+        if (errCode === 'auth/email-already-in-use') {
+          try {
+            const methods = await fetchSignInMethodsForEmail(auth, regEmail);
+            if (methods.includes('google.com')) {
+              setLinkingEmail(regEmail);
+              setLinkingPassword(regPassword);
+              setLinkingMode('google_account_exists_link_password');
+              setIsLoading(false);
+              return;
+            }
+          } catch (e) {}
+
+          setErrorMsg('An account with this email address already exists. Please Sign In with your existing password or reset it.');
+          setIsLoading(false);
+          return;
+        }
+
+        throw authError;
       }
 
-      // 2. Save detailed user profile data into Firestore (or local sandbox fallback)
+      // 2. Save detailed user profile data into Firestore
       await createUserProfile(registeredUser.uid, {
         fullName,
         username: username.trim() || fullName.trim(),
@@ -357,7 +578,7 @@ export default function SignInPage({
       console.error('Onboarding Registration Failure:', err);
       const rawMsg = err?.message || String(err || '');
       const cleanMsg = (rawMsg.startsWith('{') || rawMsg.includes('"error":') || rawMsg.includes('permission'))
-        ? 'Could not sync cloud profile immediately. Account registered in local scholar mode.'
+        ? 'Could not sync cloud profile immediately. Please check connection and try again.'
         : rawMsg || 'Registration failed. Please review your entries and try again.';
       setErrorMsg(cleanMsg);
     } finally {
@@ -392,7 +613,234 @@ export default function SignInPage({
         <div className="max-w-md w-full mx-auto space-y-8 my-auto relative z-10" id="signin_form_container">
           
           <AnimatePresence mode="wait">
-            {showResetPassword ? (
+            {linkingMode === 'verify_password_to_link_google' ? (
+              // ==========================================
+              // ACCOUNT UNIFICATION: LINK GOOGLE TO PASSWORD ACCOUNT
+              // ==========================================
+              <motion.div
+                key="link_google_view"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-6 text-left"
+                id="link_google_container"
+              >
+                <div className="text-center space-y-3" id="link_google_header">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 text-[11px] font-bold rounded-full border border-emerald-200/60 shadow-xs">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Account Unification Protocol</span>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-bold font-display text-slate-900 tracking-tight">
+                    Link Google Account
+                  </h1>
+                  <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-sm mx-auto">
+                    An existing account was found for <strong className="text-slate-800 font-semibold">{linkingEmail}</strong>. Enter your existing password to verify ownership and unify your sign-in methods under one account.
+                  </p>
+                </div>
+
+                <form onSubmit={handleVerifyPasswordAndLinkGoogle} className="space-y-4" id="link_google_form">
+                  <AnimatePresence mode="wait">
+                    {linkingError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs leading-relaxed font-semibold"
+                        id="link_google_error_banner"
+                      >
+                        {linkingError}
+                      </motion.div>
+                    )}
+                    {successMsg && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        className="p-3.5 bg-emerald-50 border border-emerald-200/50 text-emerald-800 rounded-xl text-xs leading-relaxed font-semibold animate-pulse"
+                        id="link_google_success_banner"
+                      >
+                        {successMsg}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Readonly Email field */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-bold text-slate-500 tracking-wider uppercase">
+                      Account Email
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="email"
+                        value={linkingEmail}
+                        disabled
+                        className="w-full pl-11 pr-4 py-3 bg-slate-100/80 border border-slate-200 rounded-xl text-sm text-slate-600 cursor-not-allowed select-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password field */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-bold text-slate-500 tracking-wider uppercase">
+                      Existing Account Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type={showLinkingPassword ? 'text' : 'password'}
+                        value={linkingPassword}
+                        onChange={(e) => { setLinkingPassword(e.target.value); setLinkingError(null); }}
+                        placeholder="Enter your existing password"
+                        className="w-full pl-11 pr-11 py-3 bg-white border border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:bg-white rounded-xl text-sm outline-none transition-all text-slate-800"
+                        id="link_google_password_input"
+                        autoFocus
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowLinkingPassword(!showLinkingPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        {showLinkingPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <motion.button
+                    type="submit"
+                    disabled={isLinking}
+                    whileHover={{ scale: 1.01, boxShadow: '0 4px 14px rgba(16, 185, 129, 0.25)' }}
+                    whileTap={{ scale: 0.99 }}
+                    className="w-full py-3.5 bg-gradient-to-t from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all disabled:opacity-85 text-xs sm:text-sm tracking-wider uppercase border-t border-white/10"
+                    id="link_google_submit_btn"
+                  >
+                    {isLinking ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <LinkIcon className="w-4 h-4" />
+                        <span>Verify & Unify Account</span>
+                      </>
+                    )}
+                  </motion.button>
+
+                  <div className="pt-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLinkingMode('none');
+                        setPendingGoogleCredential(null);
+                        setLinkingPassword('');
+                        setLinkingError(null);
+                        setPendingLinkingInfo?.(null);
+                      }}
+                      className="text-slate-500 hover:text-slate-800 text-xs font-semibold underline cursor-pointer"
+                    >
+                      Cancel and return to Sign In
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            ) : linkingMode === 'google_account_exists_link_password' ? (
+              // ==========================================
+              // ACCOUNT UNIFICATION: EXISTING GOOGLE ACCOUNT DETECTED
+              // ==========================================
+              <motion.div
+                key="google_exists_view"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-6 text-left"
+                id="google_exists_container"
+              >
+                <div className="text-center space-y-3" id="google_exists_header">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-800 text-[11px] font-bold rounded-full border border-blue-200/60 shadow-xs">
+                    <Fingerprint className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Existing Google Account</span>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-bold font-display text-slate-900 tracking-tight">
+                    Account Already Exists
+                  </h1>
+                  <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-sm mx-auto">
+                    The email <strong className="text-slate-800 font-semibold">{linkingEmail}</strong> was registered with Google Sign-In. You can sign in directly or authenticate with Google to link this password to your existing account.
+                  </p>
+                </div>
+
+                <div className="space-y-4 pt-2">
+                  <AnimatePresence mode="wait">
+                    {linkingError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs leading-relaxed font-semibold"
+                      >
+                        {linkingError}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Primary Link Button */}
+                  <motion.button
+                    type="button"
+                    disabled={isLinking}
+                    onClick={handleAuthenticateGoogleAndLinkPassword}
+                    whileHover={{ scale: 1.01, boxShadow: '0 4px 14px rgba(16, 185, 129, 0.25)' }}
+                    whileTap={{ scale: 0.99 }}
+                    className="w-full py-3.5 bg-gradient-to-t from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all disabled:opacity-85 text-xs sm:text-sm tracking-wider uppercase border-t border-white/10"
+                    id="link_with_google_btn"
+                  >
+                    {isLinking ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <LinkIcon className="w-4 h-4" />
+                        <span>Authenticate with Google & Link Password</span>
+                      </>
+                    )}
+                  </motion.button>
+
+                  {/* Or standard Google sign in */}
+                  <motion.button
+                    type="button"
+                    disabled={isLinking || isGoogleLoading}
+                    onClick={handleGoogleSignInFlow}
+                    whileHover={{ scale: 1.01, backgroundColor: '#f8fafc' }}
+                    whileTap={{ scale: 0.99 }}
+                    className="w-full py-3 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-bold rounded-xl flex items-center justify-center gap-2 shadow-xs cursor-pointer text-xs transition-colors uppercase tracking-wider"
+                    id="signin_google_instead_btn"
+                  >
+                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                      <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.54 15.02 1 12 1 7.35 1 3.37 3.65 1.41 7.54l3.82 2.96C6.18 7.54 8.83 5.04 12 5.04z" />
+                      <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.43c-.28 1.44-1.09 2.66-2.31 3.48l3.6 2.79c2.1-1.94 3.31-4.8 3.31-8.42z" />
+                      <path fill="#FBBC05" d="M5.23 10.5c-.24-.72-.38-1.49-.38-2.3s.14-1.58.38-2.3L1.41 2.94C.51 4.74 0 6.76 0 8.9c0 2.14.51 4.16 1.41 5.96l3.82-2.96z" />
+                      <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.6-2.79c-1.1.74-2.51 1.18-4.36 1.18-3.17 0-5.82-2.5-6.78-5.46L1.41 15.98C3.37 19.87 7.35 23 12 23z" />
+                    </svg>
+                    <span>Sign In with Google</span>
+                  </motion.button>
+
+                  <div className="pt-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLinkingMode('none');
+                        setLinkingEmail('');
+                        setLinkingPassword('');
+                        setLinkingError(null);
+                        setPendingLinkingInfo?.(null);
+                      }}
+                      className="text-slate-500 hover:text-slate-800 text-xs font-semibold underline cursor-pointer"
+                    >
+                      Cancel and return to Sign In
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ) : showResetPassword ? (
               // PASSWORD RESET VIEW
               <motion.div
                 key="reset_password_view"
@@ -1339,19 +1787,7 @@ export default function SignInPage({
                 <motion.button
                   type="button"
                   disabled={isGoogleLoading || isLoading}
-                  onClick={async () => {
-                    setAuthError?.(null);
-                    setErrorMsg(null);
-                    setSuccessMsg(null);
-                    setIsGoogleLoading(true);
-                    try {
-                      await onGoogleSignIn();
-                    } catch (err: any) {
-                      console.error('Google Sign-In Exception:', err);
-                    } finally {
-                      setIsGoogleLoading(false);
-                    }
-                  }}
+                  onClick={handleGoogleSignInFlow}
                   whileHover={{ scale: 1.01, backgroundColor: '#f8fafc' }}
                   whileTap={{ scale: 0.99 }}
                   className="w-full py-3.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-bold rounded-xl flex items-center justify-center gap-3 shadow-xs cursor-pointer text-xs sm:text-sm transition-colors uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
