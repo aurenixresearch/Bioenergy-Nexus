@@ -158,12 +158,12 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
   };
 
   const stakeholderCategories = [
-    { title: 'Universities', desc: 'Symmetric access to feedstock profiles and gas chromatography machinery', icon: GraduationCap },
-    { title: 'Industry', desc: 'Optimize biodigester loading parameters and design commercial generators', icon: Briefcase },
-    { title: 'Government', desc: 'Sponsor policy briefs and draft regional bioenergy safety roadmaps', icon: Globe },
-    { title: 'NGOs', desc: 'Introduce decentralized micro-digesters to rural smallholder farm cooperatives', icon: Users },
-    { title: 'Investors', desc: 'Fund high-TRL bio-waste conversion prototypes into utility scale', icon: Coins },
-    { title: 'International Organizations', desc: 'Scale circular economy grids and trace localized carbon offsets', icon: Award }
+    { title: 'Universities', desc: 'Advance scientific research, publish open data, and pioneer clean energy and climate solutions.', icon: GraduationCap },
+    { title: 'Industry', desc: 'Commercialize vetted lab discoveries, adopt clean technologies, and scale sustainable systems.', icon: Briefcase },
+    { title: 'Government', desc: 'Develop evidence-based policies, set sustainability standards, and guide regional energy transitions.', icon: Globe },
+    { title: 'NGOs', desc: 'Deploy community-scale solutions, empower rural populations, and champion grassroots environmental action.', icon: Users },
+    { title: 'Investors', desc: 'Finance high-impact clean-tech innovations, de-risk pilot deployments, and drive ESG returns.', icon: Coins },
+    { title: 'International Organizations', desc: 'Coordinate multilateral partnerships, harmonize green standards, and advance circular economy goals.', icon: Award }
   ];
 
   const normalizedRole = userProfile?.role?.toLowerCase() || '';
@@ -518,10 +518,10 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
       {/* STAKEHOLDER CATEGORY EXPLANATION CARDS */}
       <section className="py-6 sm:py-12 w-full px-3 sm:px-6 lg:px-8" id="stakeholder_categories">
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
-          <span className="text-xs font-mono font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full uppercase">Operational Scope</span>
-          <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-900">Ecosystem Roles & Support Parameters</h2>
-          <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-            We actively coordinate multiple aligned categories to optimize bioenergy process pathways.
+          <span className="text-xs font-mono font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-400 px-2.5 py-1 rounded-full uppercase">Operational Scope</span>
+          <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-[#44594f] dark:text-white">Ecosystem Roles & Support Parameters</h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            Connecting institutions, industry, and global partners to advance energy, climate, and tech innovations across Africa.
           </p>
         </div>
 
@@ -531,15 +531,15 @@ export default function CollaborationHome({ user, onSignIn, onNavigateToConsole 
             return (
               <div
                 key={idx}
-                className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/70 shadow-2xs hover:shadow-md hover:border-emerald-200 hover:-translate-y-0.5 transition-all duration-200 group flex flex-col justify-between"
+                className="bg-[#FFFFFF] dark:bg-slate-900/90 p-4 sm:p-5 rounded-2xl border border-[#5ea679] dark:border-slate-800 shadow-2xs hover:shadow-md hover:border-emerald-500 hover:-translate-y-0.5 transition-all duration-200 group flex flex-col justify-between"
               >
                 <div className="flex items-start gap-3.5 sm:block space-y-0 sm:space-y-3">
-                  <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl w-fit shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                  <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-xl w-fit shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                     <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900 text-sm font-display group-hover:text-emerald-950 transition-colors">{cat.title}</h4>
-                    <p className="text-xs text-slate-500 leading-relaxed mt-1 sm:mt-1.5">{cat.desc}</p>
+                    <h4 className="font-bold text-[#5c675d] dark:text-slate-100 text-sm font-display group-hover:text-emerald-950 dark:group-hover:text-emerald-300 transition-colors">{cat.title}</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1 sm:mt-1.5">{cat.desc}</p>
                   </div>
                 </div>
               </div>

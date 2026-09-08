@@ -91,12 +91,12 @@ export default function FloatingAiWidget({
 
   return (
     <>
-      {/* Floating Trigger Button at bottom right */}
+      {/* Floating Trigger Button on the left side */}
       {!isOpen && (
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex items-center gap-2"
+          className={`fixed bottom-4 left-4 sm:bottom-6 sm:left-6 ${user ? 'xl:left-[300px]' : 'xl:left-6'} z-50 flex items-center gap-2`}
         >
           <button
             type="button"

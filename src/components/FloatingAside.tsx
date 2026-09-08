@@ -17,7 +17,6 @@ import {
   LogOut,
   Sun,
   Moon,
-  Sparkles,
   Menu,
   X,
   ChevronRight,
@@ -188,13 +187,6 @@ export default function FloatingAside({
         label: isOrgAccount ? 'Organization Dashboard' : 'User Dashboard',
         id: 'dashboard',
         icon: isOrgAccount ? Building2 : LayoutDashboard,
-        category: 'workspace'
-      },
-      {
-        label: 'Aurenix AI Support System',
-        id: 'ai-assistant',
-        icon: Sparkles,
-        isAi: true,
         category: 'workspace'
       },
       {
@@ -697,7 +689,7 @@ export default function FloatingAside({
 
             {/* Quick-Access Top Pills (Shown when not searching) */}
             {!searchQuery && (
-              <div className="px-4 py-2.5 grid grid-cols-3 gap-2 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shrink-0">
+              <div className="px-4 py-2.5 grid grid-cols-2 gap-2 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shrink-0">
                 <button
                   type="button"
                   onClick={() => handleNavClick('dashboard')}
@@ -709,19 +701,6 @@ export default function FloatingAside({
                 >
                   <LayoutDashboard className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                   <span className="text-[10px] leading-tight truncate max-w-full">Dashboard</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleNavClick('ai-assistant')}
-                  className={`p-2 rounded-xl flex flex-col items-center justify-center gap-1 text-center transition-all cursor-pointer border ${
-                    currentView === 'ai-assistant'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-600 text-emerald-800 dark:text-emerald-300 font-extrabold shadow-2xs'
-                      : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-800 dark:text-slate-300 font-bold hover:border-emerald-500/40 hover:bg-emerald-50/50'
-                  }`}
-                >
-                  <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
-                  <span className="text-[10px] leading-tight truncate max-w-full">AI Support</span>
                 </button>
 
                 <button

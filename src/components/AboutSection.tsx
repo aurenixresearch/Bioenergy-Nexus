@@ -147,8 +147,8 @@ export default function AboutSection() {
           <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-slate-900 tracking-tight" id="about_heading">
             Advancing Practical Energy Solutions Across Africa
           </h2>
-          <p className="text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed font-sans max-w-3xl mx-auto px-2 sm:px-0" id="about_subheading">
-            Aurenix is Africa&apos;s research and innovation platform dedicated to advancing energy, climate, and technology solutions. We connect students, researchers, institutions, and global stakeholders to document research, foster collaboration, and transform innovative ideas into real-world impact.
+          <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed font-sans max-w-3xl mx-auto px-2 sm:px-0" id="about_subheading">
+            Aurenix is Africa&apos;s premier research and innovation hub accelerating energy, climate, and deep-tech solutions. By uniting scholars, innovators, institutions, and industry, we turn indigenous scientific capability into scalable, transformative impact.
           </p>
         </div>
 
@@ -166,8 +166,8 @@ export default function AboutSection() {
               <h3 className="text-2xl font-display font-extrabold text-slate-900">
                 Our Foundational Mission
               </h3>
-              <p className="text-slate-600 leading-relaxed text-xs sm:text-sm md:text-base font-normal">
-                {FOUNDER_INFO.mission}
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-xs sm:text-sm md:text-base font-normal">
+                Our mission is to bridge academic research and commercial deployment across Africa. We empower researchers, institutions, and global partners to document scientific breakthroughs, foster cross-sector collaboration, and build sustainable, climate-resilient systems.
               </p>
             </div>
             

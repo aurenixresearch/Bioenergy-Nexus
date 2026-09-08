@@ -420,22 +420,23 @@ export default function ResearchOverview({
       {activeTab === 'all_research' && (
         <div className="space-y-4">
           {/* Search & Category Filter Bar */}
-          <div className="bg-white dark:bg-[#06140c] rounded-2xl p-4 border border-slate-200/90 shadow-2xs space-y-3">
-            <div className="flex flex-col md:flex-row items-center gap-3">
+          <div className="bg-white dark:bg-[#06140c] rounded-2xl p-4 sm:p-5 border border-slate-200/90 dark:border-emerald-900/30 shadow-2xs space-y-3.5">
+            <div className="flex flex-col gap-3">
               {/* Search Box */}
-              <div className="relative flex-1 w-full">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <div className="relative w-full">
+                <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search research studies by title, author, keyword, or institution..."
-                  className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-sans"
+                  className="w-full pl-10 pr-20 py-2.5 bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-600 font-sans transition-all"
                 />
                 {searchQuery && (
                   <button
+                    type="button"
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-200/80 hover:bg-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition-colors"
                   >
                     Clear
                   </button>
@@ -443,20 +444,39 @@ export default function ResearchOverview({
               </div>
 
               {/* Category Filter Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 shrink-0">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer border ${
-                      selectedCategory === cat
-                        ? 'bg-slate-900 text-white border-slate-900'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 dark:border-emerald-900/20">
+                <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-1 shrink-0">
+                  <Filter className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>Topic:</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  {categories.map((cat) => {
+                    const isSelected = selectedCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border inline-flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-emerald-700 dark:bg-emerald-600 text-white border-emerald-700 dark:border-emerald-600 shadow-2xs font-extrabold'
+                            : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/80 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        <span>{cat}</span>
+                      </button>
+                    );
+                  })}
+                  {selectedCategory !== 'All' && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory('All')}
+                      className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline px-2 py-1 cursor-pointer"
+                    >
+                      Reset Filter
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

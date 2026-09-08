@@ -1333,17 +1333,16 @@ aside#desktop_floating_aside > div:nth-of-type(1) > div:nth-of-type(2) {
   border-style: none !important;
 }
 
-#desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emerald-600) span,
-#desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emerald-600) svg {
-  color: #222222;
+html:not(.dark) #desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emerald-600) span,
+html:not(.dark) #desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emerald-600) svg {
+  color: #292b2d;
 }
 
 .dark #desktop_floating_aside,
 .dark #mobile_aside_drawer {
-  background-color: #010403 !important;
-  background-image: linear-gradient(180deg, #000000 0%, #021a12 100%) !important;
+  background-color: #040202 !important;
+  background-image: none !important;
   border-color: rgba(52, 211, 153, 0.15) !important;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(52, 211, 153, 0.03) !important;
   color: #f1f5f9 !important;
 }
 
@@ -1354,6 +1353,154 @@ aside#desktop_floating_aside > div:nth-of-type(1) > div:nth-of-type(2) {
   background-color: transparent !important;
   background-image: none !important;
   color: #f1f5f9 !important;
+}
+
+/* Selected Mobile Aside Menu Styles */
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(5) {
+  border-color: #dbe2e7;
+  color: #e1e6eb;
+  background-color: #040202;
+}
+
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(5) > div:nth-of-type(1) > span:nth-of-type(1) {
+  color: #cfd4d7;
+}
+
+/* Ensure button:nth-of-type(2) matches all other sidebar buttons in both dark and light modes */
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) {
+  border-color: #dbe2e7;
+  color: #e1e6eb;
+  background-color: #040202;
+}
+
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1) {
+  color: #cfd4d7;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) {
+  border-color: #f2f3f5;
+  color: #292b2d;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1) {
+  color: #292b2d;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(2) {
+  border-color: #f2f3f5;
+  color: #292b2d;
+}
+
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(2) {
+  border-color: #dbe2e7;
+  color: #e1e6eb;
+  background-color: #040202;
+}
+
+/* Selected Ecosystem Roles and Support Parameters Styles */
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#collaboration_wrapper:nth-of-type(1) > div#collaboration_ecosystem_container:nth-of-type(1) > section#stakeholder_categories:nth-of-type(4) > div:nth-of-type(1) > h2:nth-of-type(1) {
+  color: #44594f;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#collaboration_wrapper:nth-of-type(1) > div#collaboration_ecosystem_container:nth-of-type(1) > section#stakeholder_categories:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(1) {
+  background-color: #FFFFFF;
+  border-color: #5ea679;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#collaboration_wrapper:nth-of-type(1) > div#collaboration_ecosystem_container:nth-of-type(1) > section#stakeholder_categories:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > h4:nth-of-type(1) {
+  color: #5c675d;
+}
+
+/* Apply style changes across all cards in the Ecosystem Roles and Support Parameters section */
+html:not(.dark) section#stakeholder_categories > div:nth-of-type(1) > h2 {
+  color: #44594f;
+}
+
+html:not(.dark) section#stakeholder_categories > div:nth-of-type(2) > div {
+  background-color: #FFFFFF;
+  border-color: #5ea679;
+}
+
+html:not(.dark) section#stakeholder_categories > div:nth-of-type(2) > div h4 {
+  color: #5c675d;
+}
+
+/* Dark Mode Sidebar Styles across all sidebar menu items */
+.dark #mobile_aside_drawer,
+.dark #desktop_floating_aside,
+.dark aside#mobile_aside_drawer,
+.dark aside#desktop_floating_aside {
+  background-color: #040202 !important;
+}
+
+.dark #mobile_aside_drawer button:not(.bg-emerald-700):not(.bg-emerald-600),
+.dark #mobile_aside_drawer a:not(.bg-emerald-700):not(.bg-emerald-600),
+.dark #desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emerald-600),
+.dark #desktop_floating_aside a:not(.bg-emerald-700):not(.bg-emerald-600),
+.dark aside button:not(.bg-emerald-700):not(.bg-emerald-600),
+.dark aside a:not(.bg-emerald-700):not(.bg-emerald-600) {
+  border-color: #dbe2e7;
+  color: #e1e6eb;
+  background-color: #040202;
+}
+
+.dark #mobile_aside_drawer button:not(.bg-emerald-700):not(.bg-emerald-600) span,
+.dark #mobile_aside_drawer a:not(.bg-emerald-700):not(.bg-emerald-600) span,
+.dark #desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emerald-600) span,
+.dark #desktop_floating_aside a:not(.bg-emerald-700):not(.bg-emerald-600) span,
+.dark aside button:not(.bg-emerald-700):not(.bg-emerald-600) span,
+.dark aside a:not(.bg-emerald-700):not(.bg-emerald-600) span {
+  color: #cfd4d7;
+}
+
+.dark #mobile_aside_drawer button:not(.bg-emerald-700):not(.bg-emerald-600) svg,
+.dark #desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emerald-600) svg,
+.dark aside button:not(.bg-emerald-700):not(.bg-emerald-600) svg {
+  color: #e1e6eb;
+}
+
+/* Light Mode Only: Apply border-color: #f2f3f5 and color: #292b2d across all sidebar menu items */
+html:not(.dark) #mobile_aside_drawer button,
+html:not(.dark) #mobile_aside_drawer button span,
+html:not(.dark) #mobile_aside_drawer button svg,
+html:not(.dark) #mobile_aside_drawer button > div > span,
+html:not(.dark) #mobile_aside_drawer button > div > svg,
+html:not(.dark) #mobile_aside_drawer a,
+html:not(.dark) #mobile_aside_drawer a span,
+html:not(.dark) #mobile_aside_drawer a svg,
+html:not(.dark) #desktop_floating_aside button,
+html:not(.dark) #desktop_floating_aside button span,
+html:not(.dark) #desktop_floating_aside a,
+html:not(.dark) #desktop_floating_aside a span,
+html:not(.dark) aside button,
+html:not(.dark) aside button span,
+html:not(.dark) aside a,
+html:not(.dark) aside a span {
+  border-color: #f2f3f5;
+}
+
+html:not(.dark) #mobile_aside_drawer button:not(.bg-emerald-700):not(.bg-emerald-600),
+html:not(.dark) #mobile_aside_drawer a:not(.bg-emerald-700):not(.bg-emerald-600),
+html:not(.dark) #desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emerald-600),
+html:not(.dark) #desktop_floating_aside a:not(.bg-emerald-700):not(.bg-emerald-600),
+html:not(.dark) aside button:not(.bg-emerald-700):not(.bg-emerald-600),
+html:not(.dark) aside a:not(.bg-emerald-700):not(.bg-emerald-600) {
+  color: #292b2d;
+}
+
+html:not(.dark) #mobile_aside_drawer button:not(.bg-emerald-700):not(.bg-emerald-600) span,
+html:not(.dark) #mobile_aside_drawer a:not(.bg-emerald-700):not(.bg-emerald-600) span,
+html:not(.dark) #desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emerald-600) span,
+html:not(.dark) #desktop_floating_aside a:not(.bg-emerald-700):not(.bg-emerald-600) span,
+html:not(.dark) aside button:not(.bg-emerald-700):not(.bg-emerald-600) span,
+html:not(.dark) aside a:not(.bg-emerald-700):not(.bg-emerald-600) span {
+  color: #292b2d;
+}
+
+html:not(.dark) #mobile_aside_drawer button:not(.bg-emerald-700):not(.bg-emerald-600) svg,
+html:not(.dark) #desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emerald-600) svg,
+html:not(.dark) aside button:not(.bg-emerald-700):not(.bg-emerald-600) svg {
+  color: #292b2d;
 }
 
 /* AI Assistant System Theme Guarantees (Clean White in Light Mode, Dark in Dark Mode) */
@@ -1410,25 +1557,65 @@ aside#desktop_floating_aside > div:nth-of-type(1) > div:nth-of-type(2) {
   border-top-color: #1e293b;
 }
 
-/* User Specific Focused Styles for AI Assistant */
-#ai_assistant_chat_area > div:nth-of-type(1) {
-  background-color: #ffffff;
+/* User Specific Focused Styles for AI Assistant - Unified White in Light Mode */
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) {
+  background-color: transparent;
 }
 
-#ai_assistant_sidebar > div:nth-of-type(2) {
-  background-color: #ffffff;
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div,
+html:not(.dark) #ai_assistant_workspace,
+html:not(.dark) #ai_assistant_header,
+html:not(.dark) #ai_assistant_sidebar,
+html:not(.dark) #ai_assistant_chat_area,
+html:not(.dark) #ai_assistant_composer,
+html:not(.dark) #ai_assistant_chat_area > div:nth-of-type(1),
+html:not(.dark) #ai_assistant_sidebar > div:nth-of-type(1),
+html:not(.dark) #ai_assistant_sidebar > div:nth-of-type(2),
+html:not(.dark) #ai_assistant_sidebar > div:nth-of-type(3) {
+  background-color: #ffffff !important;
+  color: #0f172a;
 }
 
-#ai_assistant_chat_area > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
-  background-color: #1d293d;
+/* Ensure all text between cards and on cards is high-contrast and fully visible */
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) h1,
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) h2,
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) h3,
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) h4,
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) p:not(.text-white),
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) span:not(.text-white):not(.text-emerald-200):not(.text-emerald-300),
+html:not(.dark) #ai_assistant_workspace h1,
+html:not(.dark) #ai_assistant_workspace h2,
+html:not(.dark) #ai_assistant_workspace h3,
+html:not(.dark) #ai_assistant_workspace h4,
+html:not(.dark) #ai_assistant_workspace p:not(.text-white),
+html:not(.dark) #ai_assistant_workspace span:not(.text-white):not(.text-emerald-200):not(.text-emerald-300) {
+  color: #0f172a;
 }
 
-#ai_assistant_sidebar > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(1) > svg:nth-of-type(1) {
-  background-color: #90b799;
+/* Guarantee white text inside user message cards and primary action buttons */
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) .bg-emerald-700,
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) .bg-emerald-800,
+html:not(.dark) #ai_assistant_workspace .bg-emerald-700,
+html:not(.dark) #ai_assistant_workspace .bg-emerald-800,
+html:not(.dark) .bg-emerald-700 p,
+html:not(.dark) .bg-emerald-700 span,
+html:not(.dark) .bg-emerald-800 p,
+html:not(.dark) .bg-emerald-800 span {
+  color: #ffffff !important;
 }
 
-#ai_assistant_sidebar > div:nth-of-type(3) {
-  background-color: #1d293d;
+/* Ensure text between cards (labels, metadata, timestamps, action buttons) has strong, legible contrast */
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) .text-slate-500,
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) .text-slate-400,
+html:not(.dark) #ai_assistant_workspace .text-slate-500,
+html:not(.dark) #ai_assistant_workspace .text-slate-400 {
+  color: #334155 !important;
+}
+
+html:not(.dark) #ai_assistant_chat_area > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
 }
 
 

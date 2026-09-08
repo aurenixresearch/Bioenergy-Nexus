@@ -36,7 +36,8 @@ import {
   AppWindow,
   PanelRight,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Pencil
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -332,11 +333,52 @@ export default function ResearchAiAssistant({
     }
   };
 
-  // Keyboard shortcut: Enter to send (Shift+Enter for new line)
+  // Keyboard shortcut: Enter to send (Shift+Enter for new line), Escape to exit/clear text
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    } else if (e.key === 'Escape') {
+      if (inputText) {
+        e.preventDefault();
+        handleClearInput();
+      }
+    }
+  };
+
+  // Clear / exit input text
+  const handleClearInput = () => {
+    setInputText('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.focus();
+    }
+  };
+
+  // Delete a specific message from current session
+  const handleDeleteMessage = (msgId: string) => {
+    if (!currentSession) return;
+    const updatedMessages = currentSession.messages.filter((m) => m.id !== msgId);
+    const updated = { ...currentSession, messages: updatedMessages };
+    setCurrentSession(updated);
+    saveChatSession(updated);
+    setSessions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+  };
+
+  // Clear current conversation messages
+  const handleClearCurrentThread = () => {
+    if (!currentSession) return;
+    const updated = { ...currentSession, messages: [] };
+    setCurrentSession(updated);
+    saveChatSession(updated);
+    setSessions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+  };
+
+  // Edit/reuse a previous message
+  const handleEditMessage = (text: string) => {
+    setInputText(text);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
     }
   };
 
@@ -465,12 +507,11 @@ export default function ResearchAiAssistant({
       </AnimatePresence>
 
       {/* Top Header Bar */}
-      <header id="ai_assistant_header" className="sticky top-0 w-full px-3.5 sm:px-6 py-2.5 sm:py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2.5 sm:gap-4 shrink-0 z-20">
+      <header id="ai_assistant_header" className="sticky top-0 w-full px-3.5 sm:px-5 py-2.5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2.5 sm:gap-3 shrink-0 z-20">
         {/* Left Side: Navigation & Brand/Session Identity */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {/* Navigation Controls Group */}
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Back/Exit navigation if available */}
             {(onClose || onNavigateToView) && (
               <button
                 type="button"
@@ -478,8 +519,8 @@ export default function ResearchAiAssistant({
                   if (onClose) onClose();
                   else if (onNavigateToView) onNavigateToView(user ? 'dashboard' : 'home');
                 }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white bg-slate-100/90 hover:bg-slate-200/90 dark:bg-slate-800/90 dark:hover:bg-slate-700 transition cursor-pointer border border-slate-200/80 dark:border-slate-700/80 shrink-0"
-                title="Return to platform (Esc)"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition cursor-pointer border border-slate-200 dark:border-slate-700 shrink-0"
+                title="Return (Esc)"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span className="hidden md:inline">{user ? 'Dashboard' : 'Home'}</span>
@@ -493,68 +534,54 @@ export default function ResearchAiAssistant({
               className={`p-1.5 sm:p-2 rounded-xl transition cursor-pointer shrink-0 border ${
                 isSidebarOpen
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/80'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-800/80 dark:hover:bg-slate-750 border-slate-200/70 dark:border-slate-700/70'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700'
               }`}
-              title={isSidebarOpen ? 'Hide History & Sessions' : 'Show History & Sessions'}
+              title={isSidebarOpen ? 'Hide History' : 'Show History'}
             >
               {isSidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
             </button>
           </div>
 
-          {/* Divider */}
-          <div className="h-5 w-px bg-slate-200 dark:bg-slate-800 shrink-0 hidden sm:block" />
-
-          {/* Brand & Assistant Identity */}
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="relative shrink-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs ring-2 ring-emerald-500/20">
-                <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-              </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" title="Online & Ready" />
+          {/* Assistant Title */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4" />
             </div>
-
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <h2 className="text-xs sm:text-sm font-black truncate text-slate-900 dark:text-white leading-tight">
-                  <span className="hidden sm:inline">Aurenix Research Intelligence & AI Support</span>
-                  <span className="sm:hidden">ARIS Intelligence</span>
-                </h2>
-                <span className="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 shrink-0">
-                  v2.5
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate hidden sm:flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 inline-block" />
-                <span className="truncate">{currentSession ? currentSession.title : 'Scientific Advisor & Research Document Analyst'}</span>
+              <h2 className="text-xs sm:text-sm font-bold truncate text-slate-900 dark:text-white leading-tight">
+                ARIS AI Assistant
+              </h2>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate hidden sm:block">
+                {currentSession ? currentSession.title : 'Research Intelligence & Advisor'}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Right Side: Tools, Engine Selector & Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        {/* Right Side: Engine Selector & Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Model Selector Dropdown */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setIsModelDropdownOpen((prev) => !prev)}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-750 dark:text-slate-200 transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-2xs"
-              title="Select Gemini AI Engine"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-2xs"
+              title="Select Gemini Engine"
             >
               <Atom className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span className="hidden md:inline font-medium">
+              <span className="hidden sm:inline font-medium">
                 {AI_MODELS.find((m) => m.id === selectedModel)?.name || 'Gemini 3.7 Flash'}
               </span>
-              <span className="md:hidden text-[11px]">
+              <span className="sm:hidden text-[11px]">
                 {selectedModel.includes('pro') ? '3.7 Pro' : '3.7 Flash'}
               </span>
               <ChevronDown className="w-3 h-3 opacity-60 ml-0.5" />
             </button>
 
             {isModelDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 sm:w-72 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50 text-left">
-                <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                  Select Gemini Reasoning Model
+              <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-1.5 z-50 text-left">
+                <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Model Engine
                 </div>
                 <div className="space-y-1">
                   {AI_MODELS.map((m) => (
@@ -570,10 +597,10 @@ export default function ResearchAiAssistant({
                           saveChatSession(updated);
                         }
                       }}
-                      className={`w-full flex flex-col p-2.5 rounded-xl text-left transition cursor-pointer ${
+                      className={`w-full flex flex-col p-2 rounded-xl text-left transition cursor-pointer ${
                         selectedModel === m.id
                           ? 'bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800'
-                          : 'hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -582,7 +609,6 @@ export default function ResearchAiAssistant({
                           {m.tag}
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{m.desc}</span>
                     </button>
                   ))}
                 </div>
@@ -590,9 +616,9 @@ export default function ResearchAiAssistant({
             )}
           </div>
 
-          {/* Size Framework Controls (if floating / configurable) */}
+          {/* Size Controls */}
           {onChangeSizeMode && (
-            <div className="hidden lg:flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 shadow-2xs">
+            <div className="hidden lg:flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
               <button
                 type="button"
                 onClick={() => onChangeSizeMode('compact')}
@@ -601,7 +627,7 @@ export default function ResearchAiAssistant({
                     ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-2xs'
                     : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
-                title="Compact Widget Mode"
+                title="Compact Mode"
               >
                 <Minimize2 className="w-3.5 h-3.5" />
               </button>
@@ -613,7 +639,7 @@ export default function ResearchAiAssistant({
                     ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-2xs'
                     : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
-                title="Docked Side Panel Mode"
+                title="Docked Side Panel"
               >
                 <PanelRight className="w-3.5 h-3.5" />
               </button>
@@ -625,7 +651,7 @@ export default function ResearchAiAssistant({
                     ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-2xs'
                     : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
-                title="Standard Window Mode"
+                title="Window Mode"
               >
                 <AppWindow className="w-3.5 h-3.5" />
               </button>
@@ -644,41 +670,41 @@ export default function ResearchAiAssistant({
             </div>
           )}
 
-          {/* Action Group */}
-          <div className="flex items-center gap-1.5">
-            {/* Export Session */}
+          {/* Clear Current Chat Messages */}
+          {currentSession && currentSession.messages && currentSession.messages.length > 0 && (
             <button
               type="button"
-              onClick={handleExportSession}
-              className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white bg-slate-100/70 hover:bg-slate-200/80 dark:bg-slate-800/70 dark:hover:bg-slate-700 border border-slate-200/60 dark:border-slate-700/60 transition cursor-pointer hidden sm:flex items-center justify-center"
-              title="Export session as Markdown (.md)"
+              onClick={handleClearCurrentThread}
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-slate-600 hover:text-rose-600 dark:text-slate-300 dark:hover:text-rose-400 bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-950/50 border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+              title="Clear all messages in this conversation"
             >
-              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Clear Chat</span>
             </button>
+          )}
 
-            {/* New Chat Button */}
+          {/* New Chat Button */}
+          <button
+            type="button"
+            onClick={() => handleCreateNewChat()}
+            className="flex items-center gap-1 sm:gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-2xs transition cursor-pointer"
+            title="Start new conversation"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">New Chat</span>
+          </button>
+
+          {/* Close button */}
+          {onClose && (
             <button
               type="button"
-              onClick={() => handleCreateNewChat()}
-              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white text-xs font-bold shadow-xs transition cursor-pointer"
-              title="Start a new conversation thread"
+              onClick={onClose}
+              className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              title="Close Assistant (Esc)"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">New Chat</span>
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
-
-            {/* Close if modal/floating */}
-            {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition cursor-pointer"
-                title="Close Assistant (Esc)"
-              >
-                <X className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            )}
-          </div>
+          )}
         </div>
       </header>
 
@@ -706,17 +732,17 @@ export default function ResearchAiAssistant({
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -280, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed lg:relative inset-y-0 left-0 z-40 lg:z-10 w-72 sm:w-80 lg:w-72 2xl:w-80 h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 overflow-hidden shadow-2xl lg:shadow-none min-h-0"
+              className="fixed lg:relative inset-y-0 left-0 z-40 lg:z-10 w-72 sm:w-80 lg:w-72 h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 overflow-hidden shadow-xl lg:shadow-none min-h-0"
             >
-              {/* Search chats & mobile close */}
-              <div className="p-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 bg-white dark:bg-slate-900">
+              {/* Search chats */}
+              <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 bg-white dark:bg-slate-900">
                 <div className="relative flex-1">
                   <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
                     value={sessionSearch}
                     onChange={(e) => setSessionSearch(e.target.value)}
-                    placeholder="Search conversations..."
+                    placeholder="Search chats..."
                     className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
@@ -732,8 +758,8 @@ export default function ResearchAiAssistant({
 
               {/* Chat Session List */}
               <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar bg-white dark:bg-slate-900">
-                <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                  Recent Sessions ({filteredSessions.length})
+                <div className="px-2 py-1 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Conversations ({filteredSessions.length})
                 </div>
 
                 {filteredSessions.map((s) => {
@@ -744,20 +770,20 @@ export default function ResearchAiAssistant({
                       onClick={() => handleSelectSession(s)}
                       className={`group w-full flex items-center justify-between p-2 rounded-xl text-left cursor-pointer transition ${
                         isActive
-                          ? 'bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-200 shadow-2xs'
-                          : 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-200'
+                          : 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60 text-slate-800 dark:text-slate-200 border border-transparent hover:border-slate-200'
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <MessageSquare
                           className={`w-4 h-4 shrink-0 ${
-                            isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-400'
+                            isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500'
                           }`}
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold truncate">{s.title}</p>
-                          <p className="text-[10px] text-slate-400 truncate">
-                            {new Date(s.updatedAt || s.createdAt).toLocaleDateString()} · {s.messages.length} msgs
+                          <p className="text-xs font-bold truncate text-slate-900 dark:text-slate-100">{s.title}</p>
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 truncate font-medium">
+                            {new Date(s.updatedAt || s.createdAt).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
@@ -774,61 +800,6 @@ export default function ResearchAiAssistant({
                   );
                 })}
               </div>
-
-              {/* Mode Switcher in sidebar */}
-              <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90">
-                <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Advisory Mode</div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMode('research')}
-                    className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
-                      selectedMode === 'research'
-                        ? 'bg-emerald-700 text-white shadow-2xs'
-                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750'
-                    }`}
-                  >
-                    <BookOpen className="w-3 h-3" />
-                    <span>Reviewer</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMode('ideas')}
-                    className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
-                      selectedMode === 'ideas'
-                        ? 'bg-emerald-700 text-white shadow-2xs'
-                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750'
-                    }`}
-                  >
-                    <Lightbulb className="w-3 h-3" />
-                    <span>Ideas</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMode('support')}
-                    className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
-                      selectedMode === 'support'
-                        ? 'bg-emerald-700 text-white shadow-2xs'
-                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750'
-                    }`}
-                  >
-                    <HelpCircle className="w-3 h-3" />
-                    <span>Platform</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMode('general')}
-                    className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
-                      selectedMode === 'general'
-                        ? 'bg-emerald-700 text-white shadow-2xs'
-                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750'
-                    }`}
-                  >
-                    <Layers className="w-3 h-3" />
-                    <span>General</span>
-                  </button>
-                </div>
-              </div>
             </motion.aside>
           )}
         </AnimatePresence>
@@ -838,45 +809,43 @@ export default function ResearchAiAssistant({
           {/* Scrollable Message List / Welcome Screen */}
           <div className="flex-1 overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 custom-scrollbar bg-white dark:bg-slate-950 w-full min-h-0">
             {(!currentSession?.messages || currentSession.messages.length === 0 || (currentSession.messages.length === 1 && currentSession.messages[0].id.startsWith('msg_welcome_'))) && (
-              <div className="w-full max-w-full 2xl:max-w-[1800px] mx-auto py-2 space-y-4">
-                {/* Welcome Hero Banner - Pristine White Card in Light Mode */}
-                <div className="w-full p-4 sm:p-6 md:p-7 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-2 border-emerald-500/30 dark:border-emerald-800/40 shadow-xl shadow-emerald-950/5">
+              <div className="w-full max-w-4xl mx-auto py-4 sm:py-8 space-y-5">
+                {/* Welcome Card - Clean White in Light Mode */}
+                <div className="w-full p-5 sm:p-7 rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="space-y-1.5 max-w-3xl">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-700/60 text-[11px] font-bold">
-                        <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-amber-300" />
-                        <span>ARIS AI Research & Support</span>
+                    <div className="space-y-2">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 text-xs font-bold w-fit">
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span>Aurenix Research Assistant</span>
                       </div>
-                      <h3 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                        Research Intelligence & Platform Support
+                      <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                        How can ARIS support your research?
                       </h3>
-                      <p className="text-xs sm:text-sm text-slate-600 dark:text-emerald-200/90 leading-relaxed font-medium">
-                        Upload research papers to summarize methodology, query experimental data, brainstorm grant-ready hypotheses, or receive instant guidance on Aurenix publishing and researcher collaboration.
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
+                        Upload research papers to summarize findings, query experimental data, brainstorm grant-ready hypotheses, or get platform guidance.
                       </p>
                     </div>
 
-                    <div className="shrink-0 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-md hover:shadow-emerald-700/20 transition cursor-pointer flex items-center gap-2"
-                      >
-                        <Paperclip className="w-4 h-4 text-emerald-200" />
-                        <span>Upload PDF / Data</span>
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition cursor-pointer flex items-center justify-center gap-2 shrink-0 shadow-xs"
+                    >
+                      <Paperclip className="w-4 h-4 text-emerald-200" />
+                      <span>Upload Document</span>
+                    </button>
                   </div>
                 </div>
 
-                {/* Quick Suggested Prompts Row */}
-                <div className="space-y-2.5 w-full">
-                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
-                    <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Suggested Prompts:</span>
+                {/* Suggested Prompts - 4 clean, concise cards */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-slate-100">
+                    <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    <span className="text-slate-900 dark:text-slate-100 font-bold">Quick Prompts:</span>
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {AI_PROMPT_PRESETS.map((preset) => (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {AI_PROMPT_PRESETS.slice(0, 4).map((preset) => (
                       <button
                         key={preset.id}
                         type="button"
@@ -887,10 +856,10 @@ export default function ResearchAiAssistant({
                           }
                           textareaRef.current?.focus();
                         }}
-                        className="px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 hover:border-emerald-400 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold flex items-center gap-2 transition cursor-pointer group shadow-xs"
+                        className="p-3.5 rounded-xl bg-white hover:bg-emerald-50/80 dark:bg-slate-900 dark:hover:bg-slate-800 border-2 border-slate-200 hover:border-emerald-500 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-bold flex items-center justify-between gap-2 transition cursor-pointer text-left shadow-2xs group"
                       >
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 group-hover:scale-125 transition-transform" />
-                        <span>{preset.title}</span>
+                        <span className="truncate text-slate-900 dark:text-white font-bold">{preset.title}</span>
+                        <ArrowRight className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
                       </button>
                     ))}
                   </div>
@@ -942,34 +911,56 @@ export default function ResearchAiAssistant({
                           className={`p-4 sm:p-6 rounded-2xl text-sm md:text-base leading-relaxed w-full ${
                             isUser
                               ? 'bg-emerald-700 text-white rounded-tr-xs shadow-md font-semibold'
-                              : 'bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-tl-xs shadow-md'
+                              : 'bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-tl-xs shadow-md'
                           }`}
                         >
                           {isUser ? (
-                            <p className="whitespace-pre-wrap text-white">{msg.text}</p>
+                            <p className="whitespace-pre-wrap text-white !text-white font-medium">{msg.text}</p>
                           ) : (
-                            <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none w-full text-slate-900 dark:text-slate-100 prose-p:text-slate-900 dark:prose-p:text-slate-100 prose-p:leading-relaxed prose-headings:text-slate-950 dark:prose-headings:text-white prose-headings:font-black prose-strong:text-slate-950 dark:prose-strong:text-white prose-strong:font-bold prose-li:text-slate-900 dark:prose-li:text-slate-200 prose-ul:text-slate-900 dark:prose-ul:text-slate-200 prose-ol:text-slate-900 dark:prose-ol:text-slate-200 prose-pre:bg-slate-100 dark:prose-pre:bg-slate-950 prose-pre:text-slate-800 dark:prose-pre:text-slate-100 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-800 prose-pre:rounded-xl prose-pre:p-4 prose-code:text-emerald-800 dark:prose-code:text-emerald-300 prose-code:bg-emerald-50 dark:prose-code:bg-emerald-950/60 prose-code:border prose-code:border-emerald-200/60 dark:prose-code:border-emerald-800/60 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-blockquote:text-slate-800 dark:prose-blockquote:text-slate-200 prose-blockquote:border-l-4 prose-blockquote:border-emerald-600 prose-blockquote:bg-emerald-50/70 dark:prose-blockquote:bg-emerald-950/30 prose-blockquote:p-3.5 prose-blockquote:rounded-r-xl prose-table:w-full prose-table:border-collapse prose-th:border prose-th:border-slate-200 dark:prose-th:border-slate-700 prose-th:text-slate-950 dark:prose-th:text-white prose-th:bg-slate-50 dark:prose-th:bg-slate-800 prose-td:border prose-td:border-slate-200 dark:prose-td:border-slate-800 prose-td:text-slate-800 dark:prose-td:text-slate-200 prose-td:bg-white dark:prose-td:bg-slate-900 prose-th:p-3 prose-td:p-3">
+                            <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none w-full text-slate-900 dark:text-slate-100 prose-p:text-slate-900 dark:prose-p:text-slate-100 prose-p:leading-relaxed prose-headings:text-slate-950 dark:prose-headings:text-white prose-headings:font-black prose-strong:text-slate-950 dark:prose-strong:text-white prose-strong:font-bold prose-li:text-slate-900 dark:prose-li:text-slate-200 prose-ul:text-slate-900 dark:prose-ul:text-slate-200 prose-ol:text-slate-900 dark:prose-ol:text-slate-200 prose-pre:bg-slate-100 dark:prose-pre:bg-slate-950 prose-pre:text-slate-800 dark:prose-pre:text-slate-100 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-800 prose-pre:rounded-xl prose-pre:p-4 prose-code:text-emerald-800 dark:prose-code:text-emerald-300 prose-code:bg-emerald-50 dark:prose-code:bg-emerald-950/60 prose-code:border prose-code:border-emerald-200/60 dark:prose-code:border-emerald-800/60 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-blockquote:text-slate-800 dark:prose-blockquote:text-slate-200 prose-blockquote:border-l-4 prose-blockquote:border-emerald-600 prose-blockquote:bg-emerald-50/70 dark:prose-blockquote:bg-emerald-950/30 prose-blockquote:p-3.5 prose-blockquote:rounded-r-xl prose-table:w-full prose-table:border-collapse prose-th:border prose-th:border-slate-200 dark:prose-th:border-slate-700 prose-th:text-slate-950 dark:prose-th:text-white prose-th:bg-slate-50 dark:prose-th:bg-slate-800 prose-td:border prose-td:border-slate-200 dark:border-slate-800 prose-td:text-slate-800 dark:prose-td:text-slate-200 prose-td:bg-white dark:prose-td:bg-slate-900 prose-th:p-3 prose-td:p-3">
                               <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
                             </div>
                           )}
                         </div>
 
-                        {/* Message Meta & Action Bar */}
-                        <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium px-1">
-                          <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                          {msg.model && <span>· {msg.model}</span>}
+                        {/* Message Meta & Action Bar - Fully Visible in Between Cards */}
+                        <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-700 dark:text-slate-300 font-bold px-1">
+                          <span className="text-slate-700 dark:text-slate-300">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          {msg.model && <span className="text-slate-600 dark:text-slate-400">· {msg.model}</span>}
 
                           {!isUser && (
                             <button
                               type="button"
                               onClick={() => handleCopyMessage(msg.text, msg.id)}
-                              className="flex items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition cursor-pointer ml-1 font-bold"
+                              className="flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 transition cursor-pointer ml-1 font-bold"
                               title="Copy response"
                             >
-                              {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-700" /> : <Copy className="w-3.5 h-3.5" />}
-                              <span>{isCopied ? 'Copied' : 'Copy'}</span>
+                              {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-700" /> : <Copy className="w-3.5 h-3.5 text-slate-600" />}
+                              <span className="text-slate-700 dark:text-slate-300 font-bold">{isCopied ? 'Copied' : 'Copy'}</span>
                             </button>
                           )}
+
+                          {isUser && (
+                            <button
+                              type="button"
+                              onClick={() => handleEditMessage(msg.text)}
+                              className="flex items-center gap-1 text-slate-700 hover:text-emerald-700 dark:text-slate-300 dark:hover:text-emerald-400 transition cursor-pointer ml-1 font-bold"
+                              title="Edit and reuse this prompt"
+                            >
+                              <Pencil className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" />
+                              <span className="text-slate-700 dark:text-slate-300 font-bold">Edit</span>
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMessage(msg.id)}
+                            className="flex items-center gap-1 text-slate-700 hover:text-rose-600 dark:text-slate-300 dark:hover:text-rose-400 transition cursor-pointer ml-1 font-bold"
+                            title="Delete this message"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-slate-600" />
+                            <span className="text-slate-700 dark:text-slate-300 font-bold">Delete</span>
+                          </button>
                         </div>
                       </div>
 
@@ -1012,27 +1003,27 @@ export default function ResearchAiAssistant({
 
           {/* Quick Follow-up Chips (only shown if messages exist) */}
           {currentSession?.messages && currentSession.messages.length > 1 && (
-            <div className="w-full px-3 sm:px-6 lg:px-8 py-2.5 bg-white dark:bg-slate-900/90 backdrop-blur-xs border-t border-slate-200 dark:border-slate-800/80 shrink-0 z-10">
+            <div className="w-full px-3 sm:px-6 lg:px-8 py-2.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 z-10">
               <div className="w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto overflow-x-auto custom-scrollbar flex items-center gap-2">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0">Quick Ask:</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider shrink-0">Quick Ask:</span>
                 <button
                   type="button"
                   onClick={() => handleSendMessage('Can you break down the mathematical methodology and statistical significance in detail?')}
-                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 dark:bg-slate-800 border border-slate-200 hover:border-emerald-400 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-700 transition shrink-0 cursor-pointer shadow-xs"
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 dark:bg-slate-800 border-2 border-slate-200 hover:border-emerald-500 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-slate-100 hover:text-emerald-700 transition shrink-0 cursor-pointer shadow-xs"
                 >
                   🔬 Methodology & Stats
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSendMessage('What are the key commercialization bottlenecks and policy recommendations?')}
-                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 dark:bg-slate-800 border border-slate-200 hover:border-emerald-400 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-700 transition shrink-0 cursor-pointer shadow-xs"
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 dark:bg-slate-800 border-2 border-slate-200 hover:border-emerald-500 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-slate-100 hover:text-emerald-700 transition shrink-0 cursor-pointer shadow-xs"
                 >
                   💡 Bottlenecks & Policy
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSendMessage('Draft an executive summary abstract suitable for an African clean-energy grant.')}
-                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 dark:bg-slate-800 border border-slate-200 hover:border-emerald-400 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-700 transition shrink-0 cursor-pointer shadow-xs"
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 dark:bg-slate-800 border-2 border-slate-200 hover:border-emerald-500 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-slate-100 hover:text-emerald-700 transition shrink-0 cursor-pointer shadow-xs"
                 >
                   📝 Grant Abstract
                 </button>
@@ -1041,11 +1032,11 @@ export default function ResearchAiAssistant({
           )}
 
           {/* Bottom Input Area */}
-          <div id="ai_assistant_composer" className="p-3 sm:p-4 lg:p-5 bg-white dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 w-full shrink-0 z-10">
-            <div className="w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto flex flex-col gap-2.5">
+          <div id="ai_assistant_composer" className="p-3 sm:p-4 lg:p-5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 w-full shrink-0 z-10">
+            <div className="w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto flex flex-col gap-2">
               {/* Attachment Preview Chips */}
               {attachments.length > 0 && (
-                <div className="flex flex-wrap gap-2 p-2.5 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs">
+                <div className="flex flex-wrap gap-2 p-2 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs">
                   {attachments.map((att) => (
                     <div
                       key={att.id}
@@ -1068,7 +1059,7 @@ export default function ResearchAiAssistant({
               )}
 
               {/* Text Input Row */}
-              <div className="relative flex items-end gap-2 bg-white dark:bg-slate-800 rounded-2xl sm:rounded-3xl border-2 border-slate-200 dark:border-slate-700 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-500/20 transition p-2.5 shadow-sm">
+              <div className="relative flex items-end gap-2 bg-white dark:bg-slate-800 rounded-2xl sm:rounded-3xl border border-slate-300 dark:border-slate-700 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-500/20 transition p-2 sm:p-2.5 shadow-sm">
                 {/* Hidden File Input */}
                 <input
                   type="file"
@@ -1083,8 +1074,8 @@ export default function ResearchAiAssistant({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-2.5 rounded-xl text-slate-600 hover:text-emerald-700 dark:text-slate-300 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer shrink-0"
-                  title="Attach research PDF, image, or dataset (up to 20MB)"
+                  className="p-2 sm:p-2.5 rounded-xl text-slate-600 hover:text-emerald-700 dark:text-slate-300 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer shrink-0"
+                  title="Attach research PDF, image, or dataset"
                 >
                   <Paperclip className="w-5 h-5" />
                 </button>
@@ -1095,31 +1086,43 @@ export default function ResearchAiAssistant({
                   value={inputText}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask ARIS or attach a paper: 'Summarize key findings', 'Generate novel research ideas', 'Help me publish'..."
+                  placeholder="Ask ARIS or attach a paper: 'Summarize key findings', 'Propose hypotheses'..."
                   rows={1}
-                  className="flex-1 bg-transparent resize-none border-0 text-sm md:text-base text-slate-950 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 font-medium focus:outline-hidden py-2 px-1.5 max-h-[220px] custom-scrollbar"
+                  className="flex-1 bg-transparent resize-none border-0 text-sm md:text-base text-slate-950 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 font-medium focus:outline-hidden py-2 px-1.5 max-h-[220px] custom-scrollbar"
                 />
+
+                {/* Exit / Clear Text Button */}
+                {inputText.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearInput}
+                    className="p-2 sm:p-2.5 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer shrink-0"
+                    title="Clear / Exit text (Esc)"
+                  >
+                    <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                )}
 
                 {/* Send Button */}
                 <button
                   type="button"
                   onClick={() => handleSendMessage()}
                   disabled={isLoading || (!inputText.trim() && attachments.length === 0)}
-                  className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition cursor-pointer shrink-0 ${
+                  className={`p-2 sm:p-2.5 rounded-xl sm:rounded-2xl transition cursor-pointer shrink-0 ${
                     isLoading || (!inputText.trim() && attachments.length === 0)
                       ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
-                      : 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-md'
+                      : 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm'
                   }`}
                   title="Send message (Enter)"
                 >
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
 
-              {/* Footer Disclaimers & Hint */}
-              <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400 font-medium px-1">
-                <span>Supports PDFs, lab images, charts, and datasets. Press Enter to send, Shift+Enter for new line.</span>
-                <span className="hidden sm:inline font-mono font-bold text-emerald-800 dark:text-emerald-400">Gemini 3.7 Multimodal</span>
+              {/* Minimal Clean Hint */}
+              <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 font-bold px-1">
+                <span className="text-slate-700 dark:text-slate-300">Enter to send · Shift+Enter for new line · Esc to clear text</span>
+                <span className="font-mono text-emerald-800 dark:text-emerald-400 font-extrabold">Gemini 3.7</span>
               </div>
             </div>
           </div>
