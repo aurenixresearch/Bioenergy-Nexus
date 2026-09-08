@@ -12,7 +12,6 @@ import PublishWizard from './PublishWizard';
 import ProfileCompletionModal from './ProfileCompletionModal';
 import { checkProfileCompleteness, ProfileCompletenessResult } from '../utils/profileValidation';
 import { User as FirebaseUser } from 'firebase/auth';
-import { createNewSession, saveChatSession, setActiveSessionId } from '../services/aiService';
 
 interface ResearchDetailProps {
   paper: ResearchPaper;
@@ -548,30 +547,6 @@ export default function ResearchDetail({
             >
               <Share2 className="w-4 h-4 text-slate-400" />
               {shared ? 'Copied!' : 'Share'}
-            </motion.button>
-
-            {/* AI Review & Insights Button */}
-            <motion.button
-              onClick={() => {
-                const session = createNewSession('research');
-                session.title = `AI Review: ${paper.title.substring(0, 26)}...`;
-                session.messages.push({
-                  id: `msg_paper_${Date.now()}`,
-                  role: 'user',
-                  text: `Please provide a deep scientific review, quantitative insights, and 3 novel follow-up research ideas based on this research paper:\n\n**Title**: ${paper.title}\n**Field/Category**: ${paper.category}\n**Authors**: ${paper.author || (paper.coAuthors ? paper.coAuthors.map(c => c.name).join(', ') : 'N/A')}\n**Abstract**: ${paper.abstract}\n${paper.researchMethodology || paper.methodology ? `**Methodology**: ${paper.researchMethodology || paper.methodology}\n` : ''}${paper.keyFindings ? `**Key Findings**: ${paper.keyFindings}\n` : ''}`,
-                  timestamp: new Date().toISOString()
-                });
-                saveChatSession(session);
-                setActiveSessionId(session.id);
-                window.dispatchEvent(new CustomEvent('open-ai-assistant'));
-              }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2.5 bg-gradient-to-r from-emerald-800 to-teal-700 hover:from-emerald-700 hover:to-teal-600 text-white rounded-xl text-xs font-extrabold shadow-sm cursor-pointer border border-emerald-600/40"
-              title="Analyze paper with AI"
-            >
-              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-              <span>AI Insights</span>
             </motion.button>
 
             {/* Download PDF */}

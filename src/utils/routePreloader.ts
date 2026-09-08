@@ -25,7 +25,6 @@ const viewLoaders: Record<string, () => Promise<any>> = {
   legal: () => import('../components/legal/LegalLayout'),
   community: () => import('../components/CommunityPage'),
   onboarding: () => import('../components/OnboardingPage'),
-  'ai-assistant': () => import('../components/ai/ResearchAiAssistant'),
 };
 
 const preloadedRoutes = new Set<string>();

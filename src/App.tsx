@@ -74,8 +74,6 @@ const ResearchAreasPage = safeLazy(() => import('./components/ResearchAreasPage'
 const LegalLayout = safeLazy(() => import('./components/legal/LegalLayout'));
 const CommunityPage = safeLazy(() => import('./components/CommunityPage'));
 const NotFoundPage = safeLazy(() => import('./components/NotFoundPage'));
-const ResearchAiAssistant = safeLazy(() => import('./components/ai/ResearchAiAssistant'));
-import FloatingAiWidget from './components/ai/FloatingAiWidget';
 
 function ViewLoadingFallback() {
   return (
@@ -179,7 +177,7 @@ function parsePath(path: string): AppRouteState {
   }
 
   // Standard views
-  const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas', 'legal', 'community', 'ai-assistant'];
+  const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas', 'legal', 'community'];
   const viewName = path.substring(1);
   if (views.includes(viewName)) {
     return { view: viewName, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: 'terms' };
@@ -849,7 +847,7 @@ export default function App() {
     <div className="bg-slate-50 min-h-screen font-sans flex flex-col justify-between" id="app_root">
       
       {/* Collapsible Floating Aside Section (visible when logged in) */}
-      {user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && currentView !== 'ai-assistant' && (
+      {user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && (
         <FloatingAside 
           user={user}
           userProfile={userProfile}
@@ -866,20 +864,16 @@ export default function App() {
       {/* Main layout container */}
       <motion.div
         animate={{ 
-          paddingLeft: user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && currentView !== 'ai-assistant'
+          paddingLeft: user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin'
             ? (isMobile ? '0px' : (isCollapsed ? '80px' : '280px'))
             : '0px'
         }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className={`flex-grow flex flex-col ${
-          currentView === 'ai-assistant'
-            ? 'w-screen h-screen w-[100vw] h-[100vh] h-[100dvh] max-h-[100dvh] overflow-hidden p-0 m-0'
-            : 'justify-between min-h-screen'
-        } w-full`}
+        className="flex-grow flex flex-col justify-between min-h-screen w-full"
         id="app_layout_wrapper"
       >
         {/* Dynamic Navigation */}
-        {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && currentView !== 'ai-assistant' && (
+        {currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && (
           <>
             <Navbar 
               user={user}
@@ -903,7 +897,7 @@ export default function App() {
         )}
 
         {/* Main Container */}
-        <main className={`flex-grow ${currentView === 'ai-assistant' ? 'w-full h-full flex-1 min-h-0 overflow-hidden flex flex-col p-0 m-0' : 'min-h-[85vh]'}`}>
+        <main className="flex-grow min-h-[85vh]">
           <ErrorBoundary>
             <Suspense fallback={<ViewLoadingFallback />}>
           {/* Bypassing AnimatePresence prevents the fatal React 19 "Expected static flag was missing" reconciler assertion crash while preserving mounting fade-ins */}
@@ -1650,28 +1644,6 @@ export default function App() {
               </motion.div>
             )}
 
-            {currentView === 'ai-assistant' && (
-              <motion.div
-                key="ai-assistant-page"
-                initial={{ opacity: 1, y: 0 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0 }}
-                className="w-full h-full flex-1 flex flex-col overflow-hidden min-h-0"
-              >
-                <SeoManager
-                  title="Aurenix Research Intelligence & AI Support — Paper Summarizer & Brainstorming"
-                  description="Interactive Gemini-powered research intelligence assistant. Summarize research PDFs, analyze experimental data, generate novel research proposals, and get platform support."
-                  canonicalUrl="https://aurenix-research.org/ai-assistant"
-                />
-                <ResearchAiAssistant 
-                  user={user || (DEMO_GUEST_USER as any)}
-                  userProfile={userProfile}
-                  onNavigateToView={setView}
-                  onClose={() => setView(user ? 'dashboard' : 'home')}
-                />
-              </motion.div>
-            )}
-
             {currentView === 'admin' && (
               <motion.div
                 key="admin-page"
@@ -1694,19 +1666,11 @@ export default function App() {
       </main>
 
         {/* Footer */}
-        {!user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && currentView !== 'ai-assistant' && <Footer onNavClick={handlePageSelect} />}
+        {!user && currentView !== 'signin' && currentView !== 'initializing' && currentView !== 'onboarding' && currentView !== 'admin' && <Footer onNavClick={handlePageSelect} />}
       </motion.div>
 
       {/* Global Cookie Consent System */}
       <CookieConsent />
-
-      {/* Global Floating AI Research & Support Assistant */}
-      <FloatingAiWidget 
-        user={user}
-        userProfile={userProfile}
-        currentView={currentView}
-        onNavigateToView={setView}
-      />
 
     </div>
   );
