@@ -196,6 +196,16 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
     }
   };
 
+  // Auto-scroll active tab into view in the horizontal tabs slider
+  useEffect(() => {
+    if (isEditModalOpen) {
+      const activeEl = document.getElementById(`edit_modal_tab_${editTab}`);
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, [editTab, isEditModalOpen]);
+
   // Alerts & Picture Upload State
   const [alertMsg, setAlertMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isAnalyzingAvatar, setIsAnalyzingAvatar] = useState(false);
@@ -811,29 +821,41 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
           <div className="lg:col-span-8 space-y-6">
             
             {/* Tab Buttons */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-2 flex flex-wrap gap-1 shadow-xs" id="profile_tab_nav">
+            <div 
+              className="bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-1.5 shadow-xs grid grid-cols-2 sm:grid-cols-5 gap-1.5" 
+              id="profile_tab_nav"
+              role="tablist"
+              aria-label="Profile navigation tabs"
+            >
               {(
                 [
                   { key: 'overview', label: 'Overview', icon: User },
                   { key: 'research', label: 'Research', icon: FlaskConical },
                   { key: 'publications', label: 'Publications', icon: BookOpen },
                   { key: 'collaborations', label: 'Collaborations', icon: Handshake },
-                  { key: 'contact', label: 'Contact Information', icon: Mail },
+                  { key: 'contact', label: 'Contact Info', icon: Mail },
                 ] as const
-              ).map((tab) => {
+              ).map((tab, idx) => {
                 const IconComp = tab.icon;
                 const isActive = activeTab === tab.key;
+                const isLastItem = idx === 4;
                 return (
                   <button
                     key={tab.key}
+                    id={`profile_tab_${tab.key}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`flex-1 min-w-[120px] px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    className={`px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer select-none whitespace-nowrap min-h-[42px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                      isLastItem ? 'col-span-2 sm:col-span-1' : 'col-span-1'
+                    } ${
                       isActive 
-                        ? 'bg-emerald-600 text-white shadow-xs' 
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        ? 'bg-emerald-600 text-white font-bold shadow-xs' 
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-800/80'
                     }`}
                   >
-                    <IconComp className="w-3.5 h-3.5 shrink-0" />
+                    <IconComp className={`w-3.5 h-3.5 shrink-0 transition-transform ${isActive ? 'scale-105' : 'opacity-75'}`} />
                     <span>{tab.label}</span>
                   </button>
                 );
@@ -1544,15 +1566,20 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
               </div>
             </div>
 
-            {/* Modal Sub-Tab Selector with Gating & Icons */}
-            <div className="border-b border-slate-100 dark:border-slate-800/80 px-4 py-2.5 flex gap-1.5 bg-slate-50/40 dark:bg-slate-950/20 overflow-x-auto shrink-0 scrollbar-none">
+            {/* Modal Sub-Tab Selector with Gating & Icons (Horizontal Slidable) */}
+            <div 
+              className="border-b border-slate-200/90 dark:border-slate-800 px-4 py-2.5 flex items-center gap-2 bg-slate-50/80 dark:bg-slate-950/40 overflow-x-auto scroll-smooth snap-x snap-mandatory touch-pan-x overscroll-x-contain shrink-0 scroll-p-4 no-scrollbar"
+              id="edit_modal_tab_slider"
+              role="tablist"
+              aria-label="Modal Steps Slider"
+            >
               {[
                 { key: 'overview', label: 'Overview & Info', icon: User },
                 { key: 'research', label: 'Research', icon: FlaskConical },
                 { key: 'publications', label: 'Publications', icon: BookOpen },
                 { key: 'collaborations', label: 'Collaborations', icon: Handshake },
                 { key: 'contact', label: 'Contact & Privacy', icon: ShieldCheck },
-              ].map((t) => {
+              ].map((t, idx) => {
                 const IconComp = t.icon;
                 const isActive = editTab === t.key;
                 const unlocked = isTabUnlocked(t.key as TabType, editForm);
@@ -1561,16 +1588,31 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                 return (
                   <button
                     key={t.key}
+                    id={`edit_modal_tab_${t.key}`}
                     type="button"
-                    onClick={() => handleTabClick(t.key as TabType)}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={(e) => {
+                      handleTabClick(t.key as TabType);
+                      (e.currentTarget as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }}
+                    className={`snap-start shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 flex items-center gap-2 cursor-pointer select-none border min-h-[38px] ${
                       isActive 
-                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 scale-[1.01]' 
+                        ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-xs scale-[1.02]' 
                         : unlocked
-                          ? 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
-                          : 'text-slate-400 dark:text-slate-600 bg-slate-100/50 dark:bg-slate-950/50 opacity-60'
+                          ? 'bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80'
+                          : 'bg-slate-100/60 dark:bg-slate-950/40 border-slate-200/50 dark:border-slate-800/50 text-slate-400 dark:text-slate-600 opacity-60 cursor-not-allowed'
                     }`}
                   >
+                    <span className={`w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${
+                      isActive 
+                        ? 'bg-white/25 text-white' 
+                        : unlocked 
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' 
+                          : 'bg-slate-200/60 dark:bg-slate-800/60 text-slate-400'
+                    }`}>
+                      {idx + 1}
+                    </span>
                     {!unlocked ? (
                       <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                     ) : completed && !isActive ? (
@@ -1578,7 +1620,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                     ) : (
                       <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`} />
                     )}
-                    {t.label}
+                    <span>{t.label}</span>
                   </button>
                 );
               })}

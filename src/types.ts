@@ -231,6 +231,23 @@ export interface CommunityComment {
   userAvatar?: string;
   content: string;
   createdAt: string;
+  upvotes?: string[];
+}
+
+export interface CommunitySubreddit {
+  id: string;
+  name: string; // e.g. "a/bioenergy"
+  title: string; // "Bioenergy & Clean Fuels"
+  description: string;
+  category: string;
+  bannerColor: string;
+  icon: string;
+  membersCount: number;
+  onlineCount: number;
+  createdBy: string;
+  createdAt: string;
+  rules?: string[];
+  isDefault?: boolean;
 }
 
 export interface CommunityPost {
@@ -240,11 +257,17 @@ export interface CommunityPost {
   authorInstitution: string;
   authorCountry: string;
   authorAvatar?: string;
+  title?: string;
+  communityId?: string; // e.g. "bioenergy"
+  communityName?: string; // e.g. "a/bioenergy"
+  flair?: string; // e.g. "Research Paper", "Breakthrough", "Discussion", "Data"
   content: string;
   imageUrl?: string;
   researchLink?: string;
   createdAt: string;
-  likes?: string[]; // Array of user IDs
+  likes?: string[]; // Array of user IDs (kept for backward compatibility)
+  upvotes?: string[]; // Array of user IDs who upvoted
+  downvotes?: string[]; // Array of user IDs who downvoted
   comments?: CommunityComment[];
 }
 

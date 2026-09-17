@@ -11,7 +11,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db, auth, isFirestoreOffline, setFirestoreOffline } from '../firebase';
-import { ResearchPaper, ConsultationInquiry, PartnershipSubmission, Researcher, Publication, CommunityPost, CommunityComment, Testimonial } from '../types';
+import { ResearchPaper, ConsultationInquiry, PartnershipSubmission, Researcher, Publication, CommunityPost, CommunityComment, CommunitySubreddit, Testimonial } from '../types';
 import { SEED_RESEARCHERS, SEED_PUBLICATIONS } from './researchersSeed';
 import { checkProfileCompleteness } from '../utils/profileValidation';
 
@@ -2348,13 +2348,380 @@ export async function deleteDeadline(userId: string, deadlineId: string): Promis
 
 // COMMUNITY SERVICES
 const LOCAL_POSTS_KEY = 'nexus_demo_community_posts';
+const LOCAL_SUBREDDITS_KEY = 'nexus_communities_subreddits_v3';
+const LOCAL_JOINED_COMMUNITIES_KEY = 'nexus_user_joined_communities_v3';
+
+export const DEFAULT_SUBREDDITS: CommunitySubreddit[] = [
+  {
+    id: 'bioenergy',
+    name: 'a/bioenergy',
+    title: 'Bioenergy & Clean Fuels',
+    description: 'Biomass conversion, thermochemical processes, cellulosic ethanol, and biofuels.',
+    category: 'Renewable Energy',
+    bannerColor: 'from-emerald-600 to-teal-700',
+    icon: 'Leaf',
+    membersCount: 2430,
+    onlineCount: 48,
+    createdBy: 'scholar-admin',
+    createdAt: '2024-01-10T00:00:00.000Z',
+    rules: [
+      'Share verifiable bioenergy empirical data',
+      'Cite peer-reviewed references or lab reports',
+      'Maintain constructive peer discourse'
+    ],
+    isDefault: true
+  },
+  {
+    id: 'climate-tech',
+    name: 'a/climate-tech',
+    title: 'Climate Tech & Carbon Capture',
+    description: 'Direct air capture, carbon mineralization, climate modeling, and decarbonization innovations.',
+    category: 'Climate Science',
+    bannerColor: 'from-cyan-600 to-blue-700',
+    icon: 'Globe',
+    membersCount: 1890,
+    onlineCount: 35,
+    createdBy: 'scholar-admin',
+    createdAt: '2024-01-15T00:00:00.000Z',
+    rules: [
+      'Empirical carbon accounting protocols',
+      'Transparent LCA (Life Cycle Assessment) citations'
+    ],
+    isDefault: true
+  },
+  {
+    id: 'solar-energy',
+    name: 'a/solar-energy',
+    title: 'Solar & Photovoltaics Research',
+    description: 'Perovskite tandems, bifacial PV arrays, CSP thermal storage, and solar degradation data.',
+    category: 'Solar Tech',
+    bannerColor: 'from-amber-500 to-orange-600',
+    icon: 'Sun',
+    membersCount: 3120,
+    onlineCount: 72,
+    createdBy: 'scholar-admin',
+    createdAt: '2024-02-01T00:00:00.000Z',
+    rules: [
+      'Specify cell architecture and solar efficiency metrics',
+      'Open science datasets encouraged'
+    ],
+    isDefault: true
+  },
+  {
+    id: 'waste-to-energy',
+    name: 'a/waste-to-energy',
+    title: 'Waste Valorization & Biogas',
+    description: 'Anaerobic digestion optimization, industrial waste valorization, pyrolysis, and biochar.',
+    category: 'Waste Tech',
+    bannerColor: 'from-teal-600 to-emerald-800',
+    icon: 'Flame',
+    membersCount: 1240,
+    onlineCount: 28,
+    createdBy: 'scholar-admin',
+    createdAt: '2024-02-12T00:00:00.000Z',
+    rules: [
+      'Include feedstock specifications (moisture, volatile solids)',
+      'Detail methane yield metrics'
+    ],
+    isDefault: true
+  },
+  {
+    id: 'sustainable-agri',
+    name: 'a/sustainable-agri',
+    title: 'Circular Agri-Bioeconomy',
+    description: 'Agricultural residues, organic soil amendment, precision farming, and food-energy-water nexus.',
+    category: 'AgriTech',
+    bannerColor: 'from-lime-600 to-green-700',
+    icon: 'Wheat',
+    membersCount: 980,
+    onlineCount: 19,
+    createdBy: 'scholar-admin',
+    createdAt: '2024-02-20T00:00:00.000Z',
+    rules: [
+      'Empirical crop yield and soil organic carbon stats',
+      'No commercial product endorsements without trials'
+    ],
+    isDefault: true
+  },
+  {
+    id: 'energy-storage',
+    name: 'a/energy-storage',
+    title: 'Batteries & Grid Energy Storage',
+    description: 'Flow batteries, sodium-ion cells, thermal storage, and microgrid frequency response.',
+    category: 'Storage',
+    bannerColor: 'from-indigo-600 to-violet-700',
+    icon: 'Zap',
+    membersCount: 1560,
+    onlineCount: 33,
+    createdBy: 'scholar-admin',
+    createdAt: '2024-03-01T00:00:00.000Z',
+    rules: [
+      'State C-rate, cyclability, and temperature conditions',
+      'Safety and electrolyte stability protocols'
+    ],
+    isDefault: true
+  }
+];
+
+export const INITIAL_COMMUNITY_POSTS: CommunityPost[] = [
+  {
+    id: 'post_seed_1',
+    userId: 'scholar-bola',
+    authorName: 'Dr. Bola Adeyemi',
+    authorInstitution: 'Federal University of Technology, Akure',
+    authorCountry: 'Nigeria',
+    communityId: 'waste-to-energy',
+    communityName: 'a/waste-to-energy',
+    title: 'Field Trial Results: High-yield anaerobic digestion with cassava peel biochar additive',
+    flair: 'Research Paper',
+    content: 'Our experimental digester trial in Ondo State demonstrated a 28.4% acceleration in methane production rate when utilizing slow-pyrolysis cassava peel biochar at 10g/L. Total volatile fatty acid accumulation was markedly reduced during peak shock loading.\n\nKey finding: The specific surface area of alkaline-treated biochar facilitates direct interspecies electron transfer (DIET) between syntrophic acetogens and methanogens.',
+    researchLink: 'https://doi.org/10.1016/j.biortech.2024.13024',
+    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+    likes: ['scholar-bola', 'scholar-elena', 'scholar-marcus', 'scholar-amara'],
+    upvotes: ['scholar-bola', 'scholar-elena', 'scholar-marcus', 'scholar-amara'],
+    downvotes: [],
+    comments: [
+      {
+        id: 'comm_1_1',
+        userId: 'scholar-elena',
+        userName: 'Dr. Elena Rostova',
+        content: 'Remarkable results, Dr. Adeyemi! What was the optimal pyrolysis temperature for the peel char? In our trials, 450°C gave optimal porosity without excessive ash melting.',
+        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+        upvotes: ['scholar-bola', 'scholar-marcus']
+      }
+    ]
+  },
+  {
+    id: 'post_seed_2',
+    userId: 'scholar-elena',
+    authorName: 'Dr. Elena Rostova',
+    authorInstitution: 'Stanford Climate Hub',
+    authorCountry: 'United States',
+    communityId: 'solar-energy',
+    communityName: 'a/solar-energy',
+    title: 'Perovskite-Silicon Tandem Cells achieve 31.8% efficiency in subtropical field test',
+    flair: 'Breakthrough',
+    content: 'Proud to share our latest 6-month outdoor durability study on atomic-layer-deposited (ALD) encapsulated perovskite-silicon tandem modules. Despite ambient relative humidity surpassing 85%, the module retained 96.2% of its initial PCE after 1,500 continuous sun-hours.\n\nWe deployed a dual-barrier fluoropolymer interface which effectively prevented iodide ion migration across electrodes.',
+    researchLink: 'https://www.nature.com/articles/s41560-024-01582-x',
+    imageUrl: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800&auto=format&fit=crop&q=80',
+    createdAt: new Date(Date.now() - 3600000 * 7).toISOString(),
+    likes: ['scholar-bola', 'scholar-elena', 'scholar-marcus', 'scholar-amara', 'scholar-chen'],
+    upvotes: ['scholar-bola', 'scholar-elena', 'scholar-marcus', 'scholar-amara', 'scholar-chen'],
+    downvotes: [],
+    comments: []
+  },
+  {
+    id: 'post_seed_3',
+    userId: 'scholar-marcus',
+    authorName: 'Marcus Vance',
+    authorInstitution: 'ETH Zurich Renewable Lab',
+    authorCountry: 'Switzerland',
+    communityId: 'bioenergy',
+    communityName: 'a/bioenergy',
+    title: 'Has anyone benchmarked dual-stage gasification vs hydrothermal liquefaction for municipal sewage sludge?',
+    flair: 'Discussion',
+    content: 'We are sizing a 50-ton/day decentralized pilot in Central Europe. Our primary concern is heavy metal partitioning and phosphorus recovery in the ash fraction. While HTL avoids initial dewatering energy penalties, the aqueous phase treatment requires substantial catalytic oxidation.\n\nWould love to hear from groups that operated both at pilot scale: which route proved more economical from a capex/opex standpoint?',
+    createdAt: new Date(Date.now() - 3600000 * 14).toISOString(),
+    likes: ['scholar-bola', 'scholar-marcus'],
+    upvotes: ['scholar-bola', 'scholar-marcus'],
+    downvotes: [],
+    comments: [
+      {
+        id: 'comm_3_1',
+        userId: 'scholar-bola',
+        userName: 'Dr. Bola Adeyemi',
+        content: 'From our West Africa sludge assessments, gasification with slagging bed traps 92% of zinc and copper into vitrified inert slag, whereas HTL leaves heavy metals in the bio-crude requiring hydrotreating.',
+        createdAt: new Date(Date.now() - 3600000 * 10).toISOString(),
+        upvotes: ['scholar-marcus']
+      }
+    ]
+  },
+  {
+    id: 'post_seed_4',
+    userId: 'scholar-amara',
+    authorName: 'Dr. Amara Okafor',
+    authorInstitution: 'African Clean Energy Alliance',
+    authorCountry: 'Kenya',
+    communityId: 'climate-tech',
+    communityName: 'a/climate-tech',
+    title: 'New Open Dataset: 10-Year Global Solar Irradiation & Biomass Yield Cross-Correlations',
+    flair: 'Dataset',
+    content: 'We have compiled and open-sourced hourly satellite irradiance (GHI/DNI) alongside ground agro-waste yields across 42 tropical equatorial stations (2014-2024). This dataset is optimized for microgrid developers co-locating solar PV with biomass gasifiers.\n\nDownload link and Python notebooks for processing are linked below.',
+    researchLink: 'https://doi.org/10.5281/zenodo.1084201',
+    createdAt: new Date(Date.now() - 3600000 * 26).toISOString(),
+    likes: ['scholar-bola', 'scholar-elena', 'scholar-amara'],
+    upvotes: ['scholar-bola', 'scholar-elena', 'scholar-amara'],
+    downvotes: [],
+    comments: []
+  }
+];
+
+export function getUserJoinedCommunityIds(userId?: string): string[] {
+  try {
+    const key = `${LOCAL_JOINED_COMMUNITIES_KEY}_${userId || 'default'}`;
+    const data = localStorage.getItem(key);
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.warn('Error reading joined communities:', e);
+  }
+  // Default joined communities
+  return ['bioenergy', 'climate-tech', 'solar-energy', 'waste-to-energy'];
+}
+
+export function setUserJoinedCommunityIds(userId: string | undefined, communityIds: string[]): void {
+  try {
+    const key = `${LOCAL_JOINED_COMMUNITIES_KEY}_${userId || 'default'}`;
+    localStorage.setItem(key, JSON.stringify(communityIds));
+  } catch (e) {
+    console.warn('Error saving joined communities:', e);
+  }
+}
+
+export async function getCommunitySubreddits(): Promise<CommunitySubreddit[]> {
+  try {
+    const colRef = collection(db, 'communities');
+    const snapshot = await getDocs(colRef);
+    const firestoreList: CommunitySubreddit[] = [];
+    snapshot.forEach(d => {
+      firestoreList.push({ id: d.id, ...d.data() } as CommunitySubreddit);
+    });
+
+    // Merge with local communities
+    let localList: CommunitySubreddit[] = [];
+    const localData = localStorage.getItem(LOCAL_SUBREDDITS_KEY);
+    if (localData) {
+      localList = JSON.parse(localData);
+    }
+
+    const all = [...DEFAULT_SUBREDDITS];
+    localList.forEach(item => {
+      if (!all.some(a => a.id === item.id)) all.push(item);
+    });
+    firestoreList.forEach(item => {
+      const idx = all.findIndex(a => a.id === item.id);
+      if (idx >= 0) all[idx] = item;
+      else all.push(item);
+    });
+
+    return all.map(c => ({
+      ...c,
+      name: c.name ? (c.name.startsWith('r/') ? c.name.replace(/^r\//, 'a/') : c.name.startsWith('a/') ? c.name : `a/${c.id}`) : `a/${c.id}`
+    }));
+  } catch (err) {
+    let localList: CommunitySubreddit[] = [];
+    const localData = localStorage.getItem(LOCAL_SUBREDDITS_KEY);
+    if (localData) {
+      localList = JSON.parse(localData);
+    }
+    const all = [...DEFAULT_SUBREDDITS];
+    localList.forEach(item => {
+      if (!all.some(a => a.id === item.id)) all.push(item);
+    });
+    return all.map(c => ({
+      ...c,
+      name: c.name ? (c.name.startsWith('r/') ? c.name.replace(/^r\//, 'a/') : c.name.startsWith('a/') ? c.name : `a/${c.id}`) : `a/${c.id}`
+    }));
+  }
+}
+
+export async function createCommunitySubreddit(
+  userId: string,
+  communityData: Omit<CommunitySubreddit, 'id' | 'createdAt' | 'membersCount' | 'onlineCount'>
+): Promise<CommunitySubreddit> {
+  const cleanId = communityData.name.replace(/^[ra]\//, '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+  const id = cleanId || 'community-' + Math.random().toString(36).substring(2, 7);
+  const formattedName = communityData.name.startsWith('a/') ? communityData.name : (communityData.name.startsWith('r/') ? communityData.name.replace(/^r\//, 'a/') : `a/${cleanId}`);
+
+  const newCommunity: CommunitySubreddit = {
+    ...communityData,
+    id,
+    name: formattedName,
+    membersCount: 1,
+    onlineCount: 1,
+    createdBy: userId,
+    createdAt: new Date().toISOString()
+  };
+
+  // Save to local
+  try {
+    const existing = localStorage.getItem(LOCAL_SUBREDDITS_KEY);
+    const list: CommunitySubreddit[] = existing ? JSON.parse(existing) : [];
+    localStorage.setItem(LOCAL_SUBREDDITS_KEY, JSON.stringify([newCommunity, ...list.filter(c => c.id !== id)]));
+  } catch (e) {
+    console.warn('Error caching community locally:', e);
+  }
+
+  // Auto join for creator
+  const joined = getUserJoinedCommunityIds(userId);
+  if (!joined.includes(id)) {
+    setUserJoinedCommunityIds(userId, [...joined, id]);
+  }
+
+  // Save to firestore if authenticated
+  if (!isDemoModeActive(userId)) {
+    try {
+      await setDoc(doc(db, 'communities', id), sanitizeForFirestore(newCommunity));
+    } catch (err) {
+      console.warn('Firestore community create warning:', err);
+    }
+  }
+
+  return newCommunity;
+}
+
+export async function toggleJoinCommunitySubreddit(
+  userId: string | undefined,
+  communityId: string,
+  isJoining: boolean
+): Promise<{ joined: boolean; membersCount?: number }> {
+  const currentJoined = getUserJoinedCommunityIds(userId);
+  let updatedJoined: string[];
+
+  if (isJoining) {
+    updatedJoined = Array.from(new Set([...currentJoined, communityId]));
+  } else {
+    updatedJoined = currentJoined.filter(id => id !== communityId);
+  }
+
+  setUserJoinedCommunityIds(userId, updatedJoined);
+
+  // Update in local subreddits list
+  try {
+    const localData = localStorage.getItem(LOCAL_SUBREDDITS_KEY);
+    const list: CommunitySubreddit[] = localData ? JSON.parse(localData) : [];
+    const updatedList = list.map(c => {
+      if (c.id === communityId) {
+        return {
+          ...c,
+          membersCount: Math.max(1, c.membersCount + (isJoining ? 1 : -1))
+        };
+      }
+      return c;
+    });
+    localStorage.setItem(LOCAL_SUBREDDITS_KEY, JSON.stringify(updatedList));
+  } catch (e) {}
+
+  return { joined: isJoining };
+}
 
 function getLocalCommunityPosts(): CommunityPost[] {
   const data = localStorage.getItem(LOCAL_POSTS_KEY);
   if (!data) {
-    return [];
+    return INITIAL_COMMUNITY_POSTS;
   }
-  return JSON.parse(data);
+  try {
+    const parsed = JSON.parse(data);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.map(p => ({
+        ...p,
+        communityName: p.communityName ? p.communityName.replace(/^r\//, 'a/') : undefined
+      }));
+    }
+  } catch (e) {}
+  return INITIAL_COMMUNITY_POSTS;
 }
 
 function setLocalCommunityPosts(posts: CommunityPost[]) {
@@ -2363,46 +2730,67 @@ function setLocalCommunityPosts(posts: CommunityPost[]) {
 
 export async function getCommunityPosts(): Promise<CommunityPost[]> {
   const userId = auth.currentUser?.uid || 'anonymous';
+  const localList = getLocalCommunityPosts();
+
   if (isDemoModeActive(userId)) {
-    return getLocalCommunityPosts().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return localList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   const path = 'community_posts';
   try {
     const colRef = collection(db, path);
     const snapshot = await getDocs(colRef);
-    const list: CommunityPost[] = [];
+    const firestoreList: CommunityPost[] = [];
     snapshot.forEach(docSnap => {
-      list.push({ id: docSnap.id, ...docSnap.data() } as CommunityPost);
+      firestoreList.push({ id: docSnap.id, ...docSnap.data() } as CommunityPost);
     });
 
-    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    // Merge firestore with local posts (so newly created posts or local posts are never missing)
+    const combinedMap = new Map<string, CommunityPost>();
+    // First seed with initial if both are empty
+    if (firestoreList.length === 0 && localList.length === 0) {
+      INITIAL_COMMUNITY_POSTS.forEach(p => combinedMap.set(p.id, p));
+    }
+    // Add local
+    localList.forEach(p => combinedMap.set(p.id, p));
+    // Overwrite with firestore (or keep merged)
+    firestoreList.forEach(p => combinedMap.set(p.id, p));
+
+    return Array.from(combinedMap.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } catch (error) {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
-      return getCommunityPosts();
     }
-    console.warn('Firestore getCommunityPosts error, falling back to local storage:', error);
-    return getLocalCommunityPosts().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    console.warn('Firestore getCommunityPosts error, using local/seed fallback:', error);
+    return localList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 }
 
-export async function createCommunityPost(userId: string, postData: Omit<CommunityPost, 'id' | 'likes' | 'comments' | 'userId'>): Promise<string> {
+export async function createCommunityPost(
+  userId: string, 
+  postData: Omit<CommunityPost, 'id' | 'likes' | 'comments' | 'userId'>
+): Promise<string> {
   const newId = 'post_' + Math.random().toString(36).substring(2, 9);
+  const upvotes = [userId];
   const fullPost: CommunityPost = {
     ...postData,
     id: newId,
     userId,
-    likes: [],
+    likes: upvotes,
+    upvotes,
+    downvotes: [],
     comments: []
   };
 
+  // 1. Immediately store in local cache so UI is instantaneous and durable
+  const list = getLocalCommunityPosts();
+  setLocalCommunityPosts([fullPost, ...list.filter(p => p.id !== newId)]);
+
   if (isDemoModeActive(userId)) {
-    const list = getLocalCommunityPosts();
-    setLocalCommunityPosts([fullPost, ...list]);
     return newId;
   }
 
+  // 2. Persist to Firestore if online and authenticated
   const path = 'community_posts';
   try {
     await setDoc(doc(db, path, newId), sanitizeForFirestore(fullPost));
@@ -2410,41 +2798,69 @@ export async function createCommunityPost(userId: string, postData: Omit<Communi
   } catch (error) {
     if (isOfflineError(error)) {
       setFirestoreOffline(true);
-      return createCommunityPost(userId, postData);
     }
-    console.warn('Firestore createCommunityPost error:', error);
-    const list = getLocalCommunityPosts();
-    setLocalCommunityPosts([fullPost, ...list]);
+    console.warn('Firestore createCommunityPost error (saved to local store):', error);
     return newId;
   }
 }
 
-export async function likeCommunityPost(userId: string, postId: string, post: CommunityPost): Promise<void> {
-  const likes = post.likes || [];
-  const updatedLikes = likes.includes(userId)
-    ? likes.filter(id => id !== userId)
-    : [...likes, userId];
+export async function voteCommunityPost(
+  userId: string, 
+  postId: string, 
+  post: CommunityPost, 
+  voteType: 'up' | 'down'
+): Promise<CommunityPost> {
+  let upvotes = post.upvotes ? [...post.upvotes] : (post.likes ? [...post.likes] : []);
+  let downvotes = post.downvotes ? [...post.downvotes] : [];
 
-  const updatedPost = { ...post, likes: updatedLikes };
+  const hasUpvoted = upvotes.includes(userId);
+  const hasDownvoted = downvotes.includes(userId);
 
-  if (isDemoModeActive(userId)) {
-    const list = getLocalCommunityPosts();
-    setLocalCommunityPosts(list.map(p => p.id === postId ? updatedPost : p));
-    return;
-  }
-
-  const path = 'community_posts';
-  try {
-    await setDoc(doc(db, path, postId), sanitizeForFirestore(updatedPost));
-  } catch (error) {
-    if (isOfflineError(error)) {
-      setFirestoreOffline(true);
-      return likeCommunityPost(userId, postId, post);
+  if (voteType === 'up') {
+    if (hasUpvoted) {
+      // Remove upvote
+      upvotes = upvotes.filter(id => id !== userId);
+    } else {
+      // Add upvote, remove from downvotes
+      upvotes.push(userId);
+      downvotes = downvotes.filter(id => id !== userId);
     }
-    console.warn('Firestore likeCommunityPost error:', error);
-    const list = getLocalCommunityPosts();
-    setLocalCommunityPosts(list.map(p => p.id === postId ? updatedPost : p));
+  } else if (voteType === 'down') {
+    if (hasDownvoted) {
+      // Remove downvote
+      downvotes = downvotes.filter(id => id !== userId);
+    } else {
+      // Add downvote, remove from upvotes
+      downvotes.push(userId);
+      upvotes = upvotes.filter(id => id !== userId);
+    }
   }
+
+  const updatedPost: CommunityPost = {
+    ...post,
+    upvotes,
+    downvotes,
+    likes: upvotes
+  };
+
+  // Update local storage
+  const list = getLocalCommunityPosts();
+  setLocalCommunityPosts(list.map(p => p.id === postId ? updatedPost : p));
+
+  if (!isDemoModeActive(userId)) {
+    const path = 'community_posts';
+    try {
+      await setDoc(doc(db, path, postId), sanitizeForFirestore(updatedPost));
+    } catch (err) {
+      console.warn('Firestore vote update error:', err);
+    }
+  }
+
+  return updatedPost;
+}
+
+export async function likeCommunityPost(userId: string, postId: string, post: CommunityPost): Promise<void> {
+  await voteCommunityPost(userId, postId, post, 'up');
 }
 
 export async function commentCommunityPost(userId: string, postId: string, post: CommunityPost, comment: CommunityComment): Promise<void> {
