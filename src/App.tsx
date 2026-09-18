@@ -73,6 +73,7 @@ const InsightsHub = safeLazy(() => import('./components/InsightsHub'));
 const ResearchAreasPage = safeLazy(() => import('./components/ResearchAreasPage'));
 const LegalLayout = safeLazy(() => import('./components/legal/LegalLayout'));
 const CommunityPage = safeLazy(() => import('./components/CommunityPage'));
+const MyCommunitiesPage = safeLazy(() => import('./components/MyCommunitiesPage'));
 const NotFoundPage = safeLazy(() => import('./components/NotFoundPage'));
 
 function ViewLoadingFallback() {
@@ -177,8 +178,11 @@ function parsePath(path: string): AppRouteState {
   }
 
   // Standard views
-  const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas', 'legal', 'community'];
+  const views = ['about', 'services', 'collaboration', 'dashboard', 'contact', 'saved', 'signin', 'console', 'profile', 'settings', 'onboarding', 'admin', 'messages', 'notifications', 'insights', 'research-areas', 'legal', 'community', 'my-communities', 'my-community', 'my_communities', 'my_community'];
   const viewName = path.substring(1);
+  if (viewName === 'my-community' || viewName === 'my_communities' || viewName === 'my_community') {
+    return { view: 'my-communities', researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: null };
+  }
   if (views.includes(viewName)) {
     return { view: viewName, researcherId: null, paperId: null, projectId: null, allianceId: null, insightSlug: null, areaSlug: null, policyId: 'terms' };
   }
@@ -234,7 +238,9 @@ export default function App() {
   };
 
   const setView = (view: string) => {
-    let effectiveView = view === 'saved_studies' ? 'saved' : (view === 'collaborations' ? 'collaboration' : view);
+    let effectiveView = view === 'saved_studies' ? 'saved' : 
+                        (view === 'collaborations' ? 'collaboration' : 
+                        (view === 'my_communities' || view === 'my-community' || view === 'my_community' ? 'my-communities' : view));
 
     if (effectiveView === 'initializing') {
       React.startTransition(() => {
@@ -275,7 +281,11 @@ export default function App() {
       insights: '/insights',
       'research-areas': '/research-areas',
       legal: '/legal',
-      community: '/community'
+      community: '/community',
+      'my-communities': '/my-communities',
+      'my-community': '/my-communities',
+      'my_communities': '/my-communities',
+      'my_community': '/my-communities'
     };
 
     const currentPath = window.location.pathname;
@@ -285,7 +295,8 @@ export default function App() {
                                    (effectiveView === 'collaboration' && currentPath.startsWith('/alliances/')) ||
                                    (effectiveView === 'insights' && currentPath.startsWith('/insights/')) ||
                                    (effectiveView === 'research-areas' && currentPath.startsWith('/research-areas/')) ||
-                                   (effectiveView === 'legal' && currentPath.startsWith('/legal/'));
+                                   (effectiveView === 'legal' && currentPath.startsWith('/legal/')) ||
+                                   (effectiveView === 'my-communities' && (currentPath.startsWith('/my-communities') || currentPath.startsWith('/my-community')));
 
     if (isCurrentSubpathOfView) {
       navigateTo(currentPath);
@@ -1416,6 +1427,7 @@ export default function App() {
             {currentView === 'messages' && (
               <motion.div
                 key="messages-page"
+                id="messages_page_wrapper"
                 initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0 }}
@@ -1463,6 +1475,28 @@ export default function App() {
                 <CommunityPage 
                   user={user}
                   userProfile={userProfile}
+                  onNavigateToView={setView}
+                />
+              </motion.div>
+            )}
+
+            {currentView === 'my-communities' && (
+              <motion.div
+                key="my-communities-page"
+                initial={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0 }}
+              >
+                <SeoManager
+                  title="My Communities | Aurenix Network"
+                  description="Manage your founded scholar hubs, track publication views & engagement, and edit research articles."
+                  canonicalUrl="https://aurenix-research.org/my-communities"
+                />
+                <MyCommunitiesPage 
+                  user={user}
+                  userProfile={userProfile}
+                  onNavigateToView={setView}
+                  theme={theme}
                 />
               </motion.div>
             )}

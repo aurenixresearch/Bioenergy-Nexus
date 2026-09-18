@@ -850,14 +850,14 @@ export default function UserDashboard({
   const isOrgUnverified = isOrgAccount && !isOrganizationVerified(userProfile);
 
   return (
-    <div className="bg-white min-h-screen py-10" id="user_dashboard" style={{ backgroundColor: '#ffffff' }}>
+    <div className="bg-white dark:bg-black min-h-screen py-10" id="user_dashboard">
       <div className="w-full px-3 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 font-bold">
         
         {/* Navigation Bar Refresh button */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <LayoutDashboard className="w-6 h-6 text-emerald-600" />
-            <h1 className="text-[19px] font-display font-extrabold text-slate-900">
+            <h1 className="text-[19px] font-display font-extrabold text-slate-900 dark:text-white">
               User dashboard
             </h1>
           </div>
@@ -866,8 +866,7 @@ export default function UserDashboard({
             disabled={loading}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-emerald-800 rounded-xl shadow-xs hover:shadow-sm transition-all cursor-pointer border border-emerald-100/90 text-xs font-semibold"
-            style={{ backgroundColor: '#ffffff' }}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-black text-emerald-800 dark:text-emerald-300 rounded-xl shadow-xs hover:shadow-sm transition-all cursor-pointer border border-emerald-100/90 dark:border-emerald-900/50 text-xs font-semibold"
             id="refresh_dashboard_btn"
           >
             <RefreshCw className="w-3.5 h-3.5" />

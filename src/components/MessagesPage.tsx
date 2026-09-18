@@ -584,7 +584,7 @@ export default function MessagesPage({
   };
 
   return (
-    <div className="w-full max-w-[1520px] mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 text-left font-sans h-[calc(100vh-80px)] min-h-[620px] flex flex-col">
+    <div id="messages_page" className="w-full max-w-[1520px] mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 text-left font-sans h-[calc(100vh-80px)] min-h-[620px] flex flex-col">
       {/* Toast Feedback Notification */}
       <AnimatePresence>
         {toastMessage && (
@@ -592,7 +592,7 @@ export default function MessagesPage({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-20 right-6 z-50 px-4 py-3 bg-slate-900 text-white rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2 border border-slate-800"
+            className="fixed top-20 right-6 z-50 px-4 py-3 bg-slate-900 text-white rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2 border-0"
           >
             <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>{toastMessage}</span>
@@ -601,7 +601,7 @@ export default function MessagesPage({
       </AnimatePresence>
 
       {/* Main Messaging Container Card */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-md flex-grow overflow-hidden flex flex-col lg:flex-row relative">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border-0 shadow-md flex-grow overflow-hidden flex flex-col lg:flex-row relative">
 
         {/* ─── LEFT PANEL: CONVERSATIONS & DIRECTORY ─────────────────────────── */}
         <div className={`w-full lg:w-96 xl:w-[380px] shrink-0 border-r border-slate-200/80 dark:border-slate-800/80 flex flex-col bg-white dark:bg-slate-900/50 ${selectedConvId ? 'hidden lg:flex' : 'flex'}`}>
@@ -648,7 +648,7 @@ export default function MessagesPage({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search messages or scholars..."
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-800/70 border-0 rounded-2xl text-xs font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-0 rounded-2xl text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40 transition-all"
               />
               {searchQuery && (
                 <button 
@@ -661,16 +661,16 @@ export default function MessagesPage({
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/70 rounded-xl text-xs font-semibold">
+            <div className="flex items-center gap-1.5 p-1 bg-slate-50 dark:bg-slate-800/80 border-0 rounded-xl text-xs font-semibold">
               <button
                 onClick={() => setActiveFilter('all')}
-                className={`flex-1 py-1.5 rounded-lg transition-all text-center ${activeFilter === 'all' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800'}`}
+                className={`flex-1 py-1.5 rounded-lg transition-all text-center ${activeFilter === 'all' ? 'bg-slate-100 text-slate-900 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 All
               </button>
               <button
                 onClick={() => setActiveFilter('unread')}
-                className={`flex-1 py-1.5 rounded-lg transition-all text-center flex items-center justify-center gap-1 ${activeFilter === 'unread' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800'}`}
+                className={`flex-1 py-1.5 rounded-lg transition-all text-center flex items-center justify-center gap-1 ${activeFilter === 'unread' ? 'bg-slate-100 text-slate-900 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 <span>Unread</span>
                 {conversations.some(c => (c.unreadCount?.[user.uid] || 0) > 0) && (
@@ -679,7 +679,7 @@ export default function MessagesPage({
               </button>
               <button
                 onClick={() => setActiveFilter('mutual_follow')}
-                className={`flex-1 py-1.5 rounded-lg transition-all text-center flex items-center justify-center gap-1 ${activeFilter === 'mutual_follow' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800'}`}
+                className={`flex-1 py-1.5 rounded-lg transition-all text-center flex items-center justify-center gap-1 ${activeFilter === 'mutual_follow' ? 'bg-slate-100 text-emerald-700 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 <UserCheck className="w-3.5 h-3.5" />
                 <span>Mutual</span>
@@ -708,7 +708,7 @@ export default function MessagesPage({
                         <img 
                           src={profile.photoURL} 
                           alt={profile.fullName}
-                          className="w-11 h-11 rounded-2xl object-cover border border-slate-200/80 dark:border-slate-700" 
+                          className="w-11 h-11 rounded-2xl object-cover border-0" 
                         />
                       ) : (
                         <div className="w-11 h-11 rounded-2xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold flex items-center justify-center text-sm">
@@ -805,7 +805,7 @@ export default function MessagesPage({
                       <img 
                         src={targetProfile.photoURL} 
                         alt={targetProfile.fullName}
-                        className="w-10 h-10 rounded-2xl object-cover border border-slate-200/80 dark:border-slate-700 group-hover:opacity-90 transition-opacity" 
+                        className="w-10 h-10 rounded-2xl object-cover border-0 group-hover:opacity-90 transition-opacity" 
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold flex items-center justify-center text-sm">
@@ -825,12 +825,12 @@ export default function MessagesPage({
                         {targetProfile?.fullName || 'Scholar Researcher'}
                       </h3>
                       {isMutualFollow ? (
-                        <span className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50 rounded-full text-[10px] font-bold flex items-center gap-1 shrink-0">
+                        <span className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-0 rounded-full text-[10px] font-bold flex items-center gap-1 shrink-0">
                           <UserCheck className="w-3 h-3 text-emerald-600" />
                           <span>Mutual Connection</span>
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 rounded-full text-[10px] font-bold flex items-center gap-1 shrink-0">
+                        <span className="px-2 py-0.5 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-0 rounded-full text-[10px] font-bold flex items-center gap-1 shrink-0">
                           <Lock className="w-3 h-3 text-amber-600" />
                           <span>Follow Required</span>
                         </span>
@@ -870,7 +870,7 @@ export default function MessagesPage({
                     </button>
 
                     {showChatMenu && (
-                      <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-2 z-50 text-xs font-medium">
+                      <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border-0 py-2 z-50 text-xs font-medium">
                         <button
                           onClick={() => {
                             setShowDisappearingModal(true);
@@ -936,7 +936,7 @@ export default function MessagesPage({
                         setCurrentMatchIndex(0);
                       }}
                       placeholder="Search text, date, or files in this chat..."
-                      className="flex-grow bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-hidden"
+                      className="flex-grow bg-white dark:bg-slate-900 border-0 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-hidden"
                     />
                     <button
                       onClick={() => setShowInChatSearch(false)}
@@ -963,7 +963,7 @@ export default function MessagesPage({
                         id={`msg_bubble_${msg.id}`}
                         className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} group transition-all`}
                       >
-                        <div className={`max-w-[85%] sm:max-w-[70%] rounded-3xl p-3.5 sm:p-4 shadow-2xs text-left relative ${isMe ? 'bg-emerald-600 text-white rounded-br-xs' : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-100 dark:border-slate-700/80 rounded-bl-xs'}`}>
+                        <div className={`max-w-[85%] sm:max-w-[70%] rounded-3xl p-3.5 sm:p-4 shadow-2xs text-left relative ${isMe ? 'bg-emerald-600 text-white rounded-br-xs' : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-0 rounded-bl-xs'}`}>
                           
                           {/* Reply Context Header */}
                           {msg.replyTo && (
@@ -984,7 +984,7 @@ export default function MessagesPage({
                           {msg.attachments && msg.attachments.length > 0 && (
                             <div className="mt-2 space-y-2">
                               {msg.attachments.map((att, attIdx) => (
-                                <div key={attIdx} className="rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-700">
+                                <div key={attIdx} className="rounded-xl overflow-hidden border-0">
                                   {att.type === 'image' ? (
                                     <img src={att.url} alt={att.name} className="max-h-60 w-full object-cover rounded-lg" />
                                   ) : att.type === 'audio' ? (
@@ -1055,7 +1055,7 @@ export default function MessagesPage({
                         <span>Follow {targetProfile?.fullName || 'Scholar'}</span>
                       </button>
                     ) : (
-                      <div className="px-4 py-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-2">
+                      <div className="px-4 py-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-0 rounded-xl text-xs font-bold flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4" />
                         <span>You follow this scholar. Waiting for them to follow back.</span>
                       </div>
@@ -1082,7 +1082,7 @@ export default function MessagesPage({
                   {attachedFiles.length > 0 && (
                     <div className="mb-2 flex items-center gap-2 overflow-x-auto pb-1">
                       {attachedFiles.map((file, idx) => (
-                        <div key={idx} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-medium flex items-center gap-2 shrink-0 border border-slate-200/80">
+                        <div key={idx} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-medium flex items-center gap-2 shrink-0 border-0">
                           <FileText className="w-3.5 h-3.5 text-emerald-600" />
                           <span className="truncate max-w-[140px]">{file.name}</span>
                           <button onClick={() => setAttachedFiles(prev => prev.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-slate-600">
@@ -1095,7 +1095,7 @@ export default function MessagesPage({
 
                   {/* Voice Note Recording UI */}
                   {isRecordingVoice ? (
-                    <div className="p-2.5 bg-red-50 dark:bg-red-950/40 rounded-2xl border border-red-200 dark:border-red-900/40 flex items-center justify-between">
+                    <div className="p-2.5 bg-red-50 dark:bg-red-950/40 rounded-2xl border-0 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-3 h-3 rounded-full bg-red-600 animate-ping" />
                         <span className="text-xs font-mono font-bold text-red-700 dark:text-red-300">
@@ -1255,14 +1255,14 @@ export default function MessagesPage({
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl text-center border border-slate-100 dark:border-slate-800">
+                <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl text-center border-0">
                   <div>
                     <span className="block text-xs font-bold text-slate-900 dark:text-white">
                       {contactResearcher?.publicationCount || 5}
                     </span>
                     <span className="block text-[10px] text-slate-400 font-mono">Papers</span>
                   </div>
-                  <div className="border-x border-slate-200 dark:border-slate-700">
+                  <div className="px-1">
                     <span className="block text-xs font-bold text-emerald-600">
                       {contactResearcher?.citations || 32}
                     </span>
@@ -1280,7 +1280,7 @@ export default function MessagesPage({
                 {onNavigateToProfile && (
                   <button
                     onClick={() => onNavigateToProfile(targetUserId)}
-                    className="w-full py-2.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-2.5 border-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <ExternalLink className="w-4 h-4 text-emerald-600" />
                     <span>View Academic Profile</span>
@@ -1300,7 +1300,7 @@ export default function MessagesPage({
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 max-w-md w-full space-y-4 text-left"
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border-0 max-w-md w-full space-y-4 text-left"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -1317,7 +1317,7 @@ export default function MessagesPage({
               </div>
 
               {permissionError && (
-                <div className="p-3 bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 rounded-2xl text-xs font-medium border border-amber-200 flex items-center gap-2">
+                <div className="p-3 bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 rounded-2xl text-xs font-medium border-0 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
                   <span>{permissionError}</span>
                 </div>

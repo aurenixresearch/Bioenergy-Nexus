@@ -11,6 +11,9 @@ import {
   deleteCommunityPost,
   getCommunitySubreddits,
   createCommunitySubreddit,
+  updateCommunitySubreddit,
+  deleteCommunitySubreddit,
+  getMyCreatedCommunityIds,
   getUserJoinedCommunityIds,
   toggleJoinCommunitySubreddit,
   DEFAULT_SUBREDDITS
@@ -19,6 +22,9 @@ import { SEED_RESEARCHERS } from '../services/researchersSeed';
 import { CommunityPost, CommunityComment, CommunitySubreddit } from '../types';
 import CreateCommunityModal from './community/CreateCommunityModal';
 import RedditSidebar from './community/RedditSidebar';
+import MobileCommunitiesModal from './community/MobileCommunitiesModal';
+import EditPostModal from './community/EditPostModal';
+import EditCommunityModal from './community/EditCommunityModal';
 import { 
   ArrowBigUp,
   ArrowBigDown,
@@ -45,12 +51,17 @@ import {
   ShieldCheck,
   CheckCircle,
   Tag,
-  ChevronDown
+  ChevronDown,
+  Users,
+  ChevronRight,
+  Crown,
+  BarChart3
 } from 'lucide-react';
 
 interface CommunityPageProps {
   user: FirebaseUser | null;
   userProfile?: any | null;
+  onNavigateToView?: (view: string) => void;
 }
 
 const POST_FLAIRS = [
@@ -62,7 +73,7 @@ const POST_FLAIRS = [
   '📰 News & Policy'
 ];
 
-export default function CommunityPage({ user, userProfile }: CommunityPageProps) {
+export default function CommunityPage({ user, userProfile, onNavigateToView }: CommunityPageProps) {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [communities, setCommunities] = useState<CommunitySubreddit[]>(DEFAULT_SUBREDDITS);
   const [joinedCommunityIds, setJoinedCommunityIds] = useState<string[]>([]);
@@ -71,6 +82,14 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
   const [loading, setLoading] = useState(true);
   const [submittingPost, setSubmittingPost] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isMobileCommunitiesOpen, setIsMobileCommunitiesOpen] = useState(false);
+
+  // Community creation and modal state
+  const [postToEditModal, setPostToEditModal] = useState<CommunityPost | null>(null);
+  const [communityToEditModal, setCommunityToEditModal] = useState<CommunitySubreddit | null>(null);
+  const [myCreatedCommunityIds, setMyCreatedCommunityIds] = useState<string[]>(() => {
+    return getMyCreatedCommunityIds();
+  });
 
   // Post creation inputs
   const [targetCommunityId, setTargetCommunityId] = useState<string>('bioenergy');
@@ -115,6 +134,35 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
     loadCommunitiesAndPosts();
     const joined = getUserJoinedCommunityIds(user?.uid);
     setJoinedCommunityIds(joined);
+
+    // Check if navigated from sidebar with target community
+    const target = localStorage.getItem('nexus_target_community_id');
+    if (target) {
+      localStorage.removeItem('nexus_target_community_id');
+      if (target === 'create-new') {
+        setIsCreateModalOpen(true);
+      } else {
+        setSelectedCommunityId(target);
+      }
+    }
+
+    const handleSelectComm = (e: Event) => {
+      const customEvent = e as CustomEvent<{ communityId: string }>;
+      if (customEvent.detail?.communityId) {
+        setSelectedCommunityId(customEvent.detail.communityId);
+      }
+    };
+
+    const handleOpenCreateComm = () => {
+      setIsCreateModalOpen(true);
+    };
+
+    window.addEventListener('select-community', handleSelectComm);
+    window.addEventListener('open-create-community', handleOpenCreateComm);
+    return () => {
+      window.removeEventListener('select-community', handleSelectComm);
+      window.removeEventListener('open-create-community', handleOpenCreateComm);
+    };
   }, [user]);
 
   // Sync selected community with target community in post creator
@@ -351,6 +399,20 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
     }
   };
 
+  // Memoize communities created by the user
+  const myCreatedCommunities = useMemo(() => {
+    const currentUserId = user?.uid;
+    const guestId = localStorage.getItem('nexus_guest_id');
+
+    return communities.filter(c => {
+      if (myCreatedCommunityIds.includes(c.id)) return true;
+      if (currentUserId && c.createdBy === currentUserId) return true;
+      if (guestId && c.createdBy === guestId) return true;
+      if (!c.isDefault && c.createdBy) return true;
+      return false;
+    });
+  }, [communities, user, myCreatedCommunityIds]);
+
   // CREATE NEW COMMUNITY
   const handleCreateCommunity = async (
     communityData: Omit<CommunitySubreddit, 'id' | 'createdAt' | 'membersCount' | 'onlineCount'>
@@ -359,10 +421,44 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
     const newComm = await createCommunitySubreddit(currentUserId, communityData);
     setCommunities(prev => [newComm, ...prev.filter(c => c.id !== newComm.id)]);
     setJoinedCommunityIds(prev => Array.from(new Set([...prev, newComm.id])));
+    setMyCreatedCommunityIds(prev => Array.from(new Set([...prev, newComm.id])));
     setSelectedCommunityId(newComm.id);
     setTargetCommunityId(newComm.id);
-    setSuccessMessage(`✨ ${newComm.name} created and joined successfully!`);
+    window.dispatchEvent(new CustomEvent('communities-updated'));
+    setSuccessMessage(`✨ ${newComm.name} created! Manage it anytime in the sidebar My Communities menu.`);
     setTimeout(() => setSuccessMessage(''), 5000);
+  };
+
+  // UPDATE COMMUNITY SETTINGS
+  const handleUpdateCommunity = async (commId: string, updatedData: Partial<CommunitySubreddit>) => {
+    const currentUserId = user?.uid || 'anonymous';
+    setCommunities(prev => prev.map(c => c.id === commId ? { ...c, ...updatedData } : c));
+    try {
+      await updateCommunitySubreddit(currentUserId, commId, updatedData);
+      window.dispatchEvent(new CustomEvent('communities-updated'));
+      setSuccessMessage('Community settings updated successfully.');
+      setTimeout(() => setSuccessMessage(''), 4000);
+    } catch (err) {
+      console.error('Error updating community:', err);
+    }
+  };
+
+  // DELETE COMMUNITY
+  const handleDeleteCommunity = async (comm: CommunitySubreddit) => {
+    const currentUserId = user?.uid || 'anonymous';
+    setCommunities(prev => prev.filter(c => c.id !== comm.id));
+    setMyCreatedCommunityIds(prev => prev.filter(id => id !== comm.id));
+    if (selectedCommunityId === comm.id) {
+      setSelectedCommunityId(null);
+    }
+    try {
+      await deleteCommunitySubreddit(currentUserId, comm.id);
+      window.dispatchEvent(new CustomEvent('communities-updated'));
+      setSuccessMessage(`Community ${comm.name} deleted.`);
+      setTimeout(() => setSuccessMessage(''), 4000);
+    } catch (err) {
+      console.error('Error deleting community:', err);
+    }
   };
 
   // Post authorship check
@@ -376,30 +472,51 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
   };
 
   const canEditPost = (post: CommunityPost) => {
-    if (!isMyPost(post)) return false;
-    const elapsed = Date.now() - new Date(post.createdAt).getTime();
-    return elapsed < 5 * 60 * 1000;
+    return isMyPost(post);
   };
 
   const canDeletePost = (post: CommunityPost) => {
-    if (!isMyPost(post)) return false;
-    const elapsed = Date.now() - new Date(post.createdAt).getTime();
-    return elapsed < 24 * 60 * 60 * 1000;
+    if (isMyPost(post)) return true;
+    const postCommId = (post.communityId || post.communityName?.replace(/^[ra]\//, '') || '').toLowerCase();
+    const isFounder = myCreatedCommunities.some(c => c.id.toLowerCase() === postCommId);
+    return isFounder;
   };
 
   const handleDeletePostConfirm = async (post: CommunityPost) => {
-    if (!canDeletePost(post)) {
-      alert('This post can no longer be deleted as more than 24 hours have passed.');
-      setDeletingPostId(null);
-      return;
-    }
     const currentUserId = user?.uid || 'anonymous';
     setDeletingPostId(null);
     setPosts(prev => prev.filter(p => p.id !== post.id));
     try {
       await deleteCommunityPost(currentUserId, post.id);
+      setSuccessMessage('Post deleted successfully.');
+      setTimeout(() => setSuccessMessage(''), 4000);
     } catch (err) {
       console.error('Error deleting post:', err);
+    }
+  };
+
+  const handleSaveModalEditPost = async (
+    postId: string,
+    updatedData: { title: string; content: string; flair?: string; researchLink?: string }
+  ) => {
+    const currentUserId = user?.uid || 'anonymous';
+    const originalPost = posts.find(p => p.id === postId);
+    if (!originalPost) return;
+
+    const updatedPost: CommunityPost = {
+      ...originalPost,
+      ...updatedData
+    };
+
+    setPosts(prev => prev.map(p => p.id === postId ? updatedPost : p));
+    setPostToEditModal(null);
+
+    try {
+      await updateCommunityPost(currentUserId, postId, updatedPost);
+      setSuccessMessage('Post updated successfully.');
+      setTimeout(() => setSuccessMessage(''), 4000);
+    } catch (err) {
+      console.error('Error updating post:', err);
     }
   };
 
@@ -547,28 +664,28 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
         {/* If viewing a specific subreddit, show that subreddit's banner */}
         {activeCommunityObj ? (
           <div>
-            <div className={`h-28 bg-gradient-to-r ${activeCommunityObj.bannerColor || 'from-emerald-600 to-teal-700'} relative p-6 flex items-end justify-between`}>
-              <div className="flex items-center gap-4 relative top-6">
-                <div className="w-16 h-16 rounded-2xl bg-white p-1.5 shadow-lg border border-slate-100 flex items-center justify-center">
-                  <div className={`w-full h-full rounded-xl bg-gradient-to-r ${activeCommunityObj.bannerColor || 'from-emerald-600 to-teal-700'} text-white flex items-center justify-center font-black text-xl`}>
+            <div className={`min-h-[100px] sm:h-28 bg-gradient-to-r ${activeCommunityObj.bannerColor || 'from-emerald-600 to-teal-700'} relative p-4 sm:p-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3`}>
+              <div className="flex items-center gap-3 sm:gap-4 relative sm:top-6">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-1.5 shadow-lg border border-slate-100 flex items-center justify-center shrink-0">
+                  <div className={`w-full h-full rounded-xl bg-gradient-to-r ${activeCommunityObj.bannerColor || 'from-emerald-600 to-teal-700'} text-white flex items-center justify-center font-black text-lg sm:text-xl`}>
                     a/
                   </div>
                 </div>
-                <div className="text-left pt-6">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                <div className="text-left sm:pt-6 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                       {activeCommunityObj.name.replace(/^r\//, 'a/')}
                     </h1>
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shrink-0">
                       {activeCommunityObj.category}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">{activeCommunityObj.title}</p>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5 truncate">{activeCommunityObj.title}</p>
                 </div>
               </div>
 
-              {/* Join / Leave button on banner */}
-              <div className="flex items-center gap-3">
+              {/* Desktop Join / Leave button on banner */}
+              <div className="hidden sm:flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => handleToggleJoin(activeCommunityObj.id)}
@@ -593,11 +710,43 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
               </div>
             </div>
 
-            <div className="pt-8 px-6 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100">
+            {/* Mobile Prominent Join Bar */}
+            <div className="sm:hidden px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-xs text-slate-600 font-semibold">
+                <span>👥 {activeCommunityObj.membersCount.toLocaleString()} Members</span>
+                <span className="flex items-center gap-1 text-emerald-600 font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  {activeCommunityObj.onlineCount || 24} Online
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleToggleJoin(activeCommunityObj.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer ${
+                  joinedCommunityIds.includes(activeCommunityObj.id)
+                    ? 'bg-white text-slate-700 border border-slate-200 hover:bg-rose-50 hover:text-rose-700'
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                }`}
+              >
+                {joinedCommunityIds.includes(activeCommunityObj.id) ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-600" />
+                    <span>Joined</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    <span>Join Hub</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="pt-4 sm:pt-8 px-5 sm:px-6 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100">
               <p className="text-xs sm:text-sm text-slate-600 max-w-3xl leading-relaxed text-left">
                 {activeCommunityObj.description}
               </p>
-              <div className="flex items-center gap-4 text-xs text-slate-500 font-semibold shrink-0">
+              <div className="hidden sm:flex items-center gap-4 text-xs text-slate-500 font-semibold shrink-0">
                 <span>👥 {activeCommunityObj.membersCount.toLocaleString()} Members</span>
                 <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -610,20 +759,55 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
           /* Default All-Communities Hub Banner */
           <div className="p-6 sm:p-8 relative">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="space-y-2 text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-full text-xs font-bold uppercase tracking-wider">
-                  <Globe className="w-3.5 h-3.5 text-emerald-600" />
-                  Nexus Scholar Community
+              <div className="space-y-3.5 text-left max-w-3xl">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200/80 rounded-full text-[11px] font-bold uppercase tracking-wider shadow-2xs">
+                    <Globe className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Nexus Scholar Community</span>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/70 text-[11px] font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Live Research Network</span>
+                  </span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-                  Renewable Energy & Climate <span className="text-emerald-600">Reddit-Style Feed</span>
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-                  Join specialized sub-communities, post peer findings, engage in constructive discussions, and upvote high-impact research.
-                </p>
+
+                <div className="space-y-1.5">
+                  <h1 className="text-2xl sm:text-3xl lg:text-3.5xl font-black tracking-tight text-slate-900 leading-snug">
+                    Renewable Energy & Climate <span className="text-emerald-600">Community Feed</span>
+                  </h1>
+                  <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
+                    Join specialized academic hubs, post peer findings, engage in constructive discussions, and upvote high-impact research.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 pt-1 text-xs text-slate-500 font-medium flex-wrap">
+                  <span className="inline-flex items-center gap-1.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Peer Discussions</span>
+                  </span>
+                  <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Empirical Findings</span>
+                  </span>
+                  <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Open Access Collaboration</span>
+                  </span>
+                </div>
               </div>
 
-              <div className="flex items-center gap-3 shrink-0 flex-wrap">
+              <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setIsMobileCommunitiesOpen(true)}
+                  className="lg:hidden px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Browse & Join Hubs ({communities.length})</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(true)}
@@ -644,6 +828,16 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
 
         {/* SUBREDDIT NAVIGATION BAR */}
         <div className="px-4 py-3 bg-slate-50/80 border-t border-slate-100 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          {/* Mobile direct button to open communities modal */}
+          <button
+            type="button"
+            onClick={() => setIsMobileCommunitiesOpen(true)}
+            className="lg:hidden px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs flex items-center gap-1.5"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Join Hubs ({joinedCommunityIds.length}/{communities.length})</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setSelectedCommunityId(null)}
@@ -705,12 +899,90 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
         </div>
       </div>
 
+      {/* Mobile Quick-Join Communities Tray (Visible on mobile & tablet) */}
+      <div className="lg:hidden bg-white border border-slate-200/90 rounded-2xl p-4 mb-6 shadow-2xs text-left">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
+              <Users className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-extrabold text-slate-900">Scholar Communities</h3>
+              <p className="text-[10px] text-slate-500">Tap to join hubs & curate your feed</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsMobileCommunitiesOpen(true)}
+            className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100"
+          >
+            <span>View All ({communities.length})</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="flex gap-2.5 overflow-x-auto pb-2 no-scrollbar">
+          {communities.map((comm) => {
+            const isJoined = joinedCommunityIds.includes(comm.id);
+            return (
+              <div
+                key={comm.id}
+                className="shrink-0 w-44 bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex flex-col justify-between"
+              >
+                <div 
+                  onClick={() => setSelectedCommunityId(comm.id)}
+                  className="cursor-pointer"
+                >
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className={`w-7 h-7 rounded-lg bg-gradient-to-r ${comm.bannerColor || 'from-emerald-600 to-teal-700'} text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs`}>
+                      a/
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-slate-900 truncate hover:text-emerald-700">
+                        {comm.name.replace(/^r\//, 'a/')}
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        {comm.membersCount >= 1000 ? `${(comm.membersCount / 1000).toFixed(1)}k` : comm.membersCount} members
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-500 line-clamp-1 mb-2.5">
+                    {comm.title}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleToggleJoin(comm.id)}
+                  className={`w-full py-1.5 px-2 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs ${
+                    isJoined
+                      ? 'bg-white text-slate-700 border border-slate-200 hover:bg-rose-50 hover:text-rose-700'
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  }`}
+                >
+                  {isJoined ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Joined</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Join Hub</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* 2. MAIN GRID LAYOUT (Main Feed + Reddit Sidebar) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* Left/Feed Column (8 cols on lg) */}
         <div className="lg:col-span-8 space-y-5">
-          
           {/* POST CREATION CARD - DOM STRUCTURE PRESERVED FOR SELECTOR COMPATIBILITY */}
           <div ref={createPostFormRef} className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs text-left">
             <form onSubmit={handleCreatePost} className="space-y-4">
@@ -1117,11 +1389,26 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
                         </button>
                       </div>
 
-                      {/* Mobile Community Pill */}
+                      {/* Mobile Community Pill & Quick Join */}
                       <div className="sm:hidden flex items-center gap-2">
-                        <span className="text-xs font-bold text-emerald-800">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedCommunityId(postCommunity.id)}
+                          className="text-xs font-bold text-emerald-800 hover:underline cursor-pointer"
+                        >
                           {(post.communityName || 'a/bioenergy').replace(/^r\//, 'a/')}
-                        </span>
+                        </button>
+                        {!isPostCommunityJoined && (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleJoin(postCommunity.id)}
+                            className="px-2 py-0.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold flex items-center gap-0.5 shadow-2xs cursor-pointer transition"
+                            title="Join Community"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>Join</span>
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -1132,16 +1419,30 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2 text-xs">
                           {/* Subreddit badge */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedCommunityId(postCommunity.id)}
-                            className="font-extrabold text-slate-900 hover:text-emerald-700 flex items-center gap-1 cursor-pointer"
-                          >
-                            <span className="w-5 h-5 rounded-md bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px]">
-                              a/
-                            </span>
-                            <span>{(post.communityName || postCommunity.name).replace(/^r\//, 'a/')}</span>
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCommunityId(postCommunity.id)}
+                              className="font-extrabold text-slate-900 hover:text-emerald-700 flex items-center gap-1 cursor-pointer"
+                            >
+                              <span className="w-5 h-5 rounded-md bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px]">
+                                a/
+                              </span>
+                              <span>{(post.communityName || postCommunity.name).replace(/^r\//, 'a/')}</span>
+                            </button>
+
+                            {!isPostCommunityJoined && (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleJoin(postCommunity.id)}
+                                className="px-2 py-0.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-bold flex items-center gap-0.5 cursor-pointer transition"
+                                title="Join this hub"
+                              >
+                                <Plus className="w-3 h-3 text-emerald-600" />
+                                <span>Join</span>
+                              </button>
+                            )}
+                          </div>
 
                           <span className="text-slate-300">•</span>
 
@@ -1208,9 +1509,9 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
                                   {canEditPost(post) ? (
                                     <button
                                       type="button"
-                                      onClick={() => setEditingPost({ id: post.id, content: post.content, title: post.title })}
+                                      onClick={() => setPostToEditModal(post)}
                                       className="p-1 text-slate-400 hover:text-emerald-700 rounded-md transition cursor-pointer"
-                                      title="Edit post content"
+                                      title="Edit post"
                                     >
                                       <Pencil className="w-3.5 h-3.5" />
                                     </button>
@@ -1416,9 +1717,11 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
             currentCommunity={activeCommunityObj}
             communities={communities}
             joinedCommunityIds={joinedCommunityIds}
+            myCreatedCommunities={myCreatedCommunities}
             onToggleJoin={handleToggleJoin}
             onSelectCommunity={setSelectedCommunityId}
             onOpenCreateCommunity={() => setIsCreateModalOpen(true)}
+            onOpenMyCommunities={() => onNavigateToView ? onNavigateToView('my-communities') : setSelectedCommunityId(null)}
             onCreatePostClick={() => {
               createPostFormRef.current?.scrollIntoView({ behavior: 'smooth' });
             }}
@@ -1433,6 +1736,42 @@ export default function CommunityPage({ user, userProfile }: CommunityPageProps)
         onClose={() => setIsCreateModalOpen(false)}
         onCreateCommunity={handleCreateCommunity}
         userId={user?.uid}
+      />
+
+      {/* EDIT POST MODAL */}
+      <EditPostModal
+        isOpen={!!postToEditModal}
+        onClose={() => setPostToEditModal(null)}
+        post={postToEditModal}
+        onSave={handleSaveModalEditPost}
+      />
+
+      {/* EDIT COMMUNITY MODAL */}
+      <EditCommunityModal
+        isOpen={!!communityToEditModal}
+        onClose={() => setCommunityToEditModal(null)}
+        community={communityToEditModal}
+        onSave={handleUpdateCommunity}
+      />
+
+      {/* MOBILE COMMUNITIES EXPLORE & JOIN MODAL */}
+      <MobileCommunitiesModal
+        isOpen={isMobileCommunitiesOpen}
+        onClose={() => setIsMobileCommunitiesOpen(false)}
+        communities={communities}
+        joinedCommunityIds={joinedCommunityIds}
+        myCreatedCommunities={myCreatedCommunities}
+        selectedCommunityId={selectedCommunityId}
+        onSelectCommunity={setSelectedCommunityId}
+        onToggleJoin={handleToggleJoin}
+        onOpenMyCommunities={() => {
+          setIsMobileCommunitiesOpen(false);
+          setSelectedCommunityId('my-communities');
+        }}
+        onOpenCreateCommunity={() => {
+          setIsMobileCommunitiesOpen(false);
+          setIsCreateModalOpen(true);
+        }}
       />
 
     </div>

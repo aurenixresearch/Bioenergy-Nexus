@@ -24,6 +24,7 @@ const viewLoaders: Record<string, () => Promise<any>> = {
   'research-areas': () => import('../components/ResearchAreasPage'),
   legal: () => import('../components/legal/LegalLayout'),
   community: () => import('../components/CommunityPage'),
+  'my-communities': () => import('../components/MyCommunitiesPage'),
   onboarding: () => import('../components/OnboardingPage'),
 };
 

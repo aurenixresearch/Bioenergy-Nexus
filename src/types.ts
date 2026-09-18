@@ -248,6 +248,7 @@ export interface CommunitySubreddit {
   createdAt: string;
   rules?: string[];
   isDefault?: boolean;
+  views?: number;
 }
 
 export interface CommunityPost {
@@ -269,6 +270,7 @@ export interface CommunityPost {
   upvotes?: string[]; // Array of user IDs who upvoted
   downvotes?: string[]; // Array of user IDs who downvoted
   comments?: CommunityComment[];
+  views?: number;
 }
 
 export interface Testimonial {

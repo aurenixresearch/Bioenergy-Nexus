@@ -141,25 +141,25 @@ export default function NotificationsPage({ user, onNavigateToView }: Notificati
   };
 
   return (
-    <div className="w-full min-h-screen py-8 px-4 sm:px-6 lg:px-8 text-left font-sans" style={{ backgroundColor: '#f2f2f2' }}>
+    <div className="w-full min-h-screen py-8 px-4 sm:px-6 lg:px-8 text-left font-sans bg-slate-50 dark:bg-[#000000] text-slate-900 dark:text-white transition-colors">
       <div className="max-w-6xl mx-auto space-y-6">
         
         {/* Top Header Banner */}
-        <div className="rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs relative overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
+        <div className="rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-neutral-800 shadow-xs relative overflow-hidden bg-white dark:bg-[#000000]">
           <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-            <Bell className="w-48 h-48 text-emerald-900" />
+            <Bell className="w-48 h-48 text-emerald-900 dark:text-emerald-400" />
           </div>
 
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 text-white rounded-full text-xs font-semibold uppercase tracking-wider border border-emerald-200/50" style={{ backgroundColor: '#01523b' }}>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-600 dark:bg-emerald-900/60 text-white rounded-full text-xs font-semibold uppercase tracking-wider border border-emerald-500/40">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
                 Live Platform Stream
               </div>
-              <h1 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight" style={{ color: '#ffffff' }}>
+              <h1 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-slate-900 dark:text-white">
                 Notifications & Activity Center
               </h1>
-              <p className="text-xs sm:text-sm max-w-2xl leading-relaxed" style={{ color: '#878a8a' }}>
+              <p className="text-xs sm:text-sm max-w-2xl leading-relaxed text-slate-600 dark:text-slate-400">
                 Stay informed with real-time updates regarding research papers, messaging, research alliances, grant opportunities, and account verifications.
               </p>
             </div>
@@ -169,10 +169,10 @@ export default function NotificationsPage({ user, onNavigateToView }: Notificati
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllRead}
-                  className="px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100/80 text-emerald-800 border border-emerald-200/60 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
+                  className="px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100/80 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
                   id="page_mark_all_read_btn"
                 >
-                  <CheckCheck className="w-4 h-4 text-emerald-600" />
+                  <CheckCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span>Mark All as Read</span>
                 </button>
               )}
@@ -180,7 +180,7 @@ export default function NotificationsPage({ user, onNavigateToView }: Notificati
               {notifications.length > 0 && (
                 <button
                   onClick={() => setShowClearModal(true)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-red-700 border border-slate-200 hover:border-red-200 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer"
+                  className="px-4 py-2.5 bg-slate-100 dark:bg-neutral-900 hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-700 dark:text-slate-300 hover:text-red-700 dark:hover:text-red-400 border border-slate-200 dark:border-neutral-800 hover:border-red-200 dark:hover:border-red-800 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer"
                   id="page_clear_all_btn"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -191,24 +191,24 @@ export default function NotificationsPage({ user, onNavigateToView }: Notificati
           </div>
 
           {/* Metric Stats Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-6 mt-6 border-t border-slate-100">
-            <div className="p-3.5 rounded-2xl border border-slate-800 text-white" style={{ backgroundColor: '#080404' }}>
-              <span className="text-[10px] font-mono font-bold uppercase text-slate-400">Total Notifications</span>
-              <div className="text-xl font-extrabold text-white mt-0.5">{notifications.length}</div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-6 mt-6 border-t border-slate-100 dark:border-neutral-900">
+            <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-[#000000] text-slate-900 dark:text-white">
+              <span className="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400">Total Notifications</span>
+              <div className="text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">{notifications.length}</div>
             </div>
-            <div className="p-3.5 rounded-2xl border border-slate-800 text-white" style={{ backgroundColor: '#080404' }}>
-              <span className="text-[10px] font-mono font-bold uppercase text-emerald-400">Unread Items</span>
-              <div className="text-xl font-extrabold text-emerald-400 mt-0.5">{unreadCount}</div>
+            <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-[#000000] text-slate-900 dark:text-white">
+              <span className="text-[10px] font-mono font-bold uppercase text-emerald-600 dark:text-emerald-400">Unread Items</span>
+              <div className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">{unreadCount}</div>
             </div>
-            <div className="p-3.5 rounded-2xl border border-slate-800 text-white col-span-2 sm:col-span-1" style={{ backgroundColor: '#080404' }}>
-              <span className="text-[10px] font-mono font-bold uppercase text-slate-400">Read & Archived</span>
-              <div className="text-xl font-extrabold text-slate-200 mt-0.5">{readCount}</div>
+            <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-[#000000] text-slate-900 dark:text-white col-span-2 sm:col-span-1">
+              <span className="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400">Read & Archived</span>
+              <div className="text-xl font-extrabold text-slate-700 dark:text-slate-300 mt-0.5">{readCount}</div>
             </div>
           </div>
         </div>
 
         {/* Search & Filter Toolbar */}
-        <div className="rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4" style={{ backgroundColor: '#ffffff' }}>
+        <div className="rounded-2xl p-4 border border-slate-200/80 dark:border-neutral-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#000000]">
           
           {/* Category Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
@@ -227,14 +227,14 @@ export default function NotificationsPage({ user, onNavigateToView }: Notificati
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeFilter === tab.id
                     ? 'bg-emerald-600 text-white shadow-2xs font-bold'
-                    : 'text-slate-600 hover:bg-slate-100'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-900'
                 }`}
                 id={`filter_tab_${tab.id}`}
               >
                 <span>{tab.label}</span>
                 {tab.count > 0 && (
                   <span className={`px-1.5 py-0.2 rounded-full font-mono text-[9px] ${
-                    activeFilter === tab.id ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+                    activeFilter === tab.id ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-neutral-800 text-slate-600 dark:text-slate-300'
                   }`}>
                     {tab.count}
                   </span>
@@ -251,12 +251,12 @@ export default function NotificationsPage({ user, onNavigateToView }: Notificati
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search notifications..."
-              className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -265,16 +265,16 @@ export default function NotificationsPage({ user, onNavigateToView }: Notificati
         </div>
 
         {/* Notifications Main List */}
-        <div className="rounded-3xl border border-slate-200/80 shadow-xs divide-y divide-slate-100 overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
+        <div className="rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-xs divide-y divide-slate-100 dark:divide-neutral-900 overflow-hidden bg-white dark:bg-[#000000]">
           {filteredNotifications.length === 0 ? (
-            <div className="p-12 text-center space-y-3" style={{ backgroundColor: '#ffffff' }}>
-              <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
+            <div className="p-12 text-center space-y-3 bg-white dark:bg-[#000000]">
+              <div className="w-12 h-12 bg-slate-100 dark:bg-neutral-900 text-slate-400 rounded-full flex items-center justify-center mx-auto">
                 <Bell className="w-6 h-6 opacity-40" />
               </div>
-              <h3 className="text-sm font-bold text-slate-800">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
                 {searchQuery ? 'No Notifications Found' : "You're all caught up."}
               </h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                 {searchQuery ? 'No results matched your search query.' : 'No new notifications to report at this time.'}
               </p>
             </div>
@@ -285,8 +285,7 @@ export default function NotificationsPage({ user, onNavigateToView }: Notificati
                 <div
                   key={notif.id}
                   onClick={() => handleItemClick(notif)}
-                  className="p-5 hover:bg-slate-50/80 transition-all cursor-pointer relative group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                  style={{ backgroundColor: '#ffffff' }}
+                  className="p-5 hover:bg-slate-50/80 dark:hover:bg-neutral-950 transition-all cursor-pointer relative group flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#000000]"
                   id={`notif_card_${notif.id}`}
                 >
                   {/* Left accent bar for unread status */}
@@ -303,25 +302,25 @@ export default function NotificationsPage({ user, onNavigateToView }: Notificati
                     {/* Main Content */}
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-slate-300 rounded-md">
                           {notif.type}
                         </span>
-                        <span className="text-xs font-mono text-slate-400">
+                        <span className="text-xs font-mono text-slate-400 dark:text-slate-500">
                           {formatRelativeTime(notif.createdAt)}
                         </span>
                         {!notif.isRead && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100/70 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
                             <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse" />
                             Unread
                           </span>
                         )}
                       </div>
 
-                      <h3 className="text-sm font-extrabold" style={{ color: '#00060c' }}>
+                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
                         {notif.title}
                       </h3>
 
-                      <p className="text-xs leading-relaxed max-w-3xl" style={{ color: '#bfcaca' }}>
+                      <p className="text-xs leading-relaxed max-w-3xl text-slate-600 dark:text-slate-400">
                         {notif.description}
                       </p>
                     </div>
@@ -332,7 +331,7 @@ export default function NotificationsPage({ user, onNavigateToView }: Notificati
                     {!notif.isRead && (
                       <button
                         onClick={(e) => handleToggleReadStatus(e, notif)}
-                        className="px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+                        className="px-3 py-1.5 bg-white dark:bg-neutral-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-neutral-800 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
                         title="Mark as read"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" />

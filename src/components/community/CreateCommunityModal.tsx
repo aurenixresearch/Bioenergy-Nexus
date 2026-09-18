@@ -155,7 +155,7 @@ export default function CreateCommunityModal({
             <div>
               <span className="text-xs uppercase tracking-widest text-white/80 font-semibold flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5" />
-                Reddit-Style Scholar Hub
+                Scholar Community Hub
               </span>
               <h2 className="text-xl font-bold font-display text-white">
                 {cleanSubredditHandle ? `a/${cleanSubredditHandle}` : 'a/new-community'}

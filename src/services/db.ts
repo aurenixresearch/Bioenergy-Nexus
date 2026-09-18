@@ -8,6 +8,7 @@ import {
   where, 
   deleteDoc, 
   addDoc,
+  updateDoc,
   serverTimestamp
 } from 'firebase/firestore';
 import { db, auth, isFirestoreOffline, setFirestoreOffline } from '../firebase';
@@ -2660,6 +2661,9 @@ export async function createCommunitySubreddit(
     setUserJoinedCommunityIds(userId, [...joined, id]);
   }
 
+  // Record that this user created this community locally
+  addMyCreatedCommunityId(id);
+
   // Save to firestore if authenticated
   if (!isDemoModeActive(userId)) {
     try {
@@ -2670,6 +2674,83 @@ export async function createCommunitySubreddit(
   }
 
   return newCommunity;
+}
+
+const MY_CREATED_COMMUNITIES_KEY = 'nexus_my_created_communities_v1';
+
+export function getMyCreatedCommunityIds(): string[] {
+  try {
+    const raw = localStorage.getItem(MY_CREATED_COMMUNITIES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function addMyCreatedCommunityId(communityId: string): void {
+  try {
+    const current = getMyCreatedCommunityIds();
+    if (!current.includes(communityId)) {
+      localStorage.setItem(MY_CREATED_COMMUNITIES_KEY, JSON.stringify([...current, communityId]));
+    }
+  } catch {}
+}
+
+export function removeMyCreatedCommunityId(communityId: string): void {
+  try {
+    const current = getMyCreatedCommunityIds();
+    localStorage.setItem(MY_CREATED_COMMUNITIES_KEY, JSON.stringify(current.filter(id => id !== communityId)));
+  } catch {}
+}
+
+export async function updateCommunitySubreddit(
+  userId: string | undefined,
+  communityId: string,
+  updatedData: Partial<CommunitySubreddit>
+): Promise<void> {
+  // Update local storage
+  try {
+    const localData = localStorage.getItem(LOCAL_SUBREDDITS_KEY);
+    const list: CommunitySubreddit[] = localData ? JSON.parse(localData) : [];
+    const updatedList = list.map(c => c.id === communityId ? { ...c, ...updatedData } : c);
+    localStorage.setItem(LOCAL_SUBREDDITS_KEY, JSON.stringify(updatedList));
+  } catch (e) {
+    console.warn('Local community update error:', e);
+  }
+
+  // Update firestore if not demo
+  if (userId && !isDemoModeActive(userId)) {
+    try {
+      await updateDoc(doc(db, 'communities', communityId), sanitizeForFirestore(updatedData));
+    } catch (e) {
+      console.warn('Firestore update community error:', e);
+    }
+  }
+}
+
+export async function deleteCommunitySubreddit(
+  userId: string | undefined,
+  communityId: string
+): Promise<void> {
+  // Remove from local list
+  try {
+    const localData = localStorage.getItem(LOCAL_SUBREDDITS_KEY);
+    const list: CommunitySubreddit[] = localData ? JSON.parse(localData) : [];
+    const updatedList = list.filter(c => c.id !== communityId);
+    localStorage.setItem(LOCAL_SUBREDDITS_KEY, JSON.stringify(updatedList));
+    removeMyCreatedCommunityId(communityId);
+  } catch (e) {
+    console.warn('Local community delete error:', e);
+  }
+
+  // Delete from firestore if not demo
+  if (userId && !isDemoModeActive(userId)) {
+    try {
+      await deleteDoc(doc(db, 'communities', communityId));
+    } catch (e) {
+      console.warn('Firestore delete community error:', e);
+    }
+  }
 }
 
 export async function toggleJoinCommunitySubreddit(

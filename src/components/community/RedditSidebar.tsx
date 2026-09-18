@@ -15,7 +15,9 @@ import {
   Microscope,
   Info,
   ChevronRight,
-  Bookmark
+  Bookmark,
+  Crown,
+  BarChart3
 } from 'lucide-react';
 import { CommunitySubreddit } from '../../types';
 
@@ -23,10 +25,12 @@ interface RedditSidebarProps {
   currentCommunity: CommunitySubreddit | null;
   communities: CommunitySubreddit[];
   joinedCommunityIds: string[];
+  myCreatedCommunities?: CommunitySubreddit[];
   onToggleJoin: (communityId: string) => void;
   onSelectCommunity: (communityId: string | null) => void;
   onOpenCreateCommunity: () => void;
   onCreatePostClick: () => void;
+  onOpenMyCommunities?: () => void;
 }
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -44,15 +48,75 @@ export default function RedditSidebar({
   currentCommunity,
   communities,
   joinedCommunityIds,
+  myCreatedCommunities = [],
   onToggleJoin,
   onSelectCommunity,
   onOpenCreateCommunity,
-  onCreatePostClick
+  onCreatePostClick,
+  onOpenMyCommunities
 }: RedditSidebarProps) {
   const isCurrentJoined = currentCommunity ? joinedCommunityIds.includes(currentCommunity.id) : false;
 
   return (
     <div className="space-y-6 text-left font-sans">
+      
+      {/* 0. MY FOUNDED HUBS (If user created any) */}
+      {myCreatedCommunities.length > 0 && (
+        <div className="bg-white rounded-3xl border border-amber-200/80 shadow-xs p-5 space-y-3 relative overflow-hidden">
+          <div className="flex items-center justify-between pb-2 border-b border-amber-100">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
+                <Crown className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900">My Communities</h4>
+                <p className="text-[10px] text-slate-500">{myCreatedCommunities.length} hub{myCreatedCommunities.length > 1 ? 's' : ''} founded</p>
+              </div>
+            </div>
+            {onOpenMyCommunities && (
+              <button
+                type="button"
+                onClick={onOpenMyCommunities}
+                className="text-[11px] font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1 cursor-pointer"
+              >
+                <span>Dashboard</span>
+                <ChevronRight className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            {myCreatedCommunities.map(c => (
+              <div
+                key={c.id}
+                className="flex items-center justify-between p-2 rounded-xl bg-amber-50/50 hover:bg-amber-100/50 transition cursor-pointer"
+                onClick={() => onSelectCommunity(c.id)}
+              >
+                <div className="truncate">
+                  <p className="text-xs font-bold text-slate-900 truncate">
+                    {c.name.replace(/^r\//, 'a/')}
+                  </p>
+                  <p className="text-[10px] text-slate-500 truncate">
+                    {c.membersCount} members • {c.category}
+                  </p>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              </div>
+            ))}
+          </div>
+
+          {onOpenMyCommunities && (
+            <button
+              type="button"
+              onClick={onOpenMyCommunities}
+              className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>View Engagement & Views</span>
+            </button>
+          )}
+        </div>
+      )}
       
       {/* 1. CURRENT COMMUNITY CARD (If a specific community is selected) */}
       {currentCommunity && (

@@ -140,15 +140,15 @@ html, body, * {
 .dark aside,
 .dark #desktop_floating_aside,
 .dark #mobile_aside_drawer {
-  background-color: #010403 !important;
-  background-image: linear-gradient(180deg, #000000 0%, #021a12 100%) !important; /* gorgeous dark green gradient */
+  background-color: #000000 !important;
+  background-image: none !important;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(52, 211, 153, 0.03) !important;
 }
 
 /* Specific main layout sections overrides for pristine dark mode */
 .dark #mission_card {
-  background-color: #040706 !important;
-  background-image: linear-gradient(135deg, #000000 0%, #031c15 100%) !important;
+  background-color: #000000 !important;
+  background-image: none !important;
   border-color: rgba(52, 211, 153, 0.2) !important;
 }
 
@@ -945,12 +945,14 @@ div[role="listbox"],
 /* Note: Global card hover translateY removed — prevents all containers from bouncing on hover */
 .dark #app_layout_wrapper div.bg-white,
 .dark #app_layout_wrapper div[class*="bg-white"],
+.dark #app_layout_wrapper div.rounded-3xl,
 .dark #app_layout_wrapper div.rounded-2xl,
 .dark #app_layout_wrapper div.rounded-xl,
 .dark #app_layout_wrapper .card,
 .dark #app_layout_wrapper [class*="shadow"],
 .dark #admin_portal_layout div.bg-white,
 .dark #admin_portal_layout div[class*="bg-white"],
+.dark #admin_portal_layout div.rounded-3xl,
 .dark #admin_portal_layout div.rounded-2xl,
 .dark #admin_portal_layout div.rounded-xl,
 .dark #admin_portal_layout .card,
@@ -962,20 +964,30 @@ div[role="listbox"],
 .dark div.rounded-2xl.shadow-md,
 .dark div.rounded-xl.shadow-md,
 .dark div.rounded-2xl.shadow-lg,
-.dark div.rounded-xl.shadow-lg {
-  background-color: #0b110e !important;
+.dark div.rounded-xl.shadow-lg,
+.dark .bg-slate-900,
+.dark .bg-slate-950,
+.dark .bg-slate-800,
+.dark [class*="dark:bg-slate-9"],
+.dark [class*="dark:bg-slate-8"],
+.dark [class*="dark:bg-zinc-9"],
+.dark [class*="dark:bg-gray-9"] {
+  background-color: #000000 !important;
+  background-image: none !important;
   border: 1px solid rgba(52, 211, 153, 0.07) !important;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(52, 211, 153, 0.03) !important;
 }
 
 .dark #app_layout_wrapper div.bg-white:hover,
 .dark #app_layout_wrapper div[class*="bg-white"]:hover,
+.dark #app_layout_wrapper div.rounded-3xl:hover,
 .dark #app_layout_wrapper div.rounded-2xl:hover,
 .dark #app_layout_wrapper div.rounded-xl:hover,
 .dark #app_layout_wrapper .card:hover,
 .dark #app_layout_wrapper [class*="shadow"]:hover,
 .dark #admin_portal_layout div.bg-white:hover,
 .dark #admin_portal_layout div[class*="bg-white"]:hover,
+.dark #admin_portal_layout div.rounded-3xl:hover,
 .dark #admin_portal_layout div.rounded-2xl:hover,
 .dark #admin_portal_layout div.rounded-xl:hover,
 .dark #admin_portal_layout .card:hover,
@@ -988,7 +1000,8 @@ div[role="listbox"],
 .dark div.rounded-xl.shadow-md:hover,
 .dark div.rounded-2xl.shadow-lg:hover,
 .dark div.rounded-xl.shadow-lg:hover {
-  background-color: #0e1814 !important;
+  background-color: #000000 !important;
+  background-image: none !important;
   border: 1px solid rgba(52, 211, 153, 0.12) !important;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(52, 211, 153, 0.05) !important;
 }
@@ -1228,7 +1241,7 @@ div[role="dialog"],
 /* Timeline Cards in dark mode */
 .dark #experience_timeline .timeline-card,
 .dark .timeline-card {
-  background-color: #0b110e !important;
+  background-color: #000000 !important;
   background-image: none !important;
   border-color: rgba(52, 211, 153, 0.15) !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
@@ -1330,7 +1343,6 @@ div[role="dialog"],
 aside#desktop_floating_aside > div:nth-of-type(1) > div:nth-of-type(2) {
   background-color: #ffffff !important;
   color: #222222 !important;
-  border-style: none !important;
 }
 
 html:not(.dark) #desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emerald-600) span,
@@ -1340,7 +1352,7 @@ html:not(.dark) #desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emer
 
 .dark #desktop_floating_aside,
 .dark #mobile_aside_drawer {
-  background-color: #040202 !important;
+  background-color: #000000 !important;
   background-image: none !important;
   border-color: rgba(52, 211, 153, 0.15) !important;
   color: #f1f5f9 !important;
@@ -1359,7 +1371,7 @@ html:not(.dark) #desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emer
 .dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(5) {
   border-color: #dbe2e7;
   color: #e1e6eb;
-  background-color: #040202;
+  background-color: #000000 !important;
 }
 
 .dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(5) > div:nth-of-type(1) > span:nth-of-type(1) {
@@ -1370,7 +1382,7 @@ html:not(.dark) #desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emer
 .dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) {
   border-color: #dbe2e7;
   color: #e1e6eb;
-  background-color: #040202;
+  background-color: #000000 !important;
 }
 
 .dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1) {
@@ -1393,8 +1405,29 @@ html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mo
 
 .dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(2) {
   border-color: #dbe2e7;
-  color: #e1e6eb;
-  background-color: #040202;
+  color: #292b2d;
+}
+
+/* Mobile Aside Drawer Buttons - Applied Style Changes */
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(1) {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(2) {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(4) > div:nth-of-type(1) > button:nth-of-type(1) {
+  background-color: #ffffff !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(4) > div:nth-of-type(1) > button:nth-of-type(2) {
+  background-color: #c30010 !important;
+  border-color: #c30010 !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#mobile_aside_drawer:nth-of-type(2) > div:nth-of-type(4) > div:nth-of-type(1) > button:nth-of-type(2) * {
+  color: #ffffff !important;
 }
 
 /* Selected Ecosystem Roles and Support Parameters Styles */
@@ -1402,10 +1435,88 @@ div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:n
   color: #44594f;
 }
 
-div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#collaboration_wrapper:nth-of-type(1) > div#collaboration_ecosystem_container:nth-of-type(1) > section#stakeholder_categories:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(1) {
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#collaboration_wrapper:nth-of-type(1) > div#collaboration_ecosystem_container:nth-of-type(1) > section#stakeholder_categories:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(1) {
   background-color: #FFFFFF;
   border-color: #5ea679;
 }
+
+/* Research Overview Section - User Dashboard Applied Styles */
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button#dashboard_upload_research_btn:nth-of-type(2) {
+  background-color: #008744 !important;
+  color: #ffffff !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button#dashboard_upload_research_btn:nth-of-type(2) * {
+  color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) {
+  background-color: #ffffff !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > h4:nth-of-type(1) {
+  color: #051101 !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > input:nth-of-type(1) {
+  background-color: #ffffff !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(2) {
+  background-color: #008744 !important;
+  border-width: 0px !important;
+  color: #ffffff !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(2) * {
+  color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(4) {
+  background-color: #ffffff !important;
+  border-width: 0px !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(3) {
+  background-color: #ffffff !important;
+  border-width: 0px !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(5) {
+  background-color: #ffffff !important;
+  border-color: #f1f3f7 !important;
+  border-width: 0px !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > span:nth-of-type(1) {
+  color: #0d190f !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > svg:nth-of-type(1) > circle:nth-of-type(1) {
+  color: #161f1a !important;
+  stroke: #161f1a !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > svg:nth-of-type(1) {
+  color: #0f1b11 !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(3) > span:nth-of-type(1) {
+  color: #3c4b42 !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(4) > span:nth-of-type(1) {
+  color: #3c4b42 !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) > div:nth-of-type(1) > div#research_overview_section:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(5) > span:nth-of-type(1) {
+  color: #3c4b42 !important;
+}
+
 
 div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#collaboration_wrapper:nth-of-type(1) > div#collaboration_ecosystem_container:nth-of-type(1) > section#stakeholder_categories:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > h4:nth-of-type(1) {
   color: #5c675d;
@@ -1430,7 +1541,7 @@ html:not(.dark) section#stakeholder_categories > div:nth-of-type(2) > div h4 {
 .dark #desktop_floating_aside,
 .dark aside#mobile_aside_drawer,
 .dark aside#desktop_floating_aside {
-  background-color: #040202 !important;
+  background-color: #000000 !important;
 }
 
 .dark #mobile_aside_drawer button:not(.bg-emerald-700):not(.bg-emerald-600),
@@ -1441,7 +1552,7 @@ html:not(.dark) section#stakeholder_categories > div:nth-of-type(2) > div h4 {
 .dark aside a:not(.bg-emerald-700):not(.bg-emerald-600) {
   border-color: #dbe2e7;
   color: #e1e6eb;
-  background-color: #040202;
+  background-color: #000000 !important;
 }
 
 .dark #mobile_aside_drawer button:not(.bg-emerald-700):not(.bg-emerald-600) span,
@@ -1502,6 +1613,298 @@ html:not(.dark) #desktop_floating_aside button:not(.bg-emerald-700):not(.bg-emer
 html:not(.dark) aside button:not(.bg-emerald-700):not(.bg-emerald-600) svg {
   color: #292b2d;
 }
+
+/* Messages View Applied Styles */
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > input:nth-of-type(1) {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) {
+  background-color: #ffffff !important;
+}
+
+/* ==========================================================================
+   USER DASHBOARD & CARDS PURE #000000 BLACK IN DARK MODE
+   ========================================================================== */
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1),
+.dark #user_dashboard,
+.dark div#user_dashboard {
+  background-color: #000000 !important;
+  background-image: none !important;
+}
+
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) div.bg-white,
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) div[class*="bg-white"],
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) div.rounded-3xl,
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) div.rounded-2xl,
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) div.rounded-xl,
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) div#research_overview_section,
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) [id*="_section"],
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) [id*="_card"],
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) [id*="_panel"],
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) [id*="_widget"],
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) [id*="_container"],
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) .card,
+.dark div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_dashboard:nth-of-type(1) section,
+.dark #user_dashboard div.bg-white,
+.dark #user_dashboard div[class*="bg-white"],
+.dark #user_dashboard .card,
+.dark #user_dashboard section,
+.dark #user_dashboard [id*="_section"],
+.dark #user_dashboard [id*="_card"],
+.dark #user_dashboard [id*="_panel"],
+.dark #user_dashboard [id*="_widget"],
+.dark #user_dashboard [id*="_container"] {
+  background-color: #000000 !important;
+  background-image: none !important;
+}
+
+.dark #user_dashboard button#refresh_dashboard_btn {
+  background-color: #000000 !important;
+  color: #34d399 !important;
+}
+
+/* Focused elements: applied exclusively in white/light mode */
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) {
+  background-color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) {
+  border-color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
+  border-color: #ffffff !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) {
+  border-color: #ffffff !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) {
+  background-color: #ffffff;
+  border-width: 0px !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) {
+  background-color: #ffffff !important;
+  border-width: 0px !important;
+}
+
+/* User Profile System: white mode styles for focused elements */
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_profile_system:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) {
+  background-color: #ffffff !important;
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_profile_system:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) {
+  background-color: #ffffff !important;
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_profile_system:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) {
+  background-color: #ffffff !important;
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_profile_system:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) {
+  background-color: #ffffff !important;
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_profile_system:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div#profile_tab_nav:nth-of-type(1) {
+  background-color: #ffffff !important;
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
+/* Specific text color targets in profile basic info */
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_profile_system:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) {
+  color: #343e36 !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_profile_system:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(5) > p:nth-of-type(1) {
+  color: #343e36 !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_profile_system:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > p:nth-of-type(1) {
+  color: #90a1b9 !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_profile_system:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > p:nth-of-type(1) {
+  color: #90a1b9 !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > div#app_layout_wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div#user_profile_system:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(4) > p:nth-of-type(1) {
+  color: #90a1b9 !important;
+}
+
+/* Floating aside in white mode */
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1),
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1) {
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1) > div:nth-of-type(1),
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1) > div:nth-of-type(1) {
+  border-width: 2px !important;
+  border-color: #ffffff !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2),
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) {
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3),
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) {
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2),
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) {
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
+div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3),
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) {
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
+html:not(.dark) div#root:nth-of-type(1) > div#app_root:nth-of-type(1) > aside#desktop_floating_aside:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) {
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
+/* White mode only: apply 0px border to every button card, text card, and button in view profile */
+html:not(.dark) #user_profile_system div[class*="rounded-2xl"],
+html:not(.dark) #user_profile_system div[class*="rounded-3xl"],
+html:not(.dark) #user_profile_system div[class*="rounded-xl"],
+html:not(.dark) #user_profile_system button,
+html:not(.dark) #user_profile_system .shadow-sm,
+html:not(.dark) #user_profile_system .shadow-xs {
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
+/* Message Page: Remove border stroke in every card to be 0px */
+#messages_page_wrapper [class*="rounded-"],
+#messages_page [class*="rounded-"],
+#messages_page_wrapper .shadow-md,
+#messages_page_wrapper .shadow-sm,
+#messages_page_wrapper .shadow-xs,
+#messages_page_wrapper .shadow-2xs,
+#messages_page .shadow-md,
+#messages_page .shadow-sm,
+#messages_page .shadow-xs,
+#messages_page .shadow-2xs,
+#messages_page [id^="msg_bubble_"] > div,
+#messages_page input,
+#messages_page textarea {
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
+/* White mode: ensure Research, Publications, and Collaborations buttons and info are fully visible */
+html:not(.dark) #profile_tab_nav {
+  background-color: #ffffff !important;
+  border-width: 0px !important;
+}
+
+html:not(.dark) #profile_tab_nav button {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  background-color: #f1f5f9;
+}
+
+html:not(.dark) #profile_tab_nav button svg {
+  color: #0f172a !important;
+}
+
+html:not(.dark) #profile_tab_nav button[aria-selected="true"],
+html:not(.dark) #profile_tab_nav button.bg-emerald-600 {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+
+html:not(.dark) #profile_tab_nav button[aria-selected="true"] svg,
+html:not(.dark) #profile_tab_nav button.bg-emerald-600 svg {
+  color: #ffffff !important;
+}
+
+html:not(.dark) #profile_tab_research,
+html:not(.dark) #profile_tab_publications,
+html:not(.dark) #profile_tab_collaborations {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+html:not(.dark) #profile_tab_research[aria-selected="true"],
+html:not(.dark) #profile_tab_publications[aria-selected="true"],
+html:not(.dark) #profile_tab_collaborations[aria-selected="true"] {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+
+/* White mode info visibility in profile system */
+html:not(.dark) #user_profile_system h3,
+html:not(.dark) #user_profile_system h4 {
+  color: #0f172a !important;
+}
+
+html:not(.dark) #user_profile_system p {
+  color: #1e293b;
+}
+
+html:not(.dark) #user_profile_system .text-slate-400 {
+  color: #475569 !important;
+}
+
+html:not(.dark) #user_profile_system .text-slate-500 {
+  color: #334155 !important;
+}
+
+html:not(.dark) #user_profile_system .text-slate-600 {
+  color: #1e293b !important;
+}
+
+html:not(.dark) #user_profile_system .text-slate-700 {
+  color: #0f172a !important;
+}
+
+
+
+
 
 
 

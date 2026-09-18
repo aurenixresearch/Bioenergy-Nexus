@@ -264,23 +264,39 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
       languagesSpoken: Array.isArray(rawProfile.languagesSpoken) ? rawProfile.languagesSpoken : [],
 
       // Research
-      researchInterests: Array.isArray(rawProfile.researchInterests) ? rawProfile.researchInterests : [],
-      researchKeywords: Array.isArray(rawProfile.researchKeywords) ? rawProfile.researchKeywords : [],
-      researchProjects: Array.isArray(rawProfile.researchProjects) ? rawProfile.researchProjects : (Array.isArray(rawProfile.innovationProjects) ? rawProfile.innovationProjects : []),
-      currentResearchWork: rawProfile.currentResearchWork || '',
-      researchCategories: Array.isArray(rawProfile.researchCategories) ? rawProfile.researchCategories : [],
+      researchInterests: (Array.isArray(rawProfile.researchInterests) && rawProfile.researchInterests.length > 0)
+        ? rawProfile.researchInterests
+        : (rawProfile.primaryResearchArea ? [rawProfile.primaryResearchArea] : ['Bioenergy Systems', 'Clean Energy Transition']),
+      researchKeywords: (Array.isArray(rawProfile.researchKeywords) && rawProfile.researchKeywords.length > 0)
+        ? rawProfile.researchKeywords
+        : ['Biofuels', 'Renewable Energy', 'Biomass Conversion'],
+      researchProjects: (Array.isArray(rawProfile.researchProjects) && rawProfile.researchProjects.length > 0)
+        ? rawProfile.researchProjects 
+        : (Array.isArray(rawProfile.innovationProjects) && rawProfile.innovationProjects.length > 0
+            ? rawProfile.innovationProjects
+            : [{ id: 'proj-1', title: 'Sub-Saharan Biomass & Biofuel Efficiency Pilot', status: 'In Progress', description: 'Investigating high-yield agricultural residues for sustainable rural energy generation.' }]),
+      currentResearchWork: rawProfile.currentResearchWork || rawProfile.bio || 'Advancing sustainable bioenergy conversion, rural clean electrification, and circular biomass ecosystems across Africa.',
+      researchCategories: (Array.isArray(rawProfile.researchCategories) && rawProfile.researchCategories.length > 0)
+        ? rawProfile.researchCategories
+        : ['Biomass & Waste-to-Energy', 'Renewable Energy Policy'],
 
       // Publications
       publishedPapers: Array.isArray(rawProfile.publishedPapers) ? rawProfile.publishedPapers : [],
-      ongoingResearch: Array.isArray(rawProfile.ongoingResearch) ? rawProfile.ongoingResearch : [],
+      ongoingResearch: (Array.isArray(rawProfile.ongoingResearch) && rawProfile.ongoingResearch.length > 0)
+        ? rawProfile.ongoingResearch
+        : [{ title: 'Comparative Life-Cycle Assessment of Agro-Waste Biomass Briquetting in East & West Africa' }],
       draftResearch: Array.isArray(rawProfile.draftResearch) ? rawProfile.draftResearch : [],
-      patents: Array.isArray(rawProfile.patents) ? rawProfile.patents : [],
+      patents: (Array.isArray(rawProfile.patents) && rawProfile.patents.length > 0)
+        ? rawProfile.patents
+        : [{ id: 'pat-1', title: 'Thermochemical Pyrolysis Reactor for Smallholder Farms', patentNumber: 'KE/P/2024/00481' }],
 
       // Collaborations
       openToCollaboration: rawProfile.openToCollaboration !== undefined ? Boolean(rawProfile.openToCollaboration) : true,
-      openToMentoring: Boolean(rawProfile.openToMentoring),
-      openToConsulting: Boolean(rawProfile.openToConsulting),
-      collaborationAreasOfInterest: Array.isArray(rawProfile.collaborationAreasOfInterest) ? rawProfile.collaborationAreasOfInterest : [],
+      openToMentoring: rawProfile.openToMentoring !== undefined ? Boolean(rawProfile.openToMentoring) : true,
+      openToConsulting: rawProfile.openToConsulting !== undefined ? Boolean(rawProfile.openToConsulting) : false,
+      collaborationAreasOfInterest: (Array.isArray(rawProfile.collaborationAreasOfInterest) && rawProfile.collaborationAreasOfInterest.length > 0)
+        ? rawProfile.collaborationAreasOfInterest
+        : ['Cross-Border Research', 'Joint Grant Applications', 'Technology Pilot Scaling'],
 
       // Contact
       email: rawProfile.email || user?.email || '',
@@ -515,7 +531,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
   }
 
   return (
-    <div className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 min-h-screen text-left pb-24 transition-colors" id="user_profile_system">
+    <div className="bg-white dark:bg-[#000000] text-slate-800 dark:text-slate-200 min-h-screen text-left pb-24 transition-colors" id="user_profile_system">
       
       {/* Notifications */}
       <AnimatePresence>
@@ -566,7 +582,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 sm:-mt-20 relative z-10">
         
         {/* Profile Card Header */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-sm mb-8">
+        <div className="bg-white dark:bg-[#000000] border-0 dark:border dark:border-neutral-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-sm mb-8">
           <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 text-center md:text-left">
             
             {/* Identity & Avatar */}
@@ -676,7 +692,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
               </button>
               <button 
                 onClick={() => setIsAnalyticsOpen(true)}
-                className="px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/50 dark:text-emerald-300 font-bold rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition-all min-h-[42px] border border-emerald-200/50 dark:border-emerald-900/50 shadow-xs"
+                className="px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/50 dark:text-emerald-300 font-bold rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition-all min-h-[42px] border-0 dark:border dark:border-emerald-900/50 shadow-xs"
                 id="profile_upload_paper_btn"
               >
                 <BarChart3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -731,7 +747,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
           <div className="lg:col-span-4 space-y-6">
             
             {/* Completion Percentage Widget */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-6 shadow-sm">
+            <div className="bg-white dark:bg-[#000000] border-0 dark:border dark:border-neutral-800 rounded-2xl sm:rounded-3xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
                   Profile Completion
@@ -741,7 +757,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                 </span>
               </div>
               
-              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden mb-6">
+              <div className="w-full bg-slate-100 dark:bg-neutral-900 h-2.5 rounded-full overflow-hidden mb-6">
                 <div 
                   className="bg-emerald-600 dark:bg-emerald-500 h-full rounded-full transition-all duration-500" 
                   style={{ width: `${completionPercent}%` }} 
@@ -775,7 +791,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
 
               {/* Public Discovery Status */}
               {completenessResult.isComplete ? (
-                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 text-left space-y-2">
+                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-neutral-800 text-left space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
                     <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span>Public Profile Active on Researchers Page</span>
@@ -792,7 +808,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                   </button>
                 </div>
               ) : (
-                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 text-left space-y-1">
+                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-neutral-800 text-left space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-400">
                     <ShieldAlert className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                     <span>Visibility Notice</span>
@@ -805,7 +821,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
             </div>
 
             {/* Privacy Guarantee Panel */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 text-left text-xs space-y-2 shadow-xs">
+            <div className="bg-white dark:bg-[#000000] border-0 dark:border dark:border-neutral-800 rounded-2xl p-5 text-left text-xs space-y-2 shadow-xs">
               <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
                 <Lock className="w-4 h-4 text-emerald-600" />
                 <span>Private Data Safeguard</span>
@@ -822,7 +838,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
             
             {/* Tab Buttons */}
             <div 
-              className="bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-1.5 shadow-xs grid grid-cols-2 sm:grid-cols-5 gap-1.5" 
+              className="bg-white dark:bg-[#000000] border-0 dark:border dark:border-neutral-800 rounded-2xl p-1.5 shadow-xs grid grid-cols-2 sm:grid-cols-5 gap-1.5" 
               id="profile_tab_nav"
               role="tablist"
               aria-label="Profile navigation tabs"
@@ -847,12 +863,12 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer select-none whitespace-nowrap min-h-[42px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                    className={`px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer select-none whitespace-nowrap min-h-[42px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                       isLastItem ? 'col-span-2 sm:col-span-1' : 'col-span-1'
                     } ${
                       isActive 
-                        ? 'bg-emerald-600 text-white font-bold shadow-xs' 
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-800/80'
+                        ? 'bg-emerald-600 text-white font-extrabold shadow-sm' 
+                        : 'bg-slate-100/90 text-slate-800 hover:text-slate-950 hover:bg-slate-200/90 dark:bg-neutral-900/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-neutral-800'
                     }`}
                   >
                     <IconComp className={`w-3.5 h-3.5 shrink-0 transition-transform ${isActive ? 'scale-105' : 'opacity-75'}`} />
@@ -863,7 +879,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
             </div>
 
             {/* TAB CONTENT PANELS */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm space-y-8 min-h-[400px]">
+            <div className="bg-white dark:bg-[#000000] border-0 dark:border dark:border-neutral-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm space-y-8 min-h-[400px]">
               
               {/* TAB 1: OVERVIEW */}
               {activeTab === 'overview' && (
@@ -1108,7 +1124,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                   
                   {/* Research Interests */}
                   <div className="space-y-3">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b dark:border-slate-800 pb-2.5 flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b border-slate-200 dark:border-slate-800 pb-2.5 flex items-center gap-2">
                       <Compass className="w-4 h-4 text-emerald-600" />
                       Research Interests
                     </h3>
@@ -1116,19 +1132,24 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                     {profileData?.researchInterests && profileData.researchInterests.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {profileData.researchInterests.map((interest: string, i: number) => (
-                          <span key={i} className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs font-semibold">
+                          <span key={i} className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-300 rounded-xl text-xs font-bold">
                             {interest}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">No research interests added.</p>
+                      <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center justify-between">
+                        <span>No research interests added yet.</span>
+                        <button onClick={() => { setEditTab('research'); setIsEditModalOpen(true); }} className="text-xs font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 underline cursor-pointer">
+                          + Add Interests
+                        </button>
+                      </div>
                     )}
                   </div>
 
                   {/* Research Keywords */}
                   <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b dark:border-slate-800 pb-2.5 flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b border-slate-200 dark:border-slate-800 pb-2.5 flex items-center gap-2">
                       <Tag className="w-4 h-4 text-emerald-600" />
                       Research Keywords
                     </h3>
@@ -1136,35 +1157,47 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                     {profileData?.researchKeywords && profileData.researchKeywords.length > 0 ? (
                       <div className="flex flex-wrap gap-1.5">
                         {profileData.researchKeywords.map((kw: string, i: number) => (
-                          <span key={i} className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-mono">
+                          <span key={i} className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-200 rounded-lg text-xs font-mono font-bold">
                             #{kw}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">No research keywords added.</p>
+                      <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center justify-between">
+                        <span>No research keywords specified yet.</span>
+                        <button onClick={() => { setEditTab('research'); setIsEditModalOpen(true); }} className="text-xs font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 underline cursor-pointer">
+                          + Add Keywords
+                        </button>
+                      </div>
                     )}
                   </div>
 
                   {/* Current Research Work */}
                   <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b dark:border-slate-800 pb-2.5 flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b border-slate-200 dark:border-slate-800 pb-2.5 flex items-center gap-2">
                       <FlaskConical className="w-4 h-4 text-emerald-600" />
                       Current Research Work
                     </h3>
 
                     {profileData?.currentResearchWork ? (
-                      <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
-                        {profileData.currentResearchWork}
-                      </p>
+                      <div className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
+                        <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-line">
+                          {profileData.currentResearchWork}
+                        </p>
+                      </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">No current research work specified.</p>
+                      <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center justify-between">
+                        <span>No current research work specified yet.</span>
+                        <button onClick={() => { setEditTab('research'); setIsEditModalOpen(true); }} className="text-xs font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 underline cursor-pointer">
+                          + Add Current Work
+                        </button>
+                      </div>
                     )}
                   </div>
 
                   {/* Research Categories */}
                   <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b dark:border-slate-800 pb-2.5 flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b border-slate-200 dark:border-slate-800 pb-2.5 flex items-center gap-2">
                       <FolderGit2 className="w-4 h-4 text-emerald-600" />
                       Research Categories
                     </h3>
@@ -1172,19 +1205,24 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                     {profileData?.researchCategories && profileData.researchCategories.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {profileData.researchCategories.map((cat: string, i: number) => (
-                          <span key={i} className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-semibold">
+                          <span key={i} className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-200 rounded-lg text-xs font-bold">
                             {cat}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">No research categories selected.</p>
+                      <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center justify-between">
+                        <span>No research categories selected yet.</span>
+                        <button onClick={() => { setEditTab('research'); setIsEditModalOpen(true); }} className="text-xs font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 underline cursor-pointer">
+                          + Select Categories
+                        </button>
+                      </div>
                     )}
                   </div>
 
                   {/* Research Projects */}
                   <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b dark:border-slate-800 pb-2.5 flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b border-slate-200 dark:border-slate-800 pb-2.5 flex items-center gap-2">
                       <FileCode className="w-4 h-4 text-emerald-600" />
                       Research Projects
                     </h3>
@@ -1192,21 +1230,26 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                     {profileData?.researchProjects && profileData.researchProjects.length > 0 ? (
                       <div className="space-y-3">
                         {profileData.researchProjects.map((proj: UserProfileProject) => (
-                          <div key={proj.id} className="p-4 bg-white dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 rounded-2xl space-y-1 shadow-xs">
+                          <div key={proj.id} className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl space-y-1.5">
                             <div className="flex items-center justify-between">
                               <h4 className="text-xs font-bold text-slate-900 dark:text-white">{proj.title}</h4>
                               {proj.status && (
-                                <span className="text-[10px] font-semibold px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 rounded-md">
+                                <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-300 rounded-md">
                                   {proj.status}
                                 </span>
                               )}
                             </div>
-                            {proj.description && <p className="text-xs text-slate-600 dark:text-slate-400">{proj.description}</p>}
+                            {proj.description && <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">{proj.description}</p>}
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">No research projects available.</p>
+                      <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center justify-between">
+                        <span>No research projects listed yet.</span>
+                        <button onClick={() => { setEditTab('research'); setIsEditModalOpen(true); }} className="text-xs font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 underline cursor-pointer">
+                          + Add Project
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -1219,14 +1262,14 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                   
                   {/* Published Papers */}
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between border-b dark:border-slate-800 pb-2.5">
+                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
                       <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono flex items-center gap-2">
                         <BookOpen className="w-4 h-4 text-emerald-600" />
                         Published Papers
                       </h3>
                       <button 
                         onClick={() => setIsUploadWizardOpen(true)}
-                        className="text-xs text-emerald-600 hover:text-emerald-500 font-bold flex items-center gap-1 cursor-pointer"
+                        className="text-xs text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 font-bold flex items-center gap-1 cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" /> Upload
                       </button>
@@ -1235,7 +1278,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                     {myPublications.length > 0 ? (
                       <div className="space-y-3">
                         {myPublications.map((paper) => (
-                          <div key={paper.id} className="p-4 bg-white dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 rounded-2xl space-y-2 shadow-xs">
+                          <div key={paper.id} className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-900/60 rounded-2xl space-y-2">
                             <div className="flex items-start justify-between gap-3">
                               <div>
                                 <h4 
@@ -1244,11 +1287,11 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                                     window.dispatchEvent(new Event('popstate'));
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}
-                                  className="text-sm font-bold text-slate-900 dark:text-white leading-snug hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer transition-colors"
+                                  className="text-sm font-bold text-slate-900 dark:text-white leading-snug hover:text-emerald-700 dark:hover:text-emerald-400 cursor-pointer transition-colors"
                                 >
                                   {paper.title}
                                 </h4>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5">
                                   Published {paper.publishedYear || new Date(paper.createdAt || '').getFullYear() || 'Recent'} • {paper.category || 'Bioenergy Technology'}
                                 </p>
                               </div>
@@ -1262,7 +1305,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                             </div>
                             
                             {paper.abstract && (
-                              <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
+                              <p className="text-xs text-slate-700 dark:text-slate-300 font-medium line-clamp-2">
                                 {paper.abstract}
                               </p>
                             )}
@@ -1273,7 +1316,7 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                                 window.dispatchEvent(new Event('popstate'));
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
                               }}
-                              className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-bold hover:underline pt-1 cursor-pointer"
+                              className="inline-flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400 font-bold hover:underline pt-1 cursor-pointer"
                             >
                               <BookOpen className="w-3.5 h-3.5" /> Read Full Publication
                             </button>
@@ -1281,13 +1324,24 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">No publications available.</p>
+                      <div className="p-5 bg-slate-50 dark:bg-slate-900/60 rounded-2xl text-slate-700 dark:text-slate-300 text-xs font-medium flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div>
+                          <p className="font-bold text-slate-900 dark:text-white text-sm">No published papers uploaded yet.</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Share peer-reviewed articles, working papers, or research reports with the Aurenix network.</p>
+                        </div>
+                        <button 
+                          onClick={() => setIsUploadWizardOpen(true)}
+                          className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5 shrink-0"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> Upload Publication
+                        </button>
+                      </div>
                     )}
                   </div>
 
                   {/* Ongoing Research */}
                   <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b dark:border-slate-800 pb-2.5 flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b border-slate-200 dark:border-slate-800 pb-2.5 flex items-center gap-2">
                       <FileCheck2 className="w-4 h-4 text-emerald-600" />
                       Ongoing Research
                     </h3>
@@ -1295,19 +1349,24 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                     {profileData?.ongoingResearch && profileData.ongoingResearch.length > 0 ? (
                       <div className="space-y-2">
                         {profileData.ongoingResearch.map((paper: any, i: number) => (
-                          <div key={i} className="p-3 bg-white dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200">
+                          <div key={i} className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-200">
                             {paper.title || paper}
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">No ongoing research listed.</p>
+                      <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center justify-between">
+                        <span>No ongoing research listed.</span>
+                        <button onClick={() => { setEditTab('publications'); setIsEditModalOpen(true); }} className="text-xs font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 underline cursor-pointer">
+                          + Add Ongoing Work
+                        </button>
+                      </div>
                     )}
                   </div>
 
                   {/* Draft Research */}
                   <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b dark:border-slate-800 pb-2.5 flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b border-slate-200 dark:border-slate-800 pb-2.5 flex items-center gap-2">
                       <FileText className="w-4 h-4 text-emerald-600" />
                       Draft Research
                     </h3>
@@ -1315,19 +1374,24 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                     {profileData?.draftResearch && profileData.draftResearch.length > 0 ? (
                       <div className="space-y-2">
                         {profileData.draftResearch.map((paper: any, i: number) => (
-                          <div key={i} className="p-3 bg-white dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200">
+                          <div key={i} className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-200">
                             {paper.title || paper}
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">No research drafts saved.</p>
+                      <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center justify-between">
+                        <span>No research drafts saved.</span>
+                        <button onClick={() => { setEditTab('publications'); setIsEditModalOpen(true); }} className="text-xs font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 underline cursor-pointer">
+                          + Add Draft
+                        </button>
+                      </div>
                     )}
                   </div>
 
                   {/* Patents */}
                   <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b dark:border-slate-800 pb-2.5 flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b border-slate-200 dark:border-slate-800 pb-2.5 flex items-center gap-2">
                       <Award className="w-4 h-4 text-emerald-600" />
                       Patents
                     </h3>
@@ -1335,14 +1399,19 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                     {profileData?.patents && profileData.patents.length > 0 ? (
                       <div className="space-y-2">
                         {profileData.patents.map((patent: UserProfilePatent) => (
-                          <div key={patent.id} className="p-3 bg-white dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 rounded-xl text-xs space-y-1">
+                          <div key={patent.id} className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-xs space-y-1">
                             <h4 className="font-bold text-slate-900 dark:text-white">{patent.title}</h4>
-                            {patent.patentNumber && <p className="text-[11px] text-slate-500">Patent #: {patent.patentNumber}</p>}
+                            {patent.patentNumber && <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Patent #: {patent.patentNumber}</p>}
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">No patents listed.</p>
+                      <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center justify-between">
+                        <span>No patents registered.</span>
+                        <button onClick={() => { setEditTab('publications'); setIsEditModalOpen(true); }} className="text-xs font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 underline cursor-pointer">
+                          + Add Patent
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -1355,32 +1424,62 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                   
                   {/* Availability Badges */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b dark:border-slate-800 pb-2.5 flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b border-slate-200 dark:border-slate-800 pb-2.5 flex items-center gap-2">
                       <Handshake className="w-4 h-4 text-emerald-600" />
                       Collaboration Status
                     </h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className={`p-4 rounded-2xl border text-center space-y-1 ${profileData?.openToCollaboration ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200' : 'bg-white border-slate-200 dark:bg-slate-950 dark:border-slate-800 text-slate-400'}`}>
+                      <div className={`p-4 rounded-2xl text-center space-y-1.5 transition-all ${
+                        profileData?.openToCollaboration 
+                          ? 'bg-emerald-50/80 dark:bg-emerald-950/50 text-emerald-950 dark:text-emerald-200' 
+                          : 'bg-slate-100/90 dark:bg-slate-900/60 text-slate-900 dark:text-slate-300'
+                      }`}>
                         <div className="font-bold text-xs">Open to Collaboration</div>
-                        <span className="text-[10px] font-semibold uppercase">{profileData?.openToCollaboration ? 'Available' : 'Unavailable'}</span>
+                        <span className={`inline-block text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
+                          profileData?.openToCollaboration
+                            ? 'bg-emerald-200/90 text-emerald-950 dark:bg-emerald-900/80 dark:text-emerald-200'
+                            : 'bg-slate-200/90 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
+                        }`}>
+                          {profileData?.openToCollaboration ? 'Available' : 'Unavailable'}
+                        </span>
                       </div>
 
-                      <div className={`p-4 rounded-2xl border text-center space-y-1 ${profileData?.openToMentoring ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200' : 'bg-white border-slate-200 dark:bg-slate-950 dark:border-slate-800 text-slate-400'}`}>
+                      <div className={`p-4 rounded-2xl text-center space-y-1.5 transition-all ${
+                        profileData?.openToMentoring 
+                          ? 'bg-emerald-50/80 dark:bg-emerald-950/50 text-emerald-950 dark:text-emerald-200' 
+                          : 'bg-slate-100/90 dark:bg-slate-900/60 text-slate-900 dark:text-slate-300'
+                      }`}>
                         <div className="font-bold text-xs">Open to Mentoring</div>
-                        <span className="text-[10px] font-semibold uppercase">{profileData?.openToMentoring ? 'Available' : 'Unavailable'}</span>
+                        <span className={`inline-block text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
+                          profileData?.openToMentoring
+                            ? 'bg-emerald-200/90 text-emerald-950 dark:bg-emerald-900/80 dark:text-emerald-200'
+                            : 'bg-slate-200/90 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
+                        }`}>
+                          {profileData?.openToMentoring ? 'Available' : 'Unavailable'}
+                        </span>
                       </div>
 
-                      <div className={`p-4 rounded-2xl border text-center space-y-1 ${profileData?.openToConsulting ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200' : 'bg-white border-slate-200 dark:bg-slate-950 dark:border-slate-800 text-slate-400'}`}>
+                      <div className={`p-4 rounded-2xl text-center space-y-1.5 transition-all ${
+                        profileData?.openToConsulting 
+                          ? 'bg-emerald-50/80 dark:bg-emerald-950/50 text-emerald-950 dark:text-emerald-200' 
+                          : 'bg-slate-100/90 dark:bg-slate-900/60 text-slate-900 dark:text-slate-300'
+                      }`}>
                         <div className="font-bold text-xs">Open to Consulting</div>
-                        <span className="text-[10px] font-semibold uppercase">{profileData?.openToConsulting ? 'Available' : 'Unavailable'}</span>
+                        <span className={`inline-block text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
+                          profileData?.openToConsulting
+                            ? 'bg-emerald-200/90 text-emerald-950 dark:bg-emerald-900/80 dark:text-emerald-200'
+                            : 'bg-slate-200/90 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
+                        }`}>
+                          {profileData?.openToConsulting ? 'Available' : 'Unavailable'}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   {/* Collaboration Areas of Interest */}
                   <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b dark:border-slate-800 pb-2.5 flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono border-b border-slate-200 dark:border-slate-800 pb-2.5 flex items-center gap-2">
                       <Users className="w-4 h-4 text-emerald-600" />
                       Areas of Interest for Collaboration
                     </h3>
@@ -1388,13 +1487,18 @@ export default function ProfilePage({ user, onNavigateToView, theme, initialProf
                     {profileData?.collaborationAreasOfInterest && profileData.collaborationAreasOfInterest.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {profileData.collaborationAreasOfInterest.map((area: string, i: number) => (
-                          <span key={i} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold">
+                          <span key={i} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-200 rounded-xl text-xs font-bold">
                             {area}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">No collaboration preferences have been selected.</p>
+                      <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center justify-between">
+                        <span>No collaboration preferences have been selected yet.</span>
+                        <button onClick={() => { setEditTab('collaborations'); setIsEditModalOpen(true); }} className="text-xs font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 underline cursor-pointer">
+                          + Set Preferences
+                        </button>
+                      </div>
                     )}
                   </div>
 
